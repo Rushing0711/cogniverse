@@ -183,7 +183,7 @@ https://jfrog.com/open-source/
 
 ```bash
 # admin后面的是API Key获取方式：登录JFrog==>右上角Welcome,admin下拉==>Edit Profile==>输入密码后Unlock==>下拉点击设置图标按钮生成；或者生成过直接复制！
-[emon@emon ~]$ curl -u admin:密码 http://emon:8083/artifactory/libs-release-local/com/coding/devops/notebook-service/1.0/notebook-service-1.0.jar --output notebook-service-1.0.jar
+[emon@emon ~]$ curl -u admin:AKCp8krAbJnpHRmCxRwQyh2t58cC6Hn6zURWKFwMaHGKvG7LP7FHRzLVuMBsEYdGaGBFLpYVW http://emon:8083/artifactory/libs-release-local/com/coding/devops/notebook-service/1.0/notebook-service-1.0.jar --output notebook-service-1.0.jar
 ```
 
 
