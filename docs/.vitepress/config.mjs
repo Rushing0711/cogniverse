@@ -20,6 +20,12 @@ export default defineConfig({
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {text: '后端', link: '/backend'},
+                    {
+                        text: 'Java', items: [
+                            {text: 'Java核心', link: '/backend/Java/JavaCore'},
+                            {text: 'Java虚拟机', link: '/backend/Java/JVM'},
+                        ]
+                    },
                 ]
             },
             {
@@ -101,6 +107,7 @@ export default defineConfig({
                             items: [
                                 {text: 'JavaInAction', link: '/backend/Java/JavaInAction'},
                                 {text: 'SpringBootInAction', link: '/backend/Java/SpringBootInAction'},
+                                {text: 'backend-jvm-learning-basic', link: '/backend/Java/Jvm/backend-jvm-learning-basic'},
                             ]
                         },
                         {text: 'Kafka', link: '/backend/Kafka/KafkaInAction'},
