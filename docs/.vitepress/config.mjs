@@ -43,7 +43,7 @@ export default defineConfig({
             '/readme': {
                 text: '首页',
                 items: [
-                    {items: [{text: '首页', link: '/readme'}]},
+                    {items: [{text: '首页', link: '/'}]},
                     {text: '笔记构建指南', link: '/readme/cogniverse『typora+vitepress』'},
                     {text: '自动生成侧边栏', link: '/readme/auto-side-bar'}
                 ]
@@ -82,6 +82,7 @@ export default defineConfig({
                         {
                             text: 'ElasticStack',
                             items: [
+                                {text: '快速了解', link: '/backend/ElasticStack/README'},
                                 {text: 'Beats', link: '/backend/ElasticStack/Beats/BeatsInAction'},
                                 {
                                     text: 'ElasticsearchInAction',
