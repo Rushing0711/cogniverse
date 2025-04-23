@@ -345,7 +345,7 @@ git clone https://github.com/facebook/react-devtools.git
 
 2. 进入react-devtools文件夹，用npm安装依赖
 
-```npm
+```shell
 npm install
 ```
 

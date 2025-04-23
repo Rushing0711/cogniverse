@@ -325,7 +325,7 @@ drwxr-xr-x   - emon supergroup          0 2022-01-29 19:15 /user/hive/warehouse/
 
 在MySQL中的体现：
 
-```mysql
+```sql
 mysql> select * from dbs \G;
 *************************** 1. row ***************************
           DB_ID: 1
@@ -390,7 +390,7 @@ hive (default)> show tables;
 
 表的元数据信息在MySQL中的体现：
 
-```mysql
+```sql
 mysql> select * from tbls \G;
 *************************** 1. row ***************************
             TBL_ID: 11
@@ -414,7 +414,7 @@ No query specified
 
 表字段的元数据信息在MySQL中的体现：
 
-```mysql
+```sql
 mysql> select * from columns_v2 \G;
 *************************** 1. row ***************************
       CD_ID: 11
@@ -519,7 +519,7 @@ COMMENT '??'
 
 注释在MySQL情况：
 
-```mysql
+```sql
 mysql> show create table columns_v2 \G;
 *************************** 1. row ***************************
        Table: columns_v2
@@ -558,7 +558,7 @@ No query specified
 
 修改注释在MySQL的元数据表编码：
 
-```mysql
+```sql
 # 修改注释元数据表字段编码
 alter table columns_v2 modify column comment varchar(256) character set utf8mb4 collate utf8mb4_unicode_ci;
 alter table table_params modify column param_value mediumtext character set utf8mb4 collate utf8mb4_unicode_ci;
@@ -838,7 +838,7 @@ hive (default)> drop table external_table;
 
 - 验证MySQL中元数据被删除了：
 
-```mysql
+```sql
 mysql> select * from tbls where tbl_name='external_table' \G;
 Empty set (0.00 sec)
 ```

@@ -2962,7 +2962,7 @@ echo "D=$D"
 % vim myshell.sh
 ```
 
-```bahs
+```bash
 #!/bin/bash
 echo "0=$0 1=$1 2=$2"
 echo "所有的参数 $*"

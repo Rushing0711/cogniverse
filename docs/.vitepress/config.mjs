@@ -5,7 +5,7 @@ export default defineConfig({
     title: "认知宇宙-Cogniverse",
     description: "cogniverse『typora+vitepress』构建的知识库系统。涉及前端、后端、设计、运维、大数据、机器学习、大模型、AI等多个领域的知识库。",
     themeConfig: {
-        siteTitle: "唯有热爱，可低岁月！",
+        siteTitle: "唯有真心热爱，可低岁月漫长！",
         logo: '/lotus.png',
         // https://vitepress.dev/reference/default-theme-config
         nav: [
@@ -58,11 +58,13 @@ export default defineConfig({
                 text: '前端',
                 items: [
                     {items: [{text: '前端', link: '/frontend'}]},
+                    {text: 'frontend-html-css-learning', link: '/frontend/html-css/frontend-html-css-learning'},
                     {text: 'HTTP', link: '/frontend/HTTP/HTTPLearning'},
                     {
                         text: 'JavaScript',
                         items: [
                             {text: 'ES6InAction', link: '/frontend/JavaScript/ES6InAction'},
+                            {text: 'frontend-js-learning', link: '/frontend/JavaScript/Js/frontend-js-learning'},
                             {text: 'JavaScriptInAction', link: '/frontend/JavaScript/JavaScriptInAction'}
                         ]
                     },
@@ -70,7 +72,12 @@ export default defineConfig({
                     {text: 'React', link: '/frontend/React/ReactInAction'},
                     {text: 'TypeScript', link: '/frontend/TypeScript/TypeScriptInAction'},
                     {text: 'VitePress', link: '/frontend/VitePress/VitePress+GitHub Pages'},
-                    {text: 'Vue', link: '/frontend/Vue/VueInAction'},
+                    {
+                        text: 'Vue', items: [
+                            {text: 'Vue', link: '/frontend/Vue/VueInAction'},
+                            {text: 'frontend-vue-learning', link: '/frontend/Vue/Vue2And3/frontend-vue-learning'},
+                        ]
+                    },
                     {
                         items: [
                             {text: 'WebStorm', link: '/frontend/WebStorm/WebStormInAction'},
@@ -107,9 +114,14 @@ export default defineConfig({
                             items: [
                                 {text: 'JavaInAction', link: '/backend/Java/JavaInAction'},
                                 {text: 'SpringBootInAction', link: '/backend/Java/SpringBootInAction'},
-                                {text: 'backend-jvm-learning-basic', link: '/backend/Java/Jvm/backend-jvm-learning-basic'},
+                                {
+                                    text: 'backend-jvm-learning-basic',
+                                    link: '/backend/Java/Jvm/backend-jvm-learning-basic'
+                                },
                             ]
                         },
+                        {text: 'SpringBoot3', link: '/backend/Spring/backend-springboot3-learning'},
+                        {text: 'Shiro', link: '/backend/Shiro/backend-shiro-learning'},
                         {text: 'Kafka', link: '/backend/Kafka/KafkaInAction'},
                         {text: 'Maven', link: '/backend/Maven/MavenInAction'},
                         {text: 'MongoDB', link: '/backend/MongoDB/MongoDBInAction'},
@@ -256,6 +268,30 @@ export default defineConfig({
                     timeStyle:
                         'medium'
                 }
+        },
+
+        search: {
+            provider: 'local',
+            options: {
+                locales: {
+                    zh: {
+                        translations: {
+                            button: {
+                                buttonText: '搜索文档',
+                                buttonAriaLabel: '搜索文档'
+                            },
+                            modal: {
+                                noResultsText: '无法找到相关结果',
+                                resetButtonTitle: '清除查询条件',
+                                footer: {
+                                    selectText: '选择',
+                                    navigateText: '切换'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
 

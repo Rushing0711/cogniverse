@@ -3540,7 +3540,7 @@ hive> exit;
 
 在初始化Metastore之后，MySQL库产生了`hivedb`库和74张表。
 
-```mysql
+```sql
 [emon@emon ~]$ mysql -uflyin -pFlyin@123 -hemon
 mysql> show databases;
 +--------------------+

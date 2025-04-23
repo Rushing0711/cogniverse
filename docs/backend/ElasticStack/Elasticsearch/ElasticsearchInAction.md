@@ -1466,7 +1466,7 @@ POST _reindex
 
 - 查看配置
 
-```absh
+```bash
 $ PUT my_index/_settings
 ```
 

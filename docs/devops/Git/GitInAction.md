@@ -360,7 +360,7 @@ git status
 
 - 以简单形式，查看当前分支的状态
 
-```shel
+```shell
 git status -s
 ```
 

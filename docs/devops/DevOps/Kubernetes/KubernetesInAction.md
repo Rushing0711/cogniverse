@@ -9566,7 +9566,7 @@ $ git config --global user.email "[邮箱]"
 
 - 检查SSH keys是否存在：
 
-```bas
+```bash
 $ ls -a ~/.ssh/
 .  ..  known_hosts
 ```

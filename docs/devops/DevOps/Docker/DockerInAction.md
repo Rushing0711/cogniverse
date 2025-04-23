@@ -2248,7 +2248,7 @@ ENTRYPOINT [ "/bin/echo", "hello docker" ]
 - 作用：切换运行命令的用户（提升安全性）。
 - 示例
 
-```do
+```dockerfile
 USER nobody
 ```
 

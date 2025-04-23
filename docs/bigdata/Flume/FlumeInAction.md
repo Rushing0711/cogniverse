@@ -1216,7 +1216,7 @@ done
 [emon@emon ~]$ mysql -uflyin -pFlyin@123
 ```
 
-```mysql
+```sql
 # 创建数据库
 mysql> CREATE DATABASE IF NOT EXISTS sqoopdb DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 # 切换数据库
@@ -1231,7 +1231,7 @@ mysql> insert into user(id, name)VALUES(NULL, 'abc');
 mysql> insert into user(id, name)VALUES(5, NULL);
 ```
 
-```mysql
+```sql
 create table user(id id(10),name varchar(64));
 ```
 

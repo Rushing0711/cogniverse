@@ -398,7 +398,7 @@ mysql> show variables like 'binlog_format';
 
 1. 命令行里设置
 
-```mysql
+```sql
 mysql> set global long_query_time = 5;
 或者
 mysql> set @@global.long_query_time = 5;
@@ -406,7 +406,7 @@ mysql> set @@global.long_query_time = 5;
 
 2. 查看是否生效
 
-```mysql
+```sql
 mysql> show global variables like 'long_query_time';
 ```
 
@@ -426,13 +426,13 @@ mysql> show global variables like 'long_query_time';
 
 1. 设置
 
-```mysql
+```sql
 mysql> set long_query_time = 1;
 ```
 
 2. 查看
 
-```mysql
+```sql
 mysql> show variables like 'long_query_time';
 ```
 
@@ -594,7 +594,7 @@ mysql -uspringboot -pSpringBoot@123 <dbname> < <backup.sql>
 
 - `mysql`命令行下
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> source path_name(比如： /home/emon/backup/mysql/selldb_20180704_01.sql)
 ```
@@ -603,13 +603,13 @@ mysql> source path_name(比如： /home/emon/backup/mysql/selldb_20180704_01.sql
 
   - 导入表结构
 
-  ```mysql
+  ```sql
   source XXX.sql
   ```
 
   - 导入表数据
 
-  ```mysql
+  ```sql
   load data infile 'XXX.txt'
   ```
 
@@ -1019,7 +1019,7 @@ relay_log_info_repository = TABLE
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql-master2/run/mysql.sock 
 ```
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='192.168.3.116',
     -> master_port=3306,
@@ -1172,7 +1172,7 @@ relay_log_info_repository = TABLE
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql/run/mysql.sock
 ```
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='192.168.3.116',
     -> master_port=3307,
@@ -1212,7 +1212,7 @@ mysql> show slave status \G
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql/run/mysql.sock
 ```
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> create table mtm(id int not null auto_increment, version int not null, primary key (id));
 mysql> insert into mtm(version) values(1);
@@ -1225,7 +1225,7 @@ mysql> insert into mtm(version) values(2);
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql-master2/run/mysql.sock
 ```
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> insert into mtm(version) values(1);
 mysql> insert into mtm(version) values(2);
@@ -1235,7 +1235,7 @@ mysql> insert into mtm(version) values(2);
 
 - master1
 
-```mysql
+```sql
 mysql> select * from mtm;
 +----+---------+
 | id | version |
@@ -1250,7 +1250,7 @@ mysql> select * from mtm;
 
 - master2
 
-```mysql
+```sql
 mysql> select * from mtm;
 +----+---------+
 | id | version |
@@ -1331,7 +1331,7 @@ relay_log_info_repository = TABLE
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql-slave1/run/mysql.sock
 ```
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='192.168.3.116',
     -> master_port=3306,
@@ -1371,7 +1371,7 @@ mysql> show slave status \G
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql/run/mysql.sock
 ```
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> insert into mtm(version) values(3);
 mysql> select * from mtm;
@@ -1392,7 +1392,7 @@ mysql> select * from mtm;
 [emon@emon ~]$ mysql -uroot -proot123 -S /usr/local/mysql-slave1/run/mysql.sock
 ```
 
-```mysql
+```sql
  mysql> use selldb;
  mysql> select * from mtm;
 +----+---------+
@@ -1441,7 +1441,7 @@ mysql> grant replication slave on *.* to 'repl'@'%' with grant option;
 [emon@emon ~]$ sudo vim /usr/local/mysql/etc/my.cnf 
 ```
 
-```mysql
+```sql
 log-bin = /usr/local/mysql/binlogs/mysql-bin
 binlog_format = mixed
 server-id=1
@@ -1462,7 +1462,7 @@ auto_increment_offset = 1
 
 - 查看**master1**中的数据库
 
-```mysql
+```sql
 mysql> show databases;
 +--------------------+
 | Database           |
@@ -1478,7 +1478,7 @@ mysql> show databases;
 
 - 锁定**master1**中的所有数据库
 
-```mysql
+```sql
 mysql> flush tables with read lock;
 ```
 
@@ -1491,7 +1491,7 @@ mysql> flush tables with read lock;
 
 - 解除**master1**的锁定
 
-```mysql
+```sql
 mysql> unlock tables;
 ```
 
@@ -1562,7 +1562,7 @@ relay_log_info_repository = TABLE
 [emon@emon ~]$ mysql -uroot -proot123
 ```
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='master1',
     -> master_port=3306,
@@ -1606,7 +1606,7 @@ ERROR 1872 (HY000): Slave failed to initialize relay log info structure from the
 
 - **master1**
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> create table t1(id int);
 mysql> insert into t1 values(1);
@@ -1614,7 +1614,7 @@ mysql> insert into t1 values(1);
 
 - **master2**
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> select * from t1;
 +------+
@@ -1633,7 +1633,7 @@ mysql> select * from t1;
 
 - **master2**
 
-```mysql
+```sql
 mysql> flush privileges;
 ```
 
@@ -1665,7 +1665,7 @@ auto_increment_offset = 2
 
 - **master2**
 
-```mysql
+```sql
 mysql> show master status \G
 *************************** 1. row ***************************
              File: mysql-bin.000008
@@ -1685,7 +1685,7 @@ Executed_Gtid_Set:
 [emon@emon ~]$ sudo vim /usr/local/mysql/etc/my.cnf
 ```
 
-```mysql
+```sql
 
 #replicate_do_db = test
 replicate_ignore_db = information_schema
@@ -1720,7 +1720,7 @@ relay_log_info_repository = TABLE
 
 如果`master_host`的IP地址变更了，不需要`stop slave`->`change master to master_host=XXX`->`start slave`的方式，只需要更改域名配置即可，稍等片刻（大约1分钟），复制链路会自动生效。
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='master2',
     -> master_port=3306,
@@ -1758,7 +1758,7 @@ mysql> show slave status \G
 
 - **master1**
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> create table mtm(id int not null auto_increment, version int not null, primary key (id));
 mysql> insert into mtm(version) values(1);
@@ -1769,7 +1769,7 @@ mysql> insert into mtm(version) values(2);
 
 - **master2**
 
-```mysql
+```sql
 mysql> use selldb;
 mysql> insert into mtm(version) values(1);
 mysql> insert into mtm(version) values(2);
@@ -1779,7 +1779,7 @@ mysql> insert into mtm(version) values(2);
 
 - **master1**
 
-```mysql
+```sql
 mysql> select * from mtm;
 +----+---------+
 | id | version |
@@ -1794,7 +1794,7 @@ mysql> select * from mtm;
 
 - **master2**
 
-```mysql
+```sql
 mysql> select * from mtm;
 +----+---------+
 | id | version |
@@ -2100,7 +2100,7 @@ fi
 
 - **slave1**
 
-```mysql
+```sql
 # 打开文件追加如下内容
 [emon@emon ~]$ sudo vim /usr/local/mysql/etc/my.cnf 
 ```
@@ -2160,7 +2160,7 @@ relay_log_info_repository = TABLE
 [emon@emon ~]$ mysql -uroot -proot123
 ```
 
-```mysql
+```sql
 mysql> change master to
     -> master_host='master',
     -> master_port=3306,
@@ -2198,14 +2198,14 @@ mysql> show slave status \G
 
   - **master(VIP所在主机，可能是`master1`或`master2`)**
 
-  ```mysql
+  ```sql
   mysql> use selldb;
   mysql> insert into t1 values(2);
   ```
 
   - **slave1**
 
-  ```mysql
+  ```sql
   mysql> user selldb;
   mysql> select * from t1;
   +------+
@@ -2234,7 +2234,7 @@ mysql> show slave status \G
 
   - **slave1**
 
-  ```mysql
+  ```sql
   mysql> select * from t1;
   +------+
   | id   |
