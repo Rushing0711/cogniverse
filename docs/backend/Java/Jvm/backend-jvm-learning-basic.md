@@ -17451,15 +17451,11 @@ public class Tuning02Controller {
 
 <div style="text-align:center;font-weight:bold;">top命令查看机器状态(1)</div>
 
-![image-20241222104225297](images/image-20241222104225297.png)
-
 
 
 ​	可以看到此时机器运行状态无异常，通过请求访问服务，浏览器输入以下地址 http://localhost:8080/getData 。再次通过top命令查看机器状态，如下图所示。
 
 <div style="text-align:center;font-weight:bold;">top命令查看机器状态(2)</div>
-
-![image-20241222104247629](images/image-20241222104247629.png)
 
 
 
@@ -17486,7 +17482,6 @@ public class Tuning02Controller {
 
 <div style="text-align:center;font-weight:bold;">top命令查看机器状态(3)</div>
 
-![image-20241222104423425](images/image-20241222104423425.png)
 
 ​	使用案例6中的解决方案进行问题定位。
 

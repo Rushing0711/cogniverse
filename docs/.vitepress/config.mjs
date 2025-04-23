@@ -20,12 +20,6 @@ export default defineConfig({
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {text: '后端', link: '/backend'},
-                    {
-                        text: 'Java', items: [
-                            {text: 'Java核心', link: '/backend/Java/JavaCore'},
-                            {text: 'Java虚拟机', link: '/backend/Java/JVM'},
-                        ]
-                    },
                 ]
             },
             {
@@ -221,6 +215,14 @@ export default defineConfig({
                             {text: 'UnderstandingLinux', link: '/devops/Linux/UnderstandingLinux'},
                         ]
                     },
+                    {
+                        text: 'Nginx', items: [
+                            {text: 'NginxCommonCMD', link: '/devops/Nginx/NginxCommonCMD'},
+                            {text: 'NginxInAction', link: '/devops/Nginx/NginxInAction'},
+                            {text: 'NginxLearning', link: '/devops/Nginx/NginxLearning'},
+                            {text: 'UnderstandingNginx', link: '/devops/Nginx/UnderstandingNginx'},
+                        ]
+                    },
                 ]
             },
         },
@@ -309,5 +311,17 @@ export default defineConfig({
                 detailsLabel:
                     '详细信息'
             }
-    }
+    },
+
+    vite: {
+        assetsInclude: ['**/*.image'] // 解决 [plugin vite:build-import-analysis] docs/frontend/Vue/Vue2And3/images/OptionsAPI2.image 报错
+    },
+
+    ignoreDeadLinks: [
+        // /^https?:\/\/暂不可用的域名/, // 正则忽略外部链接
+        // '/optional-ignored-path/',     // 忽略特定内部路径
+        // '#暂时未实现的锚点'            // 忽略锚点
+        /^http:\/\/localhost:/
+    ]
+
 })

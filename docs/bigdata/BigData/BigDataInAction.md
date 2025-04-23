@@ -1245,7 +1245,7 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 
 自定义测试
 
-- [依赖项目](git@github.com:EmonCodingBackEnd/backend-spark-learning.git)
+- [依赖项目](https://github.com/EmonCodingBackEnd/backend-spark-learning)
 - 上传自定义jar
 
 `git clone git@github.com:EmonCodingBackEnd/backend-spark-learning.git`并打包`spark-ss`模块，上传jar到spark：
