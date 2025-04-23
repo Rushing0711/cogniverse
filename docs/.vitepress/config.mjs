@@ -41,12 +41,20 @@ export default defineConfig({
         ],
 
         sidebar: {
+            '/readme': {
+                text: '首页',
+                items: [
+                    {text: '笔记构建指南', link: '/readme/cogniverse『typora+vitepress』'},
+                    {text: '自动生成侧边栏', link: '/readme/auto-side-bar'}
+                ]
+            },
             '/frontend': set_sidebar('frontend'),
             '/backend': set_sidebar('backend'),
             '/design': set_sidebar('design'),
             '/bigdata': set_sidebar('bigdata'),
             '/ai': set_sidebar('ai'),
-            '/readme': set_sidebar('readme'),
+            '/devops': set_sidebar('devops'),
+            '/misc': set_sidebar('misc')
         },
 
         socialLinks:
