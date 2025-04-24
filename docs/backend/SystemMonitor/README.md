@@ -15,19 +15,19 @@
 1、下载
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://github.com/prometheus/prometheus/releases/download/v2.30.0-rc.0/prometheus-2.30.0-rc.0.linux-amd64.tar.gz
+$ wget -cP /usr/local/src/ https://github.com/prometheus/prometheus/releases/download/v2.30.0-rc.0/prometheus-2.30.0-rc.0.linux-amd64.tar.gz
 ```
 
 2、创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Promethues
+$ mkdir /usr/local/Promethues
 ```
 
 3、解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/prometheus-2.30.0-rc.0.linux-amd64.tar.gz -C /usr/local/Promethues
+$ tar -zxvf /usr/local/src/prometheus-2.30.0-rc.0.linux-amd64.tar.gz -C /usr/local/Promethues
 ```
 
 4、创建软连接
@@ -39,7 +39,7 @@
 5、创建数据目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/prome/data
+$ mkdir /usr/local/prome/data
 ```
 
 6、启动
@@ -73,7 +73,7 @@ curl -X POST http://localhost:9090/-/reload
 8、配置化启动【推荐】
 
 ```bash
-[emon@emon ~]$ sudo vim /usr/lib/systemd/system/promed.service
+$ sudo vim /usr/lib/systemd/system/promed.service
 ```
 
 ```bash
@@ -98,25 +98,25 @@ WantedBy=multi-user.target
 - 加载
 
 ```bash
-[emon@emon ~]$ sudo systemctl daemon-reload
+$ sudo systemctl daemon-reload
 ```
 
 - 启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl start promed.service
+$ sudo systemctl start promed.service
 ```
 
 - 查看
 
 ```bash
-[emon@emon ~]$ sudo systemctl status promed.service
+$ sudo systemctl status promed.service
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ sudo systemctl stop promed.service 
+$ sudo systemctl stop promed.service 
 ```
 
 
@@ -130,13 +130,13 @@ WantedBy=multi-user.target
 1、下载
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dl.grafana.com/enterprise/release/grafana-enterprise-8.1.3-1.x86_64.rpm
+$ wget -cP /usr/local/src/ https://dl.grafana.com/enterprise/release/grafana-enterprise-8.1.3-1.x86_64.rpm
 ```
 
 2、安装
 
 ```bash
-[emon@emon ~]$ sudo yum install /usr/local/src/grafana-enterprise-8.1.3-1.x86_64.rpm 
+$ sudo yum install /usr/local/src/grafana-enterprise-8.1.3-1.x86_64.rpm 
 ```
 
 3、启动停止和查看状态
@@ -144,19 +144,19 @@ WantedBy=multi-user.target
 - 启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl start grafana-server
+$ sudo systemctl start grafana-server
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ sudo systemctl stop grafana-server
+$ sudo systemctl stop grafana-server
 ```
 
 - 查看状态
 
 ```bash
-[emon@emon ~]$ sudo systemctl status grafana-server
+$ sudo systemctl status grafana-server
 ```
 
 4、访问

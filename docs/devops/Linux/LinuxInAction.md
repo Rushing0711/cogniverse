@@ -62,22 +62,22 @@ https://www.bilibili.com/video/BV1Sv411r7vd/?spm_id_from=333.337.search-card.all
 - 第一步
 
 ```bash
-[root@wenqiu ~]# hostnamectl set-hostname wenqiu
+$ sudo hostnamectl set-hostname wenqiu
 ```
 
 - 第二步：验证
 
 ```bash
-[root@wenqiu ~]# cat /etc/hostname
+$ sudo cat /etc/hostname
 wenqiu
-[root@wenqiu ~]# hostname
+$ sudo hostname
 wenqiu
 ```
 
 - 第三步：配置
 
 ```bash
-[root@wenqiu ~]# vim /etc/hosts
+$ sudo vim /etc/hosts
 ```
 
 ```bash
@@ -94,21 +94,21 @@ wenqiu
 1. 查看网卡会话
 
 ```bash
-[root@wenqiu ~]# nmcli conn show
+$ sudo nmcli conn show
 ```
 
 2. 配置公司网卡会话
 
 ```bash
-[root@wenqiu ~]# nmcli connection add con-name company ifname ens33 autoconnect no type ethernet ip4 10.0.0.116/24 gw4 10.0.0.1
-[root@wenqiu ~]# nmcli con modify company +ipv4.dns 223.6.6.6
+$ sudo nmcli connection add con-name company ifname ens33 autoconnect no type ethernet ip4 10.0.0.116/24 gw4 10.0.0.1
+$ sudo nmcli con modify company +ipv4.dns 223.6.6.6
 ```
 
 3. 配置家庭网卡会话
 
 ```bash
-[root@wenqiu ~]# nmcli connection add con-name house ifname ens33 type ethernet ip4 192.168.1.116/24 gw4 192.168.1.1
-[root@wenqiu ~]# nmcli con modify house +ipv4.dns 211.140.188.188
+$ sudo nmcli connection add con-name house ifname ens33 type ethernet ip4 192.168.1.116/24 gw4 192.168.1.1
+$ sudo nmcli con modify house +ipv4.dns 211.140.188.188
 ```
 
 4. 配置通用net8会话
@@ -128,11 +128,11 @@ wenqiu
 此时，可配置如下：
 
 ```bash
-[root@wenqiu ~]# nmcli conn add con-name net8 ifname ens33 type ethernet ip4 192.168.32.116/24 gw4 192.168.32.2
+$ sudo nmcli conn add con-name net8 ifname ens33 type ethernet ip4 192.168.32.116/24 gw4 192.168.32.2
 # 指定了DNS后，还需要重新激活（nmtui图形界面操作）一下 net8，网络才通
-[root@wenqiu ~]# nmcli con modify net8 +ipv4.dns 192.168.32.2
+$ sudo nmcli con modify net8 +ipv4.dns 192.168.32.2
 # 配置开机自动启动该会话
-[root@wenqiu ~]# nmcli conn mod net8 connection.autoconnect yes 
+$ sudo nmcli conn mod net8 connection.autoconnect yes 
 ```
 
 > 执行： `nmcli conn up net8` 报错如下：
@@ -147,13 +147,13 @@ wenqiu
 5. 编辑网卡会话
 
 ```bash
-[root@wenqiu ~]# nmtui
+$ sudo nmtui
 ```
 
 6. 删除网卡会话
 
 ```bash
-[root@wenqiu ~]# nmcliconn delete company
+$ sudo nmcliconn delete company
 ```
 
 ### 2.2、使用系统镜像文件配置本地yum源
@@ -167,8 +167,8 @@ wenqiu
 1. 创建挂载点并挂载
 
 ```bash
-[root@wenqiu ~]# mkdir /media/cdrom
-[root@wenqiu ~]# mount -t iso9660 -o loop /usr/local/src/CentOS-7-x86_64-DVD-2009.iso /media/cdrom/
+$ sudo mkdir /media/cdrom
+$ sudo mount -t iso9660 -o loop /usr/local/src/CentOS-7-x86_64-DVD-2009.iso /media/cdrom/
 ```
 
 2. 设置开机自动挂载系统镜像文件
@@ -176,7 +176,7 @@ wenqiu
 打开文件后，在最后一行追加如下内容：
 
 ```bash
-[root@wenqiu ~]# vi /etc/fstab
+$ sudo vi /etc/fstab
 # 个人配置
 /usr/local/src/CentOS-7-x86_64-DVD-2009.iso /media/cdrom        iso9660         defaults,ro,loop 0 0
 ```
@@ -184,7 +184,7 @@ wenqiu
 3. 配置本地yum
 
 ```bash
-[root@wenqiu ~]# vi /etc/yum.repos.d/CentOS-7.9.repo
+$ sudo vi /etc/yum.repos.d/CentOS-7.9.repo
 # 如下内容为编辑的文件内容
 [CentOS7.9]
 name=CentOS7.9
@@ -197,13 +197,13 @@ gpgkey=file:///media/cdrom/RPM-GPG-KEY-CentOS-7
 4. 查看可用的yum
 
 ```bash
-[root@wenqiu ~]# yum repolist all
+$ sudo yum repolist all
 ```
 
 5. 缓存服务器包信息，之后配合`yum -C search xxx`可用不用联网即可检索软件信息
 
 ```bash
-[root@wenqiu ~]# yum makecache
+$ sudo yum makecache
 ```
 
 #### 2.2.2 Rocky9
@@ -211,22 +211,22 @@ gpgkey=file:///media/cdrom/RPM-GPG-KEY-CentOS-7
 1. 设置开机自动挂载系统镜像文件
 
 ```bash
-[root@wenqiu ~]# vi /etc/fstab
+$ sudo vi /etc/fstab
 # 个人配置
 /opt/Rocky-9.5-aarch64-dvd.iso /media/cdrom        iso9660         defaults,ro,loop 0 0
 ```
 
 ```bash
-[root@wenqiu ~]# mount -a
+$ sudo mount -a
 mount: (hint) your fstab has been modified, but systemd still uses
        the old version; use 'systemctl daemon-reload' to reload.
-[root@wenqiu ~]# systemctl daemon-reload
+$ sudo systemctl daemon-reload
 ```
 
 2. 配置本地yum
 
 ```bash
-[root@wenqiu ~]# vi /etc/yum.repos.d/Rocky-9.5.repo
+$ sudo vi /etc/yum.repos.d/Rocky-9.5.repo
 # 如下内容为编辑的文件内容
 [Rocky9.5-BaseOS]
 name=Rocky9.5-BaseOS
@@ -244,13 +244,13 @@ gpgcheck=0
 3. 查看可用的yum
 
 ```bash
-[root@wenqiu ~]# yum repolist all
+$ sudo yum repolist all
 ```
 
 4. 缓存服务器包信息，之后配合`yum -C search xxx`可用不用联网即可检索软件信息
 
 ```bash
-[root@wenqiu ~]# yum makecache
+$ sudo yum makecache
 ```
 
 ### 2.3、安装常用命令
@@ -260,37 +260,37 @@ gpgcheck=0
 1. vim
 
 ```bash
-[root@wenqiu ~]# yum install -y vim*
+$ sudo yum install -y vim*
 ```
 
 2. wget
 
 ```bash
-[root@wenqiu ~]# yum install -y wget
+$ sudo yum install -y wget
 ```
 
 3. tree
 
 ```bash
-[root@wenqiu ~]# yum install -y tree
+$ sudo yum install -y tree
 ```
 
 4. netstat和ifconfig
 
 ```bash
-[root@wenqiu ~]# yum install -y net-tools
+$ sudo yum install -y net-tools
 ```
 
 5. unzip
 
 ```bash
-[root@wenqiu ~]# yum install -y unzip
+$ sudo yum install -y unzip
 ```
 
 6. lsof
 
 ```bash
-[root@wenqiu ~]# yum install -y lsof
+$ sudo yum install -y lsof
 ```
 
 7. semanage
@@ -298,19 +298,19 @@ gpgcheck=0
 CentOS8默认没安装semanage命令，安装如下：
 
 ```bash
-[root@wenqiu ~]# yum install -y policycoreutils-python-utils
+$ sudo yum install -y policycoreutils-python-utils
 ```
 
 8. nc
 
 ```bash
-[root@wenqiu ~]# yum install -y nmap
+$ sudo yum install -y nmap
 ```
 
 9. tar
 
 ```bash
-[root@wenqiu ~]# yum install -y tar
+$ sudo yum install -y tar
 ```
 
 ### 2.4、更换yum源配置为阿里云源配置
@@ -320,13 +320,13 @@ CentOS8默认没安装semanage命令，安装如下：
 1. 备份
 
 ```bash
-[root@wenqiu ~]# mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
+$ sudo mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak
 ```
 
 2. 下载新的CentOS-Base.repo到/etc/yum.repos.d/目录
 
 ```bash
-[root@wenqiu ~]# wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+$ sudo wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
 ```
 
 【备注】如果提示无法解析`mirrors.aliyun.com`，应该是当前会话的DNS属于内网IP，只需要再增加`8.8.8.8`这个DNS即可。
@@ -334,7 +334,7 @@ CentOS8默认没安装semanage命令，安装如下：
 3. 生成缓存
 
 ```bash
-[root@wenqiu ~]# yum makecache
+$ sudo yum makecache
 ```
 
 #### 2.4.2 Rocky9
@@ -342,7 +342,7 @@ CentOS8默认没安装semanage命令，安装如下：
 1. 备份
 
 ```bash
-[root@wenqiu ~]# cd /etc/yum.repos.d/
+$ sudo cd /etc/yum.repos.d/
 [root@wenqiu yum.repos.d]# cp rocky-addons.repo rocky-addons.repo.bak
 [root@wenqiu yum.repos.d]# cp rocky-devel.repo rocky-devel.repo.bak
 [root@wenqiu yum.repos.d]# cp rocky-extras.repo rocky-extras.repo.bak
@@ -367,13 +367,13 @@ dnf makecache
 1. 创建普通用户
 
 ```bash
-[root@wenqiu ~]# useradd -c "Web Site User" emon
+$ sudo useradd -c "Web Site User" emon
 ```
 
 2. 修改密码
 
 ```bash
-[root@wenqiu ~]# passwd emon
+$ sudo passwd emon
 ```
 
 3. 赋权sudo
@@ -391,7 +391,7 @@ emon    ALL=(ALL)       ALL
 打开文件后，在最后一行追加如下内容：
 
 ```bash
-[root@wenqiu ~]# vim /etc/vimrc 
+$ sudo vim /etc/vimrc 
 " 个人配置
 set tabstop=4
 set softtabstop=4
@@ -406,7 +406,7 @@ set pastetoggle=<F9>
 打开文件后，在最后一行追加如下内容：
 
 ```bash
-[root@wenqiu ~]# vim /etc/hosts
+$ sudo vim /etc/hosts
 192.168.200.116   wenqiu
 ```
 
@@ -1599,7 +1599,7 @@ vsftpd.csr                                                                      
 4. 在CA主机上签署证书
 
 ```bash
-[root@wenqiu ~]# cd /tmp/
+$ sudo cd /tmp/
 [root@wenqiu tmp]# openssl ca -in /tmp/vsftpd.csr -out /etc/pki/CA/certs/vsftpd.crt -days 3650
 Using configuration from /etc/pki/tls/openssl.cnf
 Check that the request matches the signature

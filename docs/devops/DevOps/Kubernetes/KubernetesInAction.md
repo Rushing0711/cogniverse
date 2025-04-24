@@ -294,7 +294,7 @@ Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.
 
 ```shell
 # 如果是root用户安装的，不需要带sudo命令
-[emon@emon ~]$ vim ~/.bashrc
+$ vim ~/.bashrc
 alias docker="sudo /usr/bin/docker"
 alias dockerpsf="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.RunningFor}}\t{{.Ports}}\""
 alias dockerps="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Status}}\t{{.Names}}\""
@@ -303,7 +303,7 @@ alias dockerps="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Status}}\t{{
 使之生效：
 
 ```shell
-[emon@emon ~]$ source ~/.bashrc
+$ source ~/.bashrc
 ```
 
 ### 2.2、安装kubeadm/kubelet/kubectl

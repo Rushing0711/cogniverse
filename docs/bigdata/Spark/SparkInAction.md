@@ -95,8 +95,8 @@ Driver进程所在的节点可以是Spark集群的某一个节点或者就是我
 如果目前尚不存在`spark-defaults.conf`文件，可以从`spark-defaults.conf.template`复制一份重命名为`spark-defaults.conf`。
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/spark-defaults.conf.template /usr/local/spark/conf/spark-defaults.conf
-[emon@emon ~]$ vim /usr/local/spark/conf/spark-defaults.conf
+$ cp /usr/local/spark/conf/spark-defaults.conf.template /usr/local/spark/conf/spark-defaults.conf
+$ vim /usr/local/spark/conf/spark-defaults.conf
 ```
 
 ```properties
@@ -119,7 +119,7 @@ spark.yarn.historyServer.allowTracking=true
 - `spark-env.sh`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/spark/conf/spark-env.sh
+$ vim /usr/local/spark/conf/spark-env.sh
 ```
 
 ```properties
@@ -131,20 +131,20 @@ export SPARK_HISTORY_OPTS="-Dspark.history.ui.port=18080 -Dspark.history.fs.logD
 
 ```bash
 # 如果日志目录不存在，启动时会报错
-[emon@emon ~]$ hdfs dfs -mkdir -p hdfs://emon:8020/tmp/logs/spark-events
+$ hdfs dfs -mkdir -p hdfs://emon:8020/tmp/logs/spark-events
 ```
 
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/spark/sbin/start-history-server.sh 
+$ /usr/local/spark/sbin/start-history-server.sh 
 ```
 
 - 验证
 
 ```bash
 # 其他进程忽略显示，看到如下进程表示Spark的HistoryServer启动成功
-[emon@emon ~]$ jps
+$ jps
 17287 HistoryServer
 ```
 
@@ -155,7 +155,7 @@ http://emon:18080
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/spark/sbin/stop-history-server.sh 
+$ /usr/local/spark/sbin/stop-history-server.sh 
 ```
 
 

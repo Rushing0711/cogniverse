@@ -24,25 +24,25 @@
 下载地址页： <https://www.elastic.co/downloads>
 
 ```shell
-[emon@emon ~]$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.6.11-linux-x86_64.tar.gz
+$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-5.6.11-linux-x86_64.tar.gz
 ```
 
 2. 创建安装目录
 
 ```shell
-[emon@emon ~]$ mkdir /usr/local/Filebeat
+$ mkdir /usr/local/Filebeat
 ```
 
 3. 解压安装
 
 ```shell
-[emon@emon ~]$ tar -zxvf /usr/local/src/filebeat-5.6.11-linux-x86_64.tar.gz -C /usr/local/Filebeat/
+$ tar -zxvf /usr/local/src/filebeat-5.6.11-linux-x86_64.tar.gz -C /usr/local/Filebeat/
 ```
 
 4. 创建软连接
 
 ```shell
-[emon@emon ~]$ ln -s /usr/local/Filebeat/filebeat-5.6.11-linux-x86_64/ /usr/local/filebeat
+$ ln -s /usr/local/Filebeat/filebeat-5.6.11-linux-x86_64/ /usr/local/filebeat
 ```
 
 5. 配置`filebeat.yml`
@@ -50,10 +50,10 @@
 复制一份，进行调整：
 
 ```shell
-[emon@emon ~]$ grep -v "#" /usr/local/filebeat/filebeat.yml > /usr/local/filebeat/nginx.yml
+$ grep -v "#" /usr/local/filebeat/filebeat.yml > /usr/local/filebeat/nginx.yml
 # 设置为只能拥有者可写，否则会报错
-[emon@emon ~]$ chmod go-w /usr/local/filebeat/nginx.yml 
-[emon@emon ~]$ vim /usr/local/filebeat/nginx.yml 
+$ chmod go-w /usr/local/filebeat/nginx.yml 
+$ vim /usr/local/filebeat/nginx.yml 
 ```
 
 内容如下：
@@ -68,7 +68,7 @@ output.console:
 6. 测试
 
 ```shell
-[emon@emon ~]$ head -n 2 /usr/local/nginx/logs/access.log | /usr/local/filebeat/filebeat -e -c /usr/local/filebeat/nginx.yml 
+$ head -n 2 /usr/local/nginx/logs/access.log | /usr/local/filebeat/filebeat -e -c /usr/local/filebeat/nginx.yml 
 ```
 
 
@@ -192,25 +192,25 @@ processors:
 下载地址页： <https://www.elastic.co/downloads>
 
 ```shell
-[emon@emon ~]$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/beats/packetbeat/packetbeat-5.6.11-linux-x86_64.tar.gz
+$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/beats/packetbeat/packetbeat-5.6.11-linux-x86_64.tar.gz
 ```
 
 2. 创建安装目录
 
 ```shell
-[emon@emon ~]$ mkdir /usr/local/Packetbeat
+$ mkdir /usr/local/Packetbeat
 ```
 
 3. 解压安装
 
 ```shell
-[emon@emon ~]$ tar -zxvf /usr/local/src/packetbeat-5.6.11-linux-x86_64.tar.gz -C /usr/local/Packetbeat/
+$ tar -zxvf /usr/local/src/packetbeat-5.6.11-linux-x86_64.tar.gz -C /usr/local/Packetbeat/
 ```
 
 4. 创建软连接
 
 ```shell
-[emon@emon ~]$ ln -s /usr/local/Packetbeat/packetbeat-5.6.11-linux-x86_64/ /usr/local/packetbeat
+$ ln -s /usr/local/Packetbeat/packetbeat-5.6.11-linux-x86_64/ /usr/local/packetbeat
 ```
 
 5. 配置`packetbeat.yml`
@@ -218,8 +218,8 @@ processors:
 复制一份，进行调整：
 
 ```shell
-[emon@emon ~]$ grep -v "#" /usr/local/packetbeat/packetbeat.yml > /usr/local/packetbeat/es.yml
-[emon@emon ~]$ vim /usr/local/packetbeat/es.yml 
+$ grep -v "#" /usr/local/packetbeat/packetbeat.yml > /usr/local/packetbeat/es.yml
+$ vim /usr/local/packetbeat/es.yml 
 ```
 
 内容如下：
@@ -237,7 +237,7 @@ output.console:
 6. 测试
 
 ```shell
-[emon@emon ~]$ sudo /usr/local/packetbeat/packetbeat -e -c /usr/local/packetbeat/es.yml -strict.perms=false
+$ sudo /usr/local/packetbeat/packetbeat -e -c /usr/local/packetbeat/es.yml -strict.perms=false
 ```
 
 然后在网页访问Elasticsearch： http://192.168.8.116:9200/

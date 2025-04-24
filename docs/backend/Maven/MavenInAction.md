@@ -19,28 +19,28 @@
 专项下载地址：https://help.sonatype.com/repomanager3/download
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/3/nexus-3.41.1-01-unix.tar.gz
+$ wget -cP /usr/local/src/ https://sonatype-download.global.ssl.fastly.net/repository/downloads-prod-group/3/nexus-3.41.1-01-unix.tar.gz
 ```
 
 3. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Nexus
+$ mkdir /usr/local/Nexus
 # 每一个版本解压到一个目录
-[emon@emon ~]$ mkdir /usr/local/Nexus/nexus3.41.1-01-bundle/
+$ mkdir /usr/local/Nexus/nexus3.41.1-01-bundle/
 ```
 
 4. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/nexus-3.41.1-01-unix.tar.gz -C /usr/local/Nexus/nexus3.41.1-01-bundle
+$ tar -zxvf /usr/local/src/nexus-3.41.1-01-unix.tar.gz -C /usr/local/Nexus/nexus3.41.1-01-bundle
 ```
 
 5. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -s /usr/local/Nexus/nexus3.41.1-01-bundle/nexus-3.41.1-01 /usr/local/nexus
-[emon@emon ~]$ ln -s /usr/local/Nexus/nexus3.41.1-01-bundle/sonatype-work/nexus3/ /usr/local/nexus-work
+$ ln -s /usr/local/Nexus/nexus3.41.1-01-bundle/nexus-3.41.1-01 /usr/local/nexus
+$ ln -s /usr/local/Nexus/nexus3.41.1-01-bundle/sonatype-work/nexus3/ /usr/local/nexus-work
 ```
 
 6. 修改配置
@@ -49,13 +49,13 @@
 
 ```bash
 # 如果需要修改，可以在该文件修改 application-port；默认使用8081，不修改
-[emon@emon ~]$ vim /usr/local/nexus/etc/nexus-default.properties 
+$ vim /usr/local/nexus/etc/nexus-default.properties 
 ```
 
 - 修改默认启动内存
 
 ```bash
-[emon@emon ~]$ vim /usr/local/nexus/bin/nexus.vmoptions 
+$ vim /usr/local/nexus/bin/nexus.vmoptions 
 ```
 
 ```bash
@@ -72,7 +72,7 @@
 在`/etc/profile.d`目录创建`nexus.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/nexus.sh
+$ sudo vim /etc/profile.d/nexus.sh
 export NEXUS_HOME=/usr/local/nexus
 export NEXUS_WORK_HOME=/usr/local/nexus-work
 export PATH=$NEXUS_HOME/bin:$PATH
@@ -81,13 +81,13 @@ export PATH=$NEXUS_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 8. 校验
 
 ```bash
-[emon@emon ~]$ nexus status
+$ nexus status
 nexus is stopped.
 ```
 
@@ -96,19 +96,19 @@ nexus is stopped.
 - 启动
 
 ```bash
-[emon@emon ~]$ nexus start
+$ nexus start
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ nexus stop
+$ nexus stop
 ```
 
 - 重启
 
 ```bash
-[emon@emon ~]$ nexus restart
+$ nexus restart
 ```
 
 查看日志：`/usr/local/nexus-work/log/nexus.log`
@@ -118,7 +118,7 @@ nexus is stopped.
 参考：https://help.sonatype.com/repomanager3/system-requirements#SystemRequirements-Linux
 
 ```bash
-[emon@emon ~]$ sudo vim /usr/lib/systemd/system/nexus.service
+$ sudo vim /usr/lib/systemd/system/nexus.service
 ```
 
 ```bash
@@ -142,31 +142,31 @@ WantedBy=multi-user.target
 加载启动项：
 
 ```bash
-[emon@emon ~]$ sudo systemctl daemon-reload
+$ sudo systemctl daemon-reload
 ```
 
 设置开机启动：
 
 ```bash
-[emon@emon ~]$ sudo systemctl enable nexus.service
+$ sudo systemctl enable nexus.service
 ```
 
 - 启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl start nexus.service
+$ sudo systemctl start nexus.service
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ sudo systemctl stop nexus.service
+$ sudo systemctl stop nexus.service
 ```
 
 - 重启
 
 ```bash
-[emon@emon ~]$ sudo systemctl restart nexus.service
+$ sudo systemctl restart nexus.service
 ```
 
 11. 访问
@@ -178,7 +178,7 @@ http://192.168.200.116:8081
 查看admin密码：
 
 ```bash
-[emon@emon ~]$ cat /usr/local/nexus-work/admin.password
+$ cat /usr/local/nexus-work/admin.password
 # 然后按照步骤修改为admin123，并允许匿名用户访问
 ```
 
@@ -253,7 +253,7 @@ http://maven.aliyun.com/nexus/content/groups/public
 14. 配置nginx
 
 ```bash
-[emon@emon ~]$ vim /usr/local/nginx/conf/vhost/repo.emon.vip.conf 
+$ vim /usr/local/nginx/conf/vhost/repo.emon.vip.conf 
 ```
 
 ```bash

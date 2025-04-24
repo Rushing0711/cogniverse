@@ -218,7 +218,7 @@ stream {
 创建文件夹`vstream`：
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/nginx/conf/vstream
+$ mkdir /usr/local/nginx/conf/vstream
 ```
 
 创建一个stream配置：
@@ -416,7 +416,7 @@ if ($invalid_referer) {
 - 配置Nginx的vhost
 
 ```bash
-[emon@emon ~]$ vim /usr/local/nginx/conf/vhost/tomcates_upstream.conf 
+$ vim /usr/local/nginx/conf/vhost/tomcates_upstream.conf 
 ```
 
 ```bash
@@ -453,7 +453,7 @@ server {
 - 加载Nginx配置
 
 ```bash
-[emon@emon ~]$ sudo nginx -s reload
+$ sudo nginx -s reload
 ```
 
 - 配置本地DNS
@@ -664,7 +664,7 @@ upstream tomcats {
 - 编辑一个测试缓存的html文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/nginx/html/cache.html 
+$ vim /usr/local/nginx/html/cache.html 
 ```
 
 ```html
@@ -689,7 +689,7 @@ upstream tomcats {
 - 配置反向代理
 
 ```bash
-[emon@emon ~]$ vim /usr/local/nginx/conf/vhost/tomcates_upstream.conf 
+$ vim /usr/local/nginx/conf/vhost/tomcates_upstream.conf 
 ```
 
 ```bash
@@ -719,7 +719,7 @@ server {
 ```
 
 ```bash
-[emon@emon ~]$ sudo nginx -s reload
+$ sudo nginx -s reload
 ```
 
 - 访问
@@ -771,7 +771,7 @@ server {
 ```
 
 ```bash
-[emon@emon ~]$ sudo nginx -s reload
+$ sudo nginx -s reload
 ```
 
 3. 访问图片并查看`/usr/local/nginx/upstream_cache`目录
@@ -788,26 +788,26 @@ http://www.tomcats.com/static/img/zx.jpg
 
 ```bash
 # 由于是https，直接获取时提示 “错误: 无法验证 www.keepalived.org 的”，需要加上 --no-check-certificate 选项
-[emon@emon ~]$ wget --no-check-certificate -cP /usr/local/src/ https://www.keepalived.org/software/keepalived-2.2.7.tar.gz
+$ wget --no-check-certificate -cP /usr/local/src/ https://www.keepalived.org/software/keepalived-2.2.7.tar.gz
 ```
 
 2. 依赖检查与安装
 
 ```bash
-[emon@emon ~]$ yum list libnl libnl-devel openssl-devel
-[emon@emon ~]$ sudo yum -y install libnl libnl-devel openssl-devel
+$ yum list libnl libnl-devel openssl-devel
+$ sudo yum -y install libnl libnl-devel openssl-devel
 ```
 
 3. 创建解压目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Keepalived
+$ mkdir /usr/local/Keepalived
 ```
 
 4. 解压
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/keepalived-2.2.7.tar.gz -C /usr/local/Keepalived/
+$ tar -zxvf /usr/local/src/keepalived-2.2.7.tar.gz -C /usr/local/Keepalived/
 ```
 
 5. 执行配置脚本，并编译安装
@@ -815,7 +815,7 @@ http://www.tomcats.com/static/img/zx.jpg
 - 切换目录并执行配置脚本生成Makefile
 
 ```bash
-[emon@emon ~]$ cd /usr/local/Keepalived/keepalived-2.2.7/
+$ cd /usr/local/Keepalived/keepalived-2.2.7/
 [emon@emon keepalived-2.2.7]$ ./configure --prefix=/usr/local/Keepalived/keepalived2.2.7 --sysconf=/etc
 ```
 
@@ -833,28 +833,28 @@ http://www.tomcats.com/static/img/zx.jpg
 # 因为要在 /etc 目录下写入目录和文件，所以使用 root 权限
 [emon@emon keepalived-2.2.7]$ sudo make install
 [emon@emon keepalived-2.2.7]$ cd
-[emon@emon ~]$ ls /usr/local/Keepalived/keepalived2.2.7/
+$ ls /usr/local/Keepalived/keepalived2.2.7/
 bin  sbin  share
 ```
 
 6. 进入到`/etc/keepalived`，该目录下为keepalived核心配置文件
 
 ```bash
-[emon@emon ~]$ ls /etc/keepalived/
+$ ls /etc/keepalived/
 keepalived.conf  samples
 ```
 
 如果忘记安装配置的目录，则通过如下命令找到：
 
 ```bash
-[emon@emon ~]$ whereis keepalived
+$ whereis keepalived
 keepalived: /etc/keepalived
 ```
 
 7. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Keepalived/keepalived2.2.7/ /usr/local/keepalived
+$ ln -snf /usr/local/Keepalived/keepalived2.2.7/ /usr/local/keepalived
 ```
 
 ## 2.9、Nginx的Keepalived配置
@@ -862,7 +862,7 @@ keepalived: /etc/keepalived
 1. 配置Nginx的keepalived
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/keepalived/keepalived.conf
+$ sudo vim /etc/keepalived/keepalived.conf
 ```
 
 ```bash
@@ -902,13 +902,13 @@ vrrp_instance VI_1 {
 - 启动
 
 ```bash
-[emon@emon ~]$ sudo /usr/local/keepalived/sbin/keepalived 
+$ sudo /usr/local/keepalived/sbin/keepalived 
 ```
 
 - 查看启动日志，如果启动失败，可以识别错误信息
 
 ```bash
-[emon@emon ~]$ sudo tailf /var/log/messages
+$ sudo tailf /var/log/messages
 ```
 
 ```bash
@@ -926,7 +926,7 @@ Dec  5 10:10:55 emon Keepalived_vrrp[48645]: (VI_1) Entering MASTER STATE
 - 查看 ip addr，可以看到虚拟ip地址 192.168.1.111
 
 ```bash
-[emon@emon ~]$ ip addr
+$ ip addr
 ```
 
 ```bash
@@ -945,11 +945,11 @@ Dec  5 10:10:55 emon Keepalived_vrrp[48645]: (VI_1) Entering MASTER STATE
 - 查看keepalived启动的进程信息
 
 ```bash
-[emon@emon ~]$ ps -ef|grep keepalived
+$ ps -ef|grep keepalived
 ```
 
 ```bash
-[emon@emon ~]$ ps -ef|grep keepalived
+$ ps -ef|grep keepalived
 root      48644      1  0 10:10 ?        00:00:00 /usr/local/keepalived/sbin/keepalived
 root      48645  48644  0 10:10 ?        00:00:00 /usr/local/keepalived/sbin/keepalived
 emon      48894  14838  0 10:15 pts/2    00:00:00 grep --color=auto keepalived
@@ -960,32 +960,32 @@ emon      48894  14838  0 10:15 pts/2    00:00:00 grep --color=auto keepalived
 - 设置启动项
 
 ```bash
-[emon@emon ~]$ sudo cp /usr/local/Keepalived/keepalived-2.2.4/keepalived/etc/init.d/keepalived /etc/init.d/
-[emon@emon ~]$ sudo cp /usr/local/Keepalived/keepalived-2.2.4/keepalived/etc/sysconfig/keepalived /etc/sysconfig/
+$ sudo cp /usr/local/Keepalived/keepalived-2.2.4/keepalived/etc/init.d/keepalived /etc/init.d/
+$ sudo cp /usr/local/Keepalived/keepalived-2.2.4/keepalived/etc/sysconfig/keepalived /etc/sysconfig/
 ```
 
 - 加载启动项
 
 ```bash
-[emon@emon ~]$ sudo systemctl daemon-reload
+$ sudo systemctl daemon-reload
 ```
 
 - 启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl start keepalived
+$ sudo systemctl start keepalived
 ```
 
 - 查看
 
 ```bash
-[emon@emon ~]$ sudo systemctl status keepalived
+$ sudo systemctl status keepalived
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ sudo systemctl stop keepalived
+$ sudo systemctl stop keepalived
 ```
 
 4. Keepalived检测Nginx的服务情况
@@ -993,7 +993,7 @@ emon      48894  14838  0 10:15 pts/2    00:00:00 grep --color=auto keepalived
 - 编写脚本
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/keepalived/check_nginx_alive_or_not.sh
+$ sudo vim /etc/keepalived/check_nginx_alive_or_not.sh
 ```
 
 ```bash
@@ -1014,19 +1014,19 @@ fi
 - 修改权限
 
 ```bash
-[emon@emon ~]$ sudo chmod +x /etc/keepalived/check_nginx_alive_or_not.sh 
+$ sudo chmod +x /etc/keepalived/check_nginx_alive_or_not.sh 
 ```
 
 - 执行
 
 ```bash
-[emon@emon ~]$ sudo /etc/keepalived/check_nginx_alive_or_not.sh
+$ sudo /etc/keepalived/check_nginx_alive_or_not.sh
 ```
 
 5. 配置Keepalived监听Nginx的脚本
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/keepalived/keepalived.conf
+$ sudo vim /etc/keepalived/keepalived.conf
 ```
 
 ```bash
@@ -1074,7 +1074,7 @@ vrrp_instance VI_1 {
 - 重启使配置生效
 
 ```bash
-[emon@emon ~]$ sudo systemctl restart keepalived
+$ sudo systemctl restart keepalived
 ```
 
 ## 2.10、Nginx的Keepalived双主热备
@@ -1082,7 +1082,7 @@ vrrp_instance VI_1 {
 - 修改其中一台服务器，即是主，也是备；另外一台也类似
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/keepalived/keepalived.conf
+$ sudo vim /etc/keepalived/keepalived.conf
 ```
 
 ```bash

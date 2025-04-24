@@ -15,19 +15,19 @@
 - 启动
 
 ```bash
-[emon@emon ~]$ start-hbase.sh 
+$ start-hbase.sh 
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ stop-hbase.sh 
+$ stop-hbase.sh 
 ```
 
 - 进入hbase命令行
 
 ```bash
-[emon@emon ~]$ hbase shell
+$ hbase shell
 ```
 
 **以下命令，都是在`hbase shell`命令行下执行！**

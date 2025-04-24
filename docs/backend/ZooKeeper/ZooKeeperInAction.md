@@ -23,13 +23,13 @@
 - 远程连接
 
 ```bash
-[emon@emon ~]$ zkCli.sh -server emon:2181
+$ zkCli.sh -server emon:2181
 ```
 
 - 本地连接
 
 ```bash
-[emon@emon ~]$ zkCli.sh
+$ zkCli.sh
 ```
 
 - 退出（连接成功后，使用命令quit退出）

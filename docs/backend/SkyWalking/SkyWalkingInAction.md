@@ -15,25 +15,25 @@
 由于要搭配Elasticsearch使用，这里下载`Binary Distribution for ElasticSearch 7`
 
 ```shell
-[emon@emon ~]$ wget -cP /usr/local/src/ https://mirrors.bfsu.edu.cn/apache/skywalking/8.1.0/apache-skywalking-apm-es7-8.1.0.tar.gz
+$ wget -cP /usr/local/src/ https://mirrors.bfsu.edu.cn/apache/skywalking/8.1.0/apache-skywalking-apm-es7-8.1.0.tar.gz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/SkyWalking
+$ mkdir /usr/local/SkyWalking
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/apache-skywalking-apm-es7-8.1.0.tar.gz -C /usr/local/SkyWalking/
+$ tar -zxvf /usr/local/src/apache-skywalking-apm-es7-8.1.0.tar.gz -C /usr/local/SkyWalking/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -s /usr/local/SkyWalking/apache-skywalking-apm-bin-es7/ /usr/local/sw
+$ ln -s /usr/local/SkyWalking/apache-skywalking-apm-bin-es7/ /usr/local/sw
 ```
 
 5. 修改配置文件
@@ -41,7 +41,7 @@
 配置文件`/usr/local/sw/config/application.yml`：
 
 ```bash
-[emon@emon ~]$ vim /usr/local/sw/config/application.yml
+$ vim /usr/local/sw/config/application.yml
 ```
 
 - 第一处：存储方式
@@ -89,7 +89,7 @@ service-mesh:
 配置文件`vim /usr/local/sw/webapp/webapp.yml`：
 
 ```bash
-[emon@emon ~]$ vim /usr/local/sw/webapp/webapp.yml 
+$ vim /usr/local/sw/webapp/webapp.yml 
 ```
 
 ```bash
@@ -103,7 +103,7 @@ server:
 6. 常规启动
 
 ```bash
-[emon@emon ~]$ /usr/local/sw/bin/startup.sh 
+$ /usr/local/sw/bin/startup.sh 
 SkyWalking OAP started successfully!
 SkyWalking Web Application started successfully!
 ```

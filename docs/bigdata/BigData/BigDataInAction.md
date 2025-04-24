@@ -13,7 +13,7 @@
 大数据整体外部资源目录规划：
 
 ```bash
-[emon@emon ~]$ mkdir -p ~/bigdata/{hadoop,flume,hive,spark,flink}/{data,lib,shell,source}
+$ mkdir -p ~/bigdata/{hadoop,flume,hive,spark,flink}/{data,lib,shell,source}
 ```
 
 | 目录                    | 作用           |
@@ -64,13 +64,13 @@
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/ZooKeeper
+$ mkdir /usr/local/ZooKeeper
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/zookeeper-3.4.5-cdh5.16.2.tar.gz -C /usr/local/ZooKeeper/
+$ tar -zxvf /usr/local/src/zookeeper-3.4.5-cdh5.16.2.tar.gz -C /usr/local/ZooKeeper/
 ```
 
 **说明**：如果发生错误：
@@ -89,7 +89,7 @@
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/ZooKeeper/zookeeper-3.4.5-cdh5.16.2/ /usr/local/zoo
+$ ln -snf /usr/local/ZooKeeper/zookeeper-3.4.5-cdh5.16.2/ /usr/local/zoo
 ```
 
 5. 配置环境变量
@@ -97,7 +97,7 @@
 在`/etc/profile.d`目录创建`zoo.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/zoo.sh
+$ sudo vim /etc/profile.d/zoo.sh
 export ZK_HOME=/usr/local/zoo
 export PATH=$ZK_HOME/bin:$PATH
 ```
@@ -105,13 +105,13 @@ export PATH=$ZK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
-[emon@emon ~]$ mkdir -p /usr/local/zoo/{data,logs}
+$ mkdir -p /usr/local/zoo/{data,logs}
 ```
 
 7. 配置文件
@@ -119,13 +119,13 @@ export PATH=$ZK_HOME/bin:$PATH
 - 复制`zoo_sample.cfg`到`zoo.cfg`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
+$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
 ```
 
 - 编辑`zoo.cfg`文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/zoo/conf/zoo.cfg 
+$ vim /usr/local/zoo/conf/zoo.cfg 
 ```
 
 ```bash
@@ -142,26 +142,26 @@ admin.serverPort=8090
 - 启动（端口号2181）
 
 ```bash
-[emon@emon ~]$ zkServer.sh start
+$ zkServer.sh start
 ```
 
 - 校验
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 44611 QuorumPeerMain
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ zkServer.sh stop
+$ zkServer.sh stop
 ```
 
 - 状态
 
 ```bash
-[emon@emon ~]$ zkServer.sh status
+$ zkServer.sh status
 ```
 
 9. 连接
@@ -176,13 +176,13 @@ http://192.168.1.116:8090/commands/stat
 - 远程连接
 
 ```bash
-[emon@emon ~]$ zkCli.sh -server 192.168.1.116:2181
+$ zkCli.sh -server 192.168.1.116:2181
 ```
 
 - 本地连接
 
 ```bash
-[emon@emon ~]$ zkCli.sh
+$ zkCli.sh
 ```
 
 - 退出（连接成功后，使用命令quit退出）
@@ -241,13 +241,13 @@ http://192.168.1.116:8090/commands/stat
 - 复制`zoo_sample.cfg`到`zoo.cfg`
 
 ```
-[emon@emon ~]$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
+$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
 ```
 
 - 配置`zoo.cfg`文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/zoo/conf/zoo.cfg 
+$ vim /usr/local/zoo/conf/zoo.cfg 
 # [修改]
 dataDir=/tmp/zookeeper => dataDir=/usr/local/zoo/data
 # [新增]
@@ -266,7 +266,7 @@ server.3=emon3:2888:3888
 
 ```bash
 # 注意，这里主机名对应的myid编号，是要和zoo.cfg中配置的server.x对应上，否则集群启动报错！
-[emon@emon ~]$ echo 1 > /usr/local/zoo/data/myid
+$ echo 1 > /usr/local/zoo/data/myid
 [emon@emon2 ~]$ echo 2 > /usr/local/zoo/data/myid
 [emon@emon3 ~]$ echo 3 > /usr/local/zoo/data/myid
 ```
@@ -276,7 +276,7 @@ server.3=emon3:2888:3888
 - 启动（端口号2181）
 
 ```bash
-[emon@emon ~]$ zkServer.sh start
+$ zkServer.sh start
 [emon@emon2 ~]$ zkServer.sh start
 [emon@emon3 ~]$ zkServer.sh start
 ```
@@ -284,14 +284,14 @@ server.3=emon3:2888:3888
 - 校验
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 44611 QuorumPeerMain
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ zkServer.sh stop
+$ zkServer.sh stop
 [emon@emon2 ~]$ zkServer.sh stop
 [emon@emon3 ~]$ zkServer.sh stop
 ```
@@ -299,7 +299,7 @@ server.3=emon3:2888:3888
 - 状态
 
 ```bash
-[emon@emon ~]$ zkServer.sh status
+$ zkServer.sh status
 [emon@emon2 ~]$ zkServer.sh status
 [emon@emon3 ~]$ zkServer.sh status
 ```
@@ -315,25 +315,25 @@ server.3=emon3:2888:3888
 下载地址： https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.4/apache-zookeeper-3.6.4-bin.tar.gz --no-check-certificate
+$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.6.4/apache-zookeeper-3.6.4-bin.tar.gz --no-check-certificate
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/ZooKeeper
+$ mkdir /usr/local/ZooKeeper
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/apache-zookeeper-3.6.4-bin.tar.gz -C /usr/local/ZooKeeper/
+$ tar -zxvf /usr/local/src/apache-zookeeper-3.6.4-bin.tar.gz -C /usr/local/ZooKeeper/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.6.4-bin/ /usr/local/zoo
+$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.6.4-bin/ /usr/local/zoo
 ```
 
 5. 配置环境变量
@@ -341,7 +341,7 @@ server.3=emon3:2888:3888
 在`/etc/profile.d`目录创建`zoo.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/zoo.sh
+$ sudo vim /etc/profile.d/zoo.sh
 ```
 
 ```bash
@@ -352,7 +352,7 @@ export PATH=$ZK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 配置文件
@@ -360,13 +360,13 @@ export PATH=$ZK_HOME/bin:$PATH
 - 复制`zoo_sample.cfg`到`zoo.cfg`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
+$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
 ```
 
 - 编辑`zoo.cfg`文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/zoo/conf/zoo.cfg
+$ vim /usr/local/zoo/conf/zoo.cfg
 ```
 
 ```bash
@@ -379,26 +379,26 @@ dataDir=/tmp/zookeeper => dataDir=/usr/local/zoo/data
 - 启动（端口号2181）
 
 ```bash
-[emon@emon ~]$ zkServer.sh start
+$ zkServer.sh start
 ```
 
 - 校验
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 44611 QuorumPeerMain
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ zkServer.sh stop
+$ zkServer.sh stop
 ```
 
 - 状态
 
 ```bash
-[emon@emon ~]$ zkServer.sh status
+$ zkServer.sh status
 ```
 
 8. 连接
@@ -406,13 +406,13 @@ dataDir=/tmp/zookeeper => dataDir=/usr/local/zoo/data
 - 远程链接
 
 ```bash
-[emon@emon ~]$ zkCli.sh -server emon:2181
+$ zkCli.sh -server emon:2181
 ```
 
 - 本地连接
 
 ```bash
-[emon@emon ~]$ zkCli.sh
+$ zkCli.sh
 ```
 
 - 退出（连接成功后，使用命令quit退出）
@@ -464,25 +464,25 @@ dataDir=/tmp/zookeeper => dataDir=/usr/local/zoo/data
 下载地址： https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.5.9/apache-zookeeper-3.5.9-bin.tar.gz --no-check-certificate
+$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/zookeeper/zookeeper-3.5.9/apache-zookeeper-3.5.9-bin.tar.gz --no-check-certificate
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/ZooKeeper
+$ mkdir /usr/local/ZooKeeper
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/apache-zookeeper-3.5.9-bin.tar.gz -C /usr/local/ZooKeeper/
+$ tar -zxvf /usr/local/src/apache-zookeeper-3.5.9-bin.tar.gz -C /usr/local/ZooKeeper/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
+$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
 ```
 
 5. 配置环境变量
@@ -490,7 +490,7 @@ dataDir=/tmp/zookeeper => dataDir=/usr/local/zoo/data
 在`/etc/profile.d`目录创建`zoo.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/zoo.sh
+$ sudo vim /etc/profile.d/zoo.sh
 export ZK_HOME=/usr/local/zoo
 export PATH=$ZK_HOME/bin:$PATH
 ```
@@ -498,7 +498,7 @@ export PATH=$ZK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 配置文件
@@ -506,13 +506,13 @@ export PATH=$ZK_HOME/bin:$PATH
 - 复制`zoo_sample.cfg`到`zoo.cfg`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
+$ cp /usr/local/zoo/conf/zoo_sample.cfg /usr/local/zoo/conf/zoo.cfg
 ```
 
 - 编辑`zoo.cfg`文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/zoo/conf/zoo.cfg
+$ vim /usr/local/zoo/conf/zoo.cfg
 ```
 
 ```bash
@@ -530,8 +530,8 @@ server.3=emon3:2888:3888
 
 ```bash
 # 注意，这里主机名对应的myid编号，是要和zoo.cfg中配置的server.x对应上，否则集群启动报错！
-[emon@emon ~]$ mkdir /usr/local/zoo/data
-[emon@emon ~]$ echo 1 > /usr/local/zoo/data/myid
+$ mkdir /usr/local/zoo/data
+$ echo 1 > /usr/local/zoo/data/myid
 ```
 
 #### 1.4.4、安装其他节点
@@ -540,20 +540,20 @@ server.3=emon3:2888:3888
 
 ```bash
 # 拷贝到emon2
-[emon@emon ~]$ scp -rq /usr/local/ZooKeeper/ emon@emon2:/usr/local
+$ scp -rq /usr/local/ZooKeeper/ emon@emon2:/usr/local
 # 拷贝到emon3
-[emon@emon ~]$ scp -rq /usr/local/ZooKeeper/ emon@emon3:/usr/local
+$ scp -rq /usr/local/ZooKeeper/ emon@emon3:/usr/local
 ```
 
 2. 生成myid
 
 ```bash
 # 在emon2
-[emon@emon ~]$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
-[emon@emon ~]$ echo 2 > /usr/local/zoo/data/myid
+$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
+$ echo 2 > /usr/local/zoo/data/myid
 # 在emon3
-[emon@emon ~]$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
-[emon@emon ~]$ echo 3 > /usr/local/zoo/data/myid
+$ ln -snf /usr/local/ZooKeeper/apache-zookeeper-3.5.9-bin/ /usr/local/zoo
+$ echo 3 > /usr/local/zoo/data/myid
 ```
 
 #### 1.4.5、启动与停止
@@ -561,7 +561,7 @@ server.3=emon3:2888:3888
 - 启动（端口号2181）
 
 ```bash
-[emon@emon ~]$ /usr/local/zoo/bin/zkServer.sh start
+$ /usr/local/zoo/bin/zkServer.sh start
 [emon@emon2 ~]$ /usr/local/zoo/bin/zkServer.sh start
 [emon@emon3 ~]$ /usr/local/zoo/bin/zkServer.sh start
 ```
@@ -569,14 +569,14 @@ server.3=emon3:2888:3888
 - 校验
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 44611 QuorumPeerMain
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/zoo/bin/zkServer.sh stop
+$ /usr/local/zoo/bin/zkServer.sh stop
 [emon@emon2 ~]$ /usr/local/zoo/bin/zkServer.sh stop
 [emon@emon3 ~]$ /usr/local/zoo/bin/zkServer.sh stop
 ```
@@ -585,7 +585,7 @@ server.3=emon3:2888:3888
 
 ```bash
 # 可以查询到节点类型：follower、leader
-[emon@emon ~]$ /usr/local/zoo/bin/zkServer.sh status
+$ /usr/local/zoo/bin/zkServer.sh status
 [emon@emon2 ~]$ /usr/local/zoo/bin/zkServer.sh status
 [emon@emon3 ~]$ /usr/local/zoo/bin/zkServer.sh status
 ```
@@ -606,25 +606,25 @@ server.3=emon3:2888:3888
 下载地址：http://kafka.apache.org/downloads
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://archive.apache.org/dist/kafka/2.8.2/kafka_2.12-2.8.2.tgz
+$ wget -cP /usr/local/src/ https://archive.apache.org/dist/kafka/2.8.2/kafka_2.12-2.8.2.tgz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Kafka
+$ mkdir /usr/local/Kafka
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/kafka_2.12-2.8.2.tgz -C /usr/local/Kafka/
+$ tar -zxvf /usr/local/src/kafka_2.12-2.8.2.tgz -C /usr/local/Kafka/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Kafka/kafka_2.12-2.8.2/ /usr/local/kafka
+$ ln -snf /usr/local/Kafka/kafka_2.12-2.8.2/ /usr/local/kafka
 ```
 
 5. 配置环境变量
@@ -632,7 +632,7 @@ server.3=emon3:2888:3888
 在`/etc/profile.d`目录创建`kafka.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/kafka.sh
+$ sudo vim /etc/profile.d/kafka.sh
 ```
 
 ```bash
@@ -643,14 +643,14 @@ export PATH=$KAFKA_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
 # 非必须，配置日志目录后，会自动创建
-[emon@emon ~]$ mkdir -p /usr/local/kafka/logs
+$ mkdir -p /usr/local/kafka/logs
 ```
 
 7. 配置文件
@@ -658,7 +658,7 @@ export PATH=$KAFKA_HOME/bin:$PATH
 - 编辑`server.properties`配置文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/config/server.properties 
+$ vim /usr/local/kafka/config/server.properties 
 ```
 
 ```bash
@@ -699,7 +699,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 启动脚本
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/kafkaStart.sh
+$ vim /usr/local/kafka/kafkaStart.sh
 ```
 
 ```bash
@@ -710,7 +710,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 停止脚本
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/kafkaStop.sh
+$ vim /usr/local/kafka/kafkaStop.sh
 ```
 
 ```bash
@@ -721,8 +721,8 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 修改可执行权限
 
 ```bash
-[emon@emon ~]$ chmod u+x /usr/local/kafka/kafkaStart.sh 
-[emon@emon ~]$ chmod u+x /usr/local/kafka/kafkaStop.sh 
+$ chmod u+x /usr/local/kafka/kafkaStart.sh 
+$ chmod u+x /usr/local/kafka/kafkaStop.sh 
 ```
 
 9. 启动与停止
@@ -730,20 +730,20 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/kafka/kafkaStart.sh
+$ /usr/local/kafka/kafkaStart.sh
 ```
 
 - 验证
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 66411 Kafka
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/kafka/kafkaStop.sh
+$ /usr/local/kafka/kafkaStop.sh
 ```
 
 10. 创建`topic`
@@ -751,7 +751,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 创建
 
 ```bash
-[emon@emon ~]$ kafka-topics.sh --bootstrap-server emon:9092  --create --partitions 2 --replication-factor 1 --topic test
+$ kafka-topics.sh --bootstrap-server emon:9092  --create --partitions 2 --replication-factor 1 --topic test
 # 命令执行结果
 Created topic test.
 ```
@@ -759,7 +759,7 @@ Created topic test.
 - 查看topic列表
 
 ```bash
-[emon@emon ~]$ kafka-topics.sh --bootstrap-server emon:9092 --list
+$ kafka-topics.sh --bootstrap-server emon:9092 --list
 # 命令执行结果
 test
 ```
@@ -767,7 +767,7 @@ test
 - 查看单个topic详情
 
 ```bash
-[emon@emon ~]$ kafka-topics.sh --bootstrap-server emon:9092 --describe --topic test
+$ kafka-topics.sh --bootstrap-server emon:9092 --describe --topic test
 # 命令执行结果
 Topic: test	PartitionCount: 2	ReplicationFactor: 1	Configs: segment.bytes=1073741824
 	Topic: test	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
@@ -780,20 +780,20 @@ Topic: test	PartitionCount: 2	ReplicationFactor: 1	Configs: segment.bytes=107374
 
 ```bash
 # 打开生产者命令行模式
-[emon@emon ~]$ kafka-console-producer.sh --bootstrap-server emon:9092 --topic test
+$ kafka-console-producer.sh --bootstrap-server emon:9092 --topic test
 ```
 
 - 消费者
 
 ```bash
 # 打开消费者命令模式
-[emon@emon ~]$ kafka-console-consumer.sh --bootstrap-server emon:9092 --topic test --from-beginning
+$ kafka-console-consumer.sh --bootstrap-server emon:9092 --topic test --from-beginning
 ```
 
 - 查看topic的偏移量
 
 ```bash
-[emon@emon ~]$ kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list emon:9092 --topic test
+$ kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list emon:9092 --topic test
 # 命令执行结果
 test:0:0
 test:1:0
@@ -826,25 +826,25 @@ test:1:0
 下载地址：http://kafka.apache.org/downloads
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://archive.apache.org/dist/kafka/2.5.1/kafka_2.12-2.5.1.tgz
+$ wget -cP /usr/local/src/ https://archive.apache.org/dist/kafka/2.5.1/kafka_2.12-2.5.1.tgz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Kafka
+$ mkdir /usr/local/Kafka
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/kafka_2.12-2.5.1.tgz -C /usr/local/Kafka/
+$ tar -zxvf /usr/local/src/kafka_2.12-2.5.1.tgz -C /usr/local/Kafka/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
+$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
 ```
 
 5. 配置环境变量
@@ -852,7 +852,7 @@ test:1:0
 在`/etc/profile.d`目录创建`kafka.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/kafka.sh
+$ sudo vim /etc/profile.d/kafka.sh
 export KAFKA_HOME=/usr/local/kafka
 export PATH=$KAFKA_HOME/bin:$PATH
 ```
@@ -860,14 +860,14 @@ export PATH=$KAFKA_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
 # 非必须，配置日志目录后，会自动创建
-[emon@emon ~]$ mkdir -p /usr/local/kafka/logs
+$ mkdir -p /usr/local/kafka/logs
 ```
 
 7. 配置文件
@@ -875,7 +875,7 @@ export PATH=$KAFKA_HOME/bin:$PATH
 - 编辑`server.properties`配置文件
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/config/server.properties 
+$ vim /usr/local/kafka/config/server.properties 
 ```
 
 ```bash
@@ -892,7 +892,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 启动脚本
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/kafkaStart.sh
+$ vim /usr/local/kafka/kafkaStart.sh
 ```
 
 ```bash
@@ -903,7 +903,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 停止脚本
 
 ```bash
-[emon@emon ~]$ vim /usr/local/kafka/kafkaStop.sh
+$ vim /usr/local/kafka/kafkaStop.sh
 ```
 
 ```bash
@@ -914,8 +914,8 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 修改可执行权限
 
 ```bash
-[emon@emon ~]$ chmod u+x /usr/local/kafka/kafkaStart.sh 
-[emon@emon ~]$ chmod u+x /usr/local/kafka/kafkaStop.sh 
+$ chmod u+x /usr/local/kafka/kafkaStart.sh 
+$ chmod u+x /usr/local/kafka/kafkaStop.sh 
 ```
 
 #### 2.2.3、安装其他节点
@@ -924,23 +924,23 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 
 ```bash
 # 拷贝到emon2
-[emon@emon ~]$ scp -rq /usr/local/Kafka/ emon@emon2:/usr/local/
+$ scp -rq /usr/local/Kafka/ emon@emon2:/usr/local/
 # 拷贝到emon3
-[emon@emon ~]$ scp -rq /usr/local/Kafka/ emon@emon3:/usr/local/
+$ scp -rq /usr/local/Kafka/ emon@emon3:/usr/local/
 ```
 
 2. 生成`broker.id`
 
 ```bash
 # 在emon2
-[emon@emon ~]$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
+$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
 # 查看替换效果
 [emon@emon2 ~]$ sed -n 's/broker.id=0/broker.id=1/p' /usr/local/kafka/config/server.properties 
 # 替换
 [emon@emon2 ~]$ sed -i 's/broker.id=0/broker.id=1/' /usr/local/kafka/config/server.properties 
 
 # 在emon3
-[emon@emon ~]$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
+$ ln -snf /usr/local/Kafka/kafka_2.12-2.5.1/ /usr/local/kafka
 # 查看替换效果
 [emon@emon2 ~]$ sed -n 's/broker.id=0/broker.id=2/p' /usr/local/kafka/config/server.properties 
 # 替换
@@ -952,7 +952,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/kafka/kafkaStart.sh 
+$ /usr/local/kafka/kafkaStart.sh 
 [emon@emon2 ~]$ /usr/local/kafka/kafkaStart.sh 
 [emon@emon3 ~]$ /usr/local/kafka/kafkaStart.sh 
 ```
@@ -960,14 +960,14 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 - 校验
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 66411 Kafka
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/kafka/kafkaStop.sh
+$ /usr/local/kafka/kafkaStop.sh
 [emon@emon2 ~]$ /usr/local/kafka/kafkaStop.sh
 [emon@emon3 ~]$ /usr/local/kafka/kafkaStop.sh
 ```
@@ -979,7 +979,7 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 1. 请确保JDK8或者JDK11已安装
 
 ```bash
-[emon@emon ~]$ java -version
+$ java -version
 ```
 
 2. 下载
@@ -993,31 +993,31 @@ zookeeper.connect=localhost:2181=>zookeeper.connect=emon:2181
 这里下载2.12.10经典版
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://downloads.lightbend.com/scala/2.12.10/scala-2.12.10.tgz
+$ wget -cP /usr/local/src/ https://downloads.lightbend.com/scala/2.12.10/scala-2.12.10.tgz
 ```
 
 3. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Scala
+$ mkdir /usr/local/Scala
 ```
 
 4. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/scala-2.12.10.tgz -C /usr/local/Scala/
+$ tar -zxvf /usr/local/src/scala-2.12.10.tgz -C /usr/local/Scala/
 ```
 
 5. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Scala/scala-2.12.10/ /usr/local/scala
+$ ln -snf /usr/local/Scala/scala-2.12.10/ /usr/local/scala
 ```
 
 6. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/scala.sh
+$ sudo vim /etc/profile.d/scala.sh
 export SCALA_HOME=/usr/local/scala
 export PATH=$SCALA_HOME/bin:$PATH
 ```
@@ -1025,15 +1025,15 @@ export PATH=$SCALA_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 7. 校验
 
 ```bash
-[emon@emon ~]$ scala -version
+$ scala -version
 Scala code runner version 2.12.10 -- Copyright 2002-2019, LAMP/EPFL and Lightbend, Inc.
-[emon@emon ~]$ scala
+$ scala
 Welcome to Scala 2.12.10 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_251).
 Type in expressions for evaluation. Or try :help.
 
@@ -1065,13 +1065,13 @@ scala> :quit
 各个版本：https://archive.apache.org/dist/spark/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/spark/spark-3.0.3/spark-3.0.3.tgz --no-check-certificate
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/spark/spark-3.0.3/spark-3.0.3.tgz --no-check-certificate
 ```
 
 2. 解压
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/spark-3.0.3.tgz -C /usr/local/src/
+$ tar -zxvf /usr/local/src/spark-3.0.3.tgz -C /usr/local/src/
 ```
 
 3. 编译
@@ -1091,7 +1091,7 @@ scala> :quit
 - 切换目录
 
 ```bash
-[emon@emon ~]$ cd /usr/local/src/spark-3.0.3/
+$ cd /usr/local/src/spark-3.0.3/
 ```
 
 - 编辑`pom.xml`内容
@@ -1178,7 +1178,7 @@ https://github.com/apache/spark/pull/16884/files
 [emon@emon spark-3.0.3]$ mv spark-3.0.3-bin-2.6.0-cdh5.16.2.tgz /usr/local/src/
 [emon@emon spark-3.0.3]$ cd
 # 清理编译环境
-[emon@emon ~]$ rm -rf /usr/local/src/spark-3.0.3
+$ rm -rf /usr/local/src/spark-3.0.3
 ```
 
 #### 4.1.2、安装
@@ -1186,19 +1186,19 @@ https://github.com/apache/spark/pull/16884/files
 1. 创建解压目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Spark
+$ mkdir /usr/local/Spark
 ```
 
 2. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/spark-3.0.3-bin-2.6.0-cdh5.16.2.tgz -C /usr/local/Spark/
+$ tar -zxvf /usr/local/src/spark-3.0.3-bin-2.6.0-cdh5.16.2.tgz -C /usr/local/Spark/
 ```
 
 3. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Spark/spark-3.0.3-bin-2.6.0-cdh5.16.2/ /usr/local/spark
+$ ln -snf /usr/local/Spark/spark-3.0.3-bin-2.6.0-cdh5.16.2/ /usr/local/spark
 ```
 
 4. 配置环境变量
@@ -1206,7 +1206,7 @@ https://github.com/apache/spark/pull/16884/files
 在`/etc/profile.d`目录创建`spark.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/spark.sh
+$ sudo vim /etc/profile.d/spark.sh
 export SPARK_HOME=/usr/local/spark
 export PATH=$SPARK_HOME/bin:$PATH
 ```
@@ -1214,7 +1214,7 @@ export PATH=$SPARK_HOME/bin:$PATH
 使之生效：
 
 ```
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 4.1.3、YARN模式
@@ -1224,8 +1224,8 @@ export PATH=$SPARK_HOME/bin:$PATH
 - `spark-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
-[emon@emon ~]$ vim /usr/local/spark/conf/spark-env.sh
+$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
+$ vim /usr/local/spark/conf/spark-env.sh
 # [新增]
 export JAVA_HOME=${JAVA_HOME}
 # [新增]
@@ -1240,7 +1240,7 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 - 样例测试：基于yarn执行样例测试
 
 ```bash
-[emon@emon ~]$ spark-submit --class org.apache.spark.examples.SparkPi --master yarn --deploy-mode cluster /usr/local/spark/examples/jars/spark-examples*.jar 2
+$ spark-submit --class org.apache.spark.examples.SparkPi --master yarn --deploy-mode cluster /usr/local/spark/examples/jars/spark-examples*.jar 2
 ```
 
 自定义测试
@@ -1264,7 +1264,7 @@ nc -lk 9527
 - 执行
 
 ```bash
-[emon@emon ~]$ spark-submit --class com.coding.bigdata.ss.NetworkWordCountApp --master yarn /usr/local/spark/custom/lib/spark-ss-1.0-SNAPSHOT.jar 2
+$ spark-submit --class com.coding.bigdata.ss.NetworkWordCountApp --master yarn /usr/local/spark/custom/lib/spark-ss-1.0-SNAPSHOT.jar 2
 ```
 
 - 在nc窗口输入内容，比如： a,a,a,b,b,c 之后回车，可以在执行窗口看到输出的统计结果。
@@ -1282,13 +1282,13 @@ nc -lk 9527
 各个版本：https://archive.apache.org/dist/spark/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://archive.apache.org/dist/spark/spark-2.4.8/spark-2.4.8.tgz --no-check-certificate
+$ wget -cP /usr/local/src/ https://archive.apache.org/dist/spark/spark-2.4.8/spark-2.4.8.tgz --no-check-certificate
 ```
 
 2. 解压
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/spark-2.4.8.tgz -C /usr/local/src/
+$ tar -zxvf /usr/local/src/spark-2.4.8.tgz -C /usr/local/src/
 ```
 
 3. 编译
@@ -1308,7 +1308,7 @@ nc -lk 9527
 - 切换目录
 
 ```bash
-[emon@emon ~]$ cd /usr/local/src/spark-2.4.8
+$ cd /usr/local/src/spark-2.4.8
 ```
 
 - 编译之前查看
@@ -1406,7 +1406,7 @@ java.lang.IllegalArgumentException: Unrecognized Hadoop major version number: 3.
 [emon@emon spark-2.4.8]$ mv spark-2.4.8-bin-hadoop3.3.1.tgz /usr/local/src/
 [emon@emon spark-2.4.8]$ cd
 # 清理编译环境
-[emon@emon ~]$ rm -rf /usr/local/src/spark-2.4.8
+$ rm -rf /usr/local/src/spark-2.4.8
 ```
 
 #### 4.2.2、安装
@@ -1414,19 +1414,19 @@ java.lang.IllegalArgumentException: Unrecognized Hadoop major version number: 3.
 1. 创建解压目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Spark
+$ mkdir /usr/local/Spark
 ```
 
 2. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/spark-2.4.8-bin-hadoop3.3.1.tgz -C /usr/local/Spark/
+$ tar -zxvf /usr/local/src/spark-2.4.8-bin-hadoop3.3.1.tgz -C /usr/local/Spark/
 ```
 
 3. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ /usr/local/spark
+$ ln -snf /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ /usr/local/spark
 ```
 
 4. 配置环境变量
@@ -1434,7 +1434,7 @@ java.lang.IllegalArgumentException: Unrecognized Hadoop major version number: 3.
 在`/etc/profile.d`目录创建`spark.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/spark.sh
+$ sudo vim /etc/profile.d/spark.sh
 export SPARK_HOME=/usr/local/spark
 export PATH=$SPARK_HOME/bin:$PATH
 ```
@@ -1442,7 +1442,7 @@ export PATH=$SPARK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 4.2.2、Yarn模式
@@ -1452,8 +1452,8 @@ export PATH=$SPARK_HOME/bin:$PATH
 - `spark-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
-[emon@emon ~]$ vim /usr/local/spark/conf/spark-env.sh
+$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
+$ vim /usr/local/spark/conf/spark-env.sh
 ```
 
 ```properties
@@ -1471,7 +1471,7 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 - 样例测试：基于yarn执行样例测试
 
 ```bash
-[emon@emon ~]$ spark-submit --class org.apache.spark.examples.SparkPi --master yarn --deploy-mode cluster /usr/local/spark/examples/jars/spark-examples*.jar 2
+$ spark-submit --class org.apache.spark.examples.SparkPi --master yarn --deploy-mode cluster /usr/local/spark/examples/jars/spark-examples*.jar 2
 ```
 
 #### 4.2.3、Standalone独立集群模式
@@ -1483,8 +1483,8 @@ export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 - `spark-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
-[emon@emon ~]$ vim /usr/local/spark/conf/spark-env.sh
+$ cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
+$ vim /usr/local/spark/conf/spark-env.sh
 ```
 
 ```properties
@@ -1497,8 +1497,8 @@ export SPARK_MASTER_HOST=emon
 2. `slaves`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/slaves.template /usr/local/spark/conf/slaves
-[emon@emon ~]$ vim /usr/local/spark/conf/slaves
+$ cp /usr/local/spark/conf/slaves.template /usr/local/spark/conf/slaves
+$ vim /usr/local/spark/conf/slaves
 ```
 
 ```bash
@@ -1519,8 +1519,8 @@ emon3
 - 拷贝到emon2和emon3安装目录
 
 ```bash
-[emon@emon ~]$ scp -rq /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ emon@emon2:/usr/local/Spark/
-[emon@emon ~]$ scp -rq /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ emon@emon3:/usr/local/Spark/
+$ scp -rq /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ emon@emon2:/usr/local/Spark/
+$ scp -rq /usr/local/Spark/spark-2.4.8-bin-hadoop3.3.1/ emon@emon3:/usr/local/Spark/
 ```
 
 - 配置emon2和emon3上软连接
@@ -1533,13 +1533,13 @@ emon3
 4. 在主节点启动Spark集群
 
 ```bash
-[emon@emon ~]$ /usr/local/spark/sbin/start-all.sh 
+$ /usr/local/spark/sbin/start-all.sh 
 ```
 
 - 验证1
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 124560 Master
 [emon@emon2 ~]$ jps
 12824 Worker
@@ -1556,7 +1556,7 @@ emon3
 - 验证3：基于spark执行样例测试
 
 ```bash
-[emon@emon ~]$ spark-submit --class org.apache.spark.examples.SparkPi --master spark://emon:7077 /usr/local/spark/examples/jars/spark-examples*.jar 2
+$ spark-submit --class org.apache.spark.examples.SparkPi --master spark://emon:7077 /usr/local/spark/examples/jars/spark-examples*.jar 2
 ```
 
 
@@ -1598,13 +1598,13 @@ https://archive.cloudera.com/cdh5/cdh/5/  （已无法下载）
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Hadoop
+$ mkdir /usr/local/Hadoop
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -xzvf /usr/local/src/hadoop-2.6.0-cdh5.16.2.tar.gz -C /usr/local/Hadoop/
+$ tar -xzvf /usr/local/src/hadoop-2.6.0-cdh5.16.2.tar.gz -C /usr/local/Hadoop/
 ```
 
 - hadoop软件包常见目录说明
@@ -1620,13 +1620,13 @@ https://archive.cloudera.com/cdh5/cdh/5/  （已无法下载）
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Hadoop/hadoop-2.6.0-cdh5.16.2/ /usr/local/hadoop
+$ ln -snf /usr/local/Hadoop/hadoop-2.6.0-cdh5.16.2/ /usr/local/hadoop
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/hadoop.sh
+$ sudo vim /etc/profile.d/hadoop.sh
 export HADOOP_HOME=/usr/local/hadoop
 export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 ```
@@ -1634,7 +1634,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 使之生效：
 
 ```
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 5.1.2、配置
@@ -1644,7 +1644,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 - 确保JAVA_HOME指定到JDK8，查看配置
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
+$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
 ```
 
 可以看到`export JAVA_HOME=${JAVA_HOME}`，所以，如果JAVA_HOME环境变量是正确的即可。
@@ -1653,7 +1653,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 
 ```bash
 # 在打开的文件中<configuration>节点内添加属性
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
 ```
 
 ```xml
@@ -1669,7 +1669,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 
 ```bash
 # 修改副本数量
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
 ```
 
 ```xml
@@ -1688,7 +1688,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 - 修改从节点
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/slaves 
+$ vim /usr/local/hadoop/etc/hadoop/slaves 
 ```
 
 ```bash
@@ -1703,7 +1703,7 @@ emon
 - 格式化HDFS文件系统：第一次执行的时候一定要格式化文件系统，不要重复执行。
 
 ```bash
-[emon@emon ~]$ hdfs namenode -format
+$ hdfs namenode -format
 ```
 
 ```bash
@@ -1750,7 +1750,7 @@ SHUTDOWN_MSG: Shutting down NameNode at emon/192.168.1.116
 - 启动HDFS
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/start-dfs.sh 
+$ /usr/local/hadoop/sbin/start-dfs.sh 
 ```
 
 ```bash
@@ -1780,7 +1780,7 @@ Starting secondary namenodes [0.0.0.0]
 **注意**：确保防火墙停止，或者50070端口是放开的！
 
 ```bash
-[emon@emon ~]$ sudo firewall-cmd --state
+$ sudo firewall-cmd --state
 not running
 ```
 
@@ -1790,13 +1790,13 @@ not running
 
 ```bash
 # 执行一个PI求解的任务
-[emon@emon ~]$ hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0-cdh5.16.2.jar pi 2 3
+$ hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0-cdh5.16.2.jar pi 2 3
 ```
 
 3. 停止HDFS
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/stop-dfs.sh
+$ /usr/local/hadoop/sbin/stop-dfs.sh
 ```
 
 4. 另外一种启动方式
@@ -1818,11 +1818,11 @@ not running
 > ​					hadoop-daemons.sh stop secondarynamenode
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/hadoop-daemon.sh start namenode
-[emon@emon ~]$ /usr/local/hadoop/sbin/hadoop-daemon.sh start datanode
+$ /usr/local/hadoop/sbin/hadoop-daemon.sh start namenode
+$ /usr/local/hadoop/sbin/hadoop-daemon.sh start datanode
 
-[emon@emon ~]$ /usr/local/hadoop/sbin/hadoop-daemon.sh stop datanode
-[emon@emon ~]$ /usr/local/hadoop/sbin/hadoop-daemon.sh stop namenode
+$ /usr/local/hadoop/sbin/hadoop-daemon.sh stop datanode
+$ /usr/local/hadoop/sbin/hadoop-daemon.sh stop namenode
 ```
 
 ##### 2.YARN配置
@@ -1832,8 +1832,8 @@ not running
 - 配置`mapred-site.xml`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
 ```
 
 ```xml
@@ -1848,7 +1848,7 @@ not running
 - 配置`yarn-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
 ```
 
 ```xml
@@ -1872,7 +1872,7 @@ not running
 - 启动YARN
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/start-yarn.sh 
+$ /usr/local/hadoop/sbin/start-yarn.sh 
 ```
 
 ```bash
@@ -1902,7 +1902,7 @@ emon: starting nodemanager, logging to /usr/local/Hadoop/hadoop-2.6.0-cdh5.16.2/
 3. 停止YARN
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/stop-yarn.sh 
+$ /usr/local/hadoop/sbin/stop-yarn.sh 
 ```
 
 4. 另外一种方式
@@ -1952,7 +1952,7 @@ emon: starting nodemanager, logging to /usr/local/Hadoop/hadoop-2.6.0-cdh5.16.2/
 - hostname配置情况
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/hosts
+$ sudo vim /etc/hosts
 192.168.1.116 emon
 192.168.1.117 emon2
 192.168.1.118 emon3
@@ -1981,13 +1981,13 @@ emon: starting nodemanager, logging to /usr/local/Hadoop/hadoop-2.6.0-cdh5.16.2/
 - 检查SSH keys是否存在：（每一台服务器都需要做）
 
 ```bash
-[emon@emon ~]$ ls -a ~/.ssh
+$ ls -a ~/.ssh
 ```
 
 - 如果不存在，生成SSH keys：（每一台服务器都需要做）
 
 ```bash
-[emon@emon ~]$ ssh-keygen -t rsa -b 4096 -C "[邮箱]"
+$ ssh-keygen -t rsa -b 4096 -C "[邮箱]"
 Generating public/private rsa key pair.
 Enter file in which to save the key (/home/emon/.ssh/id_rsa):`[默认]` 
 Created directory '/home/emon/.ssh'.
@@ -2014,17 +2014,17 @@ The key's randomart image is:
 - 拷贝emon服务器公钥到其他服务器：（仅emon服务器需要做）
 
 ```bash
-[emon@emon ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon
-[emon@emon ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon2
-[emon@emon ~]$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon3
+$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon
+$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon2
+$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon3
 ```
 
 - 验证从emon服务器登录到emon、emon2、emon3免密登录
 
 ```bash
-[emon@emon ~]$ ssh emon
-[emon@emon ~]$ ssh emon2
-[emon@emon ~]$ ssh emon3
+$ ssh emon
+$ ssh emon2
+$ ssh emon3
 ```
 
 ##### 2.集群内时间同步服务
@@ -2036,13 +2036,13 @@ The key's randomart image is:
 - 检查是否已安装
 
 ```bash
-[emon@emon ~]$ yum list ntp
+$ yum list ntp
 ```
 
 - 如果未安装，则安装
 
 ```bash
-[emon@emon ~]$ sudo yum install -y ntp
+$ sudo yum install -y ntp
 ```
 
 2. 配置服务端
@@ -2052,7 +2052,7 @@ The key's randomart image is:
 - 配置`ntp.conf`
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/ntp.conf 
+$ sudo vim /etc/ntp.conf 
 ```
 
 ```bash
@@ -2079,7 +2079,7 @@ fudge 127.0.0.1 stratum 10
 - 同步时间
 
 ```bash
-[emon@emon ~]$ sudo ntpdate -u ntp1.aliyun.com
+$ sudo ntpdate -u ntp1.aliyun.com
 # 命令行输出信息
 20 Jan 13:56:45 ntpdate[119191]: adjust time server 120.25.115.20 offset 0.003865 sec
 ```
@@ -2087,27 +2087,27 @@ fudge 127.0.0.1 stratum 10
 - 开启ntp服务
 
 ```bash
-[emon@emon ~]$ sudo systemctl start ntpd
+$ sudo systemctl start ntpd
 ```
 
 - 查看服务状态
 
 ```bash
-[emon@emon ~]$ sudo systemctl status ntpd
+$ sudo systemctl status ntpd
 ```
 
 - 关闭服务命令
 
 ```bash
-[emon@emon ~]$ sudo systemctl stop ntpd
+$ sudo systemctl stop ntpd
 ```
 
 - 设置为开机自动启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl enable ntpd
+$ sudo systemctl enable ntpd
 # 校验设置结果
-[emon@emon ~]$ sudo systemctl is-enabled ntpd
+$ sudo systemctl is-enabled ntpd
 # 命令行输出信息，enabled表示已经设置开机自启成功
 enabled
 ```
@@ -2115,7 +2115,7 @@ enabled
 - 查看状态
 
 ```bash
-[emon@emon ~]$ ntpstat
+$ ntpstat
 # 命令行输出信息
 synchronised to NTP server (120.25.115.20) at stratum 3
    time correct to within 27 ms
@@ -2133,7 +2133,7 @@ unsynchronised
 - 配置`ntp.conf`
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/ntp.conf 
+$ sudo vim /etc/ntp.conf 
 ```
 
 ```bash
@@ -2150,13 +2150,13 @@ server emon
 - 开启ntp服务
 
 ```bash
-[emon@emon ~]$ sudo systemctl start ntpd
+$ sudo systemctl start ntpd
 ```
 
 - 设置为开机自动启动
 
 ```bash
-[emon@emon ~]$ sudo systemctl enable ntpd
+$ sudo systemctl enable ntpd
 ```
 
 - 查看状态
@@ -2182,7 +2182,7 @@ server emon
 确保JAVA_HOME指定到JDK8，查看配置
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
+$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
 ```
 
 可以看到`export JAVA_HOME=${JAVA_HOME}`，所以，如果JAVA_HOME环境变量是正确的即可。
@@ -2191,7 +2191,7 @@ server emon
 
 ```bash
 # 在打开的文件中<configuration>节点内添加属性
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
 ```
 
 ```xml
@@ -2207,7 +2207,7 @@ server emon
 
 ```bash
 # 修改副本数量，由于默认副本系统是3，也可以不用修改了
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
 ```
 
 ```xml
@@ -2228,8 +2228,8 @@ server emon
 - 配置`mapred-site.xml`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
 ```
 
 ```xml
@@ -2244,7 +2244,7 @@ server emon
 - 配置`yarn-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
 ```
 
 ```xml
@@ -2272,7 +2272,7 @@ server emon
 - `slaves`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/slaves 
+$ vim /usr/local/hadoop/etc/hadoop/slaves 
 ```
 
 ```bash
@@ -2293,9 +2293,9 @@ emon3
 - 格式化HDFS文件系统：第一次执行的时候一定要格式化文件系统，不要重复执行。
 
 ```bash
-[emon@emon ~]$ hdfs namenode -format
+$ hdfs namenode -format
 # 或者
-[emon@emon ~]$ hadoop namenode -format
+$ hadoop namenode -format
 ```
 
 ```bash
@@ -2349,22 +2349,22 @@ SHUTDOWN_MSG: Shutting down NameNode at emon/192.168.1.116
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/start-dfs.sh 
+$ /usr/local/hadoop/sbin/start-dfs.sh 
 ```
 
 - 验证1
 
 ```bash
 # jps查看进程
-[emon@emon ~]$ jps
+$ jps
 14707 Jps
 13909 NameNode
 14232 DataNode
 14589 SecondaryNameNode
 # 查看hdfs路径
-[emon@emon ~]$ hadoop fs -ls  /
+$ hadoop fs -ls  /
 # 上传文件
-[emon@emon ~]$ hadoop fs -put /usr/local/hadoop/README.txt /
+$ hadoop fs -put /usr/local/hadoop/README.txt /
 ```
 
 **说明：**执行上传文件时如果报错：
@@ -2381,7 +2381,7 @@ http://repo.emon.vip:50070
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/stop-dfs.sh 
+$ /usr/local/hadoop/sbin/stop-dfs.sh 
 ```
 
 
@@ -2389,7 +2389,7 @@ http://repo.emon.vip:50070
 ##### 3.启动YARN与停止
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/start-yarn.sh
+$ /usr/local/hadoop/sbin/start-yarn.sh
 ```
 
 - 验证1
@@ -2412,13 +2412,13 @@ http://repo.emon.vip:8088
 
 ```bash
 # 执行一个PI求解的任务
-[emon@emon ~]$ hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0-cdh5.16.2.jar pi 2 3
+$ hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.6.0-cdh5.16.2.jar pi 2 3
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/hadoop/sbin/stop-yarn.sh
+$ /usr/local/hadoop/sbin/stop-yarn.sh
 ```
 
 ##### 4.启动停止顺序
@@ -2454,19 +2454,19 @@ http://repo.emon.vip:8088
 历史发行版下载页面：https://archive.apache.org/dist/hadoop/common/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://archive.apache.org/dist/hadoop/common/hadoop-3.3.1/hadoop-3.3.1.tar.gz
+$ wget -cP /usr/local/src/ https://archive.apache.org/dist/hadoop/common/hadoop-3.3.1/hadoop-3.3.1.tar.gz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Hadoop
+$ mkdir /usr/local/Hadoop
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/hadoop-3.3.1.tar.gz -C /usr/local/Hadoop/
+$ tar -zxvf /usr/local/src/hadoop-3.3.1.tar.gz -C /usr/local/Hadoop/
 ```
 
 - hadoop软件包常见目录说明
@@ -2486,13 +2486,13 @@ http://repo.emon.vip:8088
 
 ```bash
 # 注意：如果ln -s命令，在软连接存在时会导致软连接路径下产生一个无效软连接；-snf会移除旧的
-[emon@emon ~]$ ln -snf /usr/local/Hadoop/hadoop-3.3.1/ /usr/local/hadoop
+$ ln -snf /usr/local/Hadoop/hadoop-3.3.1/ /usr/local/hadoop
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/hadoop.sh
+$ sudo vim /etc/profile.d/hadoop.sh
 export HADOOP_HOME=/usr/local/hadoop
 export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 ```
@@ -2500,7 +2500,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 5.3.2、配置
@@ -2510,7 +2510,7 @@ export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH
 - 配置`hadoop-env.sh`
 
 ```
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
+$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
 ```
 
 ```bash
@@ -2524,7 +2524,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 
 ```bash
 # 在打开的文件中<configuration>节点内添加属性
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
 ```
 
 ```xml
@@ -2544,7 +2544,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 
 ```bash
 # 修改副本数量
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
 ```
 
 ```xml
@@ -2563,7 +2563,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - 配置`mapred-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
 ```
 
 ```xml
@@ -2578,7 +2578,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - 配置`yarn-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
 ```
 
 ```xml
@@ -2602,7 +2602,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - `workers`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/workers 
+$ vim /usr/local/hadoop/etc/hadoop/workers 
 ```
 
 ```bash
@@ -2617,7 +2617,7 @@ emon
 - 格式化HDFS文件系统：第一次执行的时候一定要格式化文件系统，不要重复执行。
 
 ```bash
-[emon@emon ~]$ hdfs namenode -format
+$ hdfs namenode -format
 ```
 
 ```bash
@@ -2665,7 +2665,7 @@ SHUTDOWN_MSG: Shutting down NameNode at emon/10.0.0.116
 - 启动
 
 ```bash
-[emon@emon ~]$ start-all.sh 
+$ start-all.sh 
 # 命令行输出信息
 WARNING: Attempting to start all Apache Hadoop daemons as emon in 10 seconds.
 WARNING: This is not a recommended production deployment configuration.
@@ -2680,7 +2680,7 @@ Starting nodemanagers
 - 停止
 
 ```bash
-[emon@emon ~]$ stop-all.sh 
+$ stop-all.sh 
 WARNING: Stopping all Apache Hadoop daemons as emon in 10 seconds.
 WARNING: Use CTRL-C to abort.
 Stopping namenodes on [emon]
@@ -2693,7 +2693,7 @@ Stopping resourcemanager
 - 验证
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 # 命令行输出信息
 115706 NameNode
 116051 DataNode
@@ -2708,7 +2708,7 @@ Stopping resourcemanager
 **注意**：确保防火墙停止，或者9870端口是放开的！
 
 ```bash
-[emon@emon ~]$ sudo firewall-cmd --state
+$ sudo firewall-cmd --state
 not running
 ```
 
@@ -2721,7 +2721,7 @@ not running
 **注意**：确保防火墙停止，或者8088端口是放开的！
 
 ```bash
-[emon@emon ~]$ sudo firewall-cmd --state
+$ sudo firewall-cmd --state
 not running
 ```
 
@@ -2775,7 +2775,7 @@ not running
 - 配置`hadoop-env.sh`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
+$ vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh 
 ```
 
 ```bash
@@ -2789,7 +2789,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 
 ```bash
 # 在打开的文件中<configuration>节点内添加属性
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
 ```
 
 ```xml
@@ -2809,7 +2809,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 
 ```bash
 # 修改副本数量
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/hdfs-site.xml 
 ```
 
 ```xml
@@ -2832,7 +2832,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - 配置`mapred-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
+$ vim /usr/local/hadoop/etc/hadoop/mapred-site.xml
 ```
 
 ```xml
@@ -2847,7 +2847,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - 配置`yarn-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/yarn-site.xml 
 ```
 
 ```xml
@@ -2875,7 +2875,7 @@ export HADOOP_LOG_DIR=${HADOOP_HOME}/logs
 - `workers`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/workers 
+$ vim /usr/local/hadoop/etc/hadoop/workers 
 ```
 
 ```bash
@@ -2889,13 +2889,13 @@ emon3
 - 拷贝到emon2
 
 ```bash
-[emon@emon ~]$ scp -rq /usr/local/Hadoop/hadoop-3.3.1 emon@emon2:/usr/local/Hadoop/
+$ scp -rq /usr/local/Hadoop/hadoop-3.3.1 emon@emon2:/usr/local/Hadoop/
 ```
 
 - 拷贝到emon3
 
 ```bash
-[emon@emon ~]$ scp -rq /usr/local/Hadoop/hadoop-3.3.1 emon@emon3:/usr/local/Hadoop/
+$ scp -rq /usr/local/Hadoop/hadoop-3.3.1 emon@emon3:/usr/local/Hadoop/
 ```
 
 - 配置emon2和emon3服务器上Hadoop环境
@@ -2911,7 +2911,7 @@ emon3
 - 格式化HDFS文件系统：第一次执行的时候一定要格式化文件系统，不要重复执行。
 
 ```bash
-[emon@emon ~]$ hdfs namenode -format
+$ hdfs namenode -format
 ```
 
 ```bash
@@ -2959,7 +2959,7 @@ SHUTDOWN_MSG: Shutting down NameNode at emon/10.0.0.116
 - 启动
 
 ```bash
-[emon@emon ~]$ start-all.sh 
+$ start-all.sh 
 # 命令行输出信息
 WARNING: Attempting to start all Apache Hadoop daemons as emon in 10 seconds.
 WARNING: This is not a recommended production deployment configuration.
@@ -2976,7 +2976,7 @@ Starting nodemanagers
 - 停止
 
 ```bash
-[emon@emon ~]$ stop-all.sh 
+$ stop-all.sh 
 WARNING: Stopping all Apache Hadoop daemons as emon in 10 seconds.
 WARNING: Use CTRL-C to abort.
 Stopping namenodes on [emon]
@@ -2990,7 +2990,7 @@ Stopping resourcemanager
 
 ```bash
 # emon服务器上
-[emon@emon ~]$ jps
+$ jps
 # 命令行输出信息
 115706 NameNode
 116438 SecondaryNameNode
@@ -3013,7 +3013,7 @@ Stopping resourcemanager
 **注意**：确保防火墙停止，或者9870端口是放开的！
 
 ```bash
-[emon@emon ~]$ sudo firewall-cmd --state
+$ sudo firewall-cmd --state
 not running
 ```
 
@@ -3026,7 +3026,7 @@ not running
 **注意**：确保防火墙停止，或者8088端口是放开的！
 
 ```bash
-[emon@emon ~]$ sudo firewall-cmd --state
+$ sudo firewall-cmd --state
 not running
 ```
 
@@ -3055,7 +3055,7 @@ hdfs不适合小文件存储。
 **备注**：如果`/usr/local/hadoop/etc/hadoop/slaves`配置了主机名，但主机名在`/etc/hosts`定义为`127.0.0.1  emon`会有本地可以查看文件内容，但JavaAPI无法执行open出hdfs文件内容的问题；但如果主机名要配置为`192.168.1.116    emon`这样时，在公司和家里切换麻烦，写了如下切换的脚本。
 
 ```bash
-[emon@emon ~]$ vim bin/switchHadoopIP.sh 
+$ vim bin/switchHadoopIP.sh 
 ```
 
 ```bash
@@ -3114,13 +3114,13 @@ echo -e "\e[1;32m 成功启动Hadoop HDFS，对应环境 " $ENV_NAME"("$ENV_VALU
 - 切换到house环境
 
 ```bash
-[emon@emon ~]$ ~/bin/switchHadoopIP.sh house
+$ ~/bin/switchHadoopIP.sh house
 ```
 
 - 切换到company环境
 
 ```bash
-[emon@emon ~]$ ~/bin/switchHadoopIP.sh company
+$ ~/bin/switchHadoopIP.sh company
 ```
 
 ### 5.9、Hadoop学习碰到的问题
@@ -3204,25 +3204,25 @@ https://archive.cloudera.com/cdh5/cdh/5/ （已无法下载）
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Hive
+$ mkdir /usr/local/Hive
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/hive-1.1.0-cdh5.16.2.tar.gz -C /usr/local/Hive/
+$ tar -zxvf /usr/local/src/hive-1.1.0-cdh5.16.2.tar.gz -C /usr/local/Hive/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Hive/hive-1.1.0-cdh5.16.2/ /usr/local/hive
+$ ln -snf /usr/local/Hive/hive-1.1.0-cdh5.16.2/ /usr/local/hive
 ```
 
 5. 配置环境变量
 
 ```
-[emon@emon ~]$ sudo vim /etc/profile.d/hive.sh
+$ sudo vim /etc/profile.d/hive.sh
 export HIVE_HOME=/usr/local/hive
 export PATH=$HIVE_HOME/bin:$PATH
 ```
@@ -3230,7 +3230,7 @@ export PATH=$HIVE_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 6.1.2、配置
@@ -3240,8 +3240,8 @@ export PATH=$HIVE_HOME/bin:$PATH
 - `hive-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hive/conf/hive-env.sh.template /usr/local/hive/conf/hive-env.sh
-[emon@emon ~]$ vim /usr/local/hive/conf/hive-env.sh
+$ cp /usr/local/hive/conf/hive-env.sh.template /usr/local/hive/conf/hive-env.sh
+$ vim /usr/local/hive/conf/hive-env.sh
 ```
 
 ```bash
@@ -3252,7 +3252,7 @@ HADOOP_HOME=/usr/local/hadoop
 - `hive-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hive/conf/hive-site.xml
+$ vim /usr/local/hive/conf/hive-site.xml
 ```
 
 ```xml
@@ -3281,14 +3281,14 @@ HADOOP_HOME=/usr/local/hadoop
 - 拷贝mysql驱动包到`$HIVE_HOME/lib`目录
 
 ```bash
-[emon@emon ~]$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/hive/lib/
+$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/hive/lib/
 ```
 
 ##### 2.启动hive命令行
 
 ```sql
 # 进入CLI
-[emon@emon ~]$ hive
+$ hive
 ......
 Logging initialized using configuration in jar:file:/usr/local/Hive/hive-1.1.0-cdh5.16.2/lib/hive-common-1.1.0-cdh5.16.2.jar!/hive-log4j.properties
 WARNING: Hive CLI is deprecated and migration to Beeline is recommended.
@@ -3307,7 +3307,7 @@ test_db
 ##### 3.MySQL库情况
 
 ```sql
-[emon@emon ~]$ mysql -uflyin -pFlyin@123 -hemon
+$ mysql -uflyin -pFlyin@123 -hemon
 mysql> show databases;
 +--------------------+
 | Database           |
@@ -3372,31 +3372,31 @@ DB_LOCATION_URI: hdfs://0.0.0.0:8020/user/hive/warehouse
 历史发行版下载页面：https://archive.apache.org/dist/hive/ 或者 https://dlcdn.apache.org/hive/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz --no-check-certificate
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz --no-check-certificate
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Hive
+$ mkdir /usr/local/Hive
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/apache-hive-3.1.2-bin.tar.gz -C /usr/local/Hive/
+$ tar -zxvf /usr/local/src/apache-hive-3.1.2-bin.tar.gz -C /usr/local/Hive/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Hive/apache-hive-3.1.2-bin/ /usr/local/hive
+$ ln -snf /usr/local/Hive/apache-hive-3.1.2-bin/ /usr/local/hive
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/hive.sh
+$ sudo vim /etc/profile.d/hive.sh
 export HIVE_HOME=/usr/local/hive
 export PATH=$HIVE_HOME/bin:$PATH
 ```
@@ -3404,7 +3404,7 @@ export PATH=$HIVE_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 6.2.2、配置
@@ -3414,8 +3414,8 @@ export PATH=$HIVE_HOME/bin:$PATH
 - `hive-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hive/conf/hive-env.sh.template /usr/local/hive/conf/hive-env.sh
-[emon@emon ~]$ vim /usr/local/hive/conf/hive-env.sh
+$ cp /usr/local/hive/conf/hive-env.sh.template /usr/local/hive/conf/hive-env.sh
+$ vim /usr/local/hive/conf/hive-env.sh
 ```
 
 ```bash
@@ -3427,8 +3427,8 @@ HADOOP_HOME=/usr/local/hadoop
 
 ```bash
 # 可以复制模板生成hive-site.xml后修改以下属性的值，也可以直接跳过该步骤，手动编写hive-site.xml文件。推荐：跳过复制，直接手写。
-[emon@emon ~]$ cp /usr/local/hive/conf/hive-default.xml.template /usr/local/hive/conf/hive-site.xml
-[emon@emon ~]$ vim /usr/local/hive/conf/hive-site.xml
+$ cp /usr/local/hive/conf/hive-default.xml.template /usr/local/hive/conf/hive-site.xml
+$ vim /usr/local/hive/conf/hive-site.xml
 ```
 
 ```xml
@@ -3469,13 +3469,13 @@ HADOOP_HOME=/usr/local/hadoop
 - 拷贝mysql驱动包到`$HIVE_HOME/lib`目录
 
 ```bash
-[emon@emon ~]$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/hive/lib/
+$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/hive/lib/
 ```
 
 - 修改Hadoop集群的`core-site.xml`文件，集群每个节点都需要，纯客户端节点不需要修改
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+$ vim /usr/local/hadoop/etc/hadoop/core-site.xml 
 ```
 
 ```xml
@@ -3495,7 +3495,7 @@ HADOOP_HOME=/usr/local/hadoop
 - 初始化Metastore
 
 ```bash
-[emon@emon ~]$ schematool -dbType mysql -initSchema
+$ schematool -dbType mysql -initSchema
 # 命令行输出信息
 SLF4J: Class path contains multiple SLF4J bindings.
 SLF4J: Found binding in [jar:file:/usr/local/Hive/apache-hive-3.1.2-bin/lib/log4j-slf4j-impl-2.10.0.jar!/org/slf4j/impl/StaticLoggerBinder.class]
@@ -3518,7 +3518,7 @@ schemaTool completed
 
 ```bash
 # 进入CLI
-[emon@emon ~]$ hive
+$ hive
 ......
 Logging initialized using configuration in jar:file:/usr/local/Hive/apache-hive-3.1.2-bin/lib/hive-common-3.1.2.jar!/hive-log4j2.properties Async: true
 Hive Session ID = c8c20879-6c99-48d2-9130-532798bed484
@@ -3541,7 +3541,7 @@ hive> exit;
 在初始化Metastore之后，MySQL库产生了`hivedb`库和74张表。
 
 ```sql
-[emon@emon ~]$ mysql -uflyin -pFlyin@123 -hemon
+$ mysql -uflyin -pFlyin@123 -hemon
 mysql> show databases;
 +--------------------+
 | Database           |
@@ -3582,7 +3582,7 @@ No query specified
 - 启动hiveserver2
 
 ```bash
-[emon@emon ~]$ hiveserver2 
+$ hiveserver2 
 # 命令行输出信息
 SLF4J: Class path contains multiple SLF4J bindings.
 SLF4J: Found binding in [jar:file:/usr/local/HBase/hbase-1.2.0-cdh5.16.2/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
@@ -3605,7 +3605,7 @@ Hive Session ID = 857e29d3-2f66-444c-8093-f721f4a9e626
 - 连接
 
 ```bash
-[emon@emon ~]$ beeline -u jdbc:hive2://localhost:10000
+$ beeline -u jdbc:hive2://localhost:10000
 # 连接失败，注意：User: emon is not allowed to impersonate anonymous 是由于Hadoop的core-site.xml配置问题。
 Connecting to jdbc:hive2://localhost:10000
 2022-01-29 18:53:33,871 INFO jdbc.Utils: Supplied authorities: localhost:10000
@@ -3614,7 +3614,7 @@ Connecting to jdbc:hive2://localhost:10000
 Error: Could not open client transport with JDBC Uri: jdbc:hive2://localhost:10000: Failed to open new session: java.lang.RuntimeException: org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.security.authorize.AuthorizationException): User: emon is not allowed to impersonate anonymous (state=08S01,code=0)
 Beeline version 2.3.7 by Apache Hive
 # 确保Hadoop的core-site.xml配置过并重启后，再试！
-[emon@emon ~]$ beeline -u jdbc:hive2://localhost:10000 -n emon
+$ beeline -u jdbc:hive2://localhost:10000 -n emon
 Connecting to jdbc:hive2://localhost:10000
 2022-01-29 19:11:05,769 INFO jdbc.Utils: Supplied authorities: localhost:10000
 2022-01-29 19:11:05,770 INFO jdbc.Utils: Resolved authority: localhost:10000
@@ -3624,7 +3624,7 @@ Transaction isolation: TRANSACTION_REPEATABLE_READ
 Beeline version 2.3.7 by Apache Hive
 0: jdbc:hive2://localhost:10000> 
 # 使用主机名访问
-[emon@emon ~]$ beeline -u jdbc:hive2://emon:10000 -n emon
+$ beeline -u jdbc:hive2://emon:10000 -n emon
 ```
 
 ### 6.9、Hive学习碰到的问题（配对CDH5）
@@ -3634,7 +3634,7 @@ Beeline version 2.3.7 by Apache Hive
   - 如果在hive命令行执行卡主，一定要看hive日志，默认`/tmp/${user.name}`，比如我这里的`/tmp/emon`目录下
 
   ```bash
-  [emon@emon ~]$ tailf /tmp/emon/hive.log
+  $ tailf /tmp/emon/hive.log
   ```
 
 - 问题2
@@ -3697,13 +3697,13 @@ Beeline version 2.3.7 by Apache Hive
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Flume
+$ mkdir /usr/local/Flume
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/flume-ng-1.6.0-cdh5.16.2.tar.gz -C /usr/local/Flume/
+$ tar -zxvf /usr/local/src/flume-ng-1.6.0-cdh5.16.2.tar.gz -C /usr/local/Flume/
 ```
 
 **特殊说明**：如下提示，对该包解压无需关注，不影响使用。
@@ -3719,7 +3719,7 @@ Beeline version 2.3.7 by Apache Hive
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Flume/apache-flume-1.6.0-cdh5.16.2-bin/ /usr/local/flume
+$ ln -snf /usr/local/Flume/apache-flume-1.6.0-cdh5.16.2-bin/ /usr/local/flume
 ```
 
 5. 配置环境变量
@@ -3727,7 +3727,7 @@ Beeline version 2.3.7 by Apache Hive
 在`/etc/profile.d`目录创建`flume.sh`文件：
 
 ```
-[emon@emon ~]$ sudo vim /etc/profile.d/flume.sh
+$ sudo vim /etc/profile.d/flume.sh
 export FLUME_HOME=/usr/local/flume
 export PATH=$FLUME_HOME/bin:$PATH
 ```
@@ -3735,13 +3735,13 @@ export PATH=$FLUME_HOME/bin:$PATH
 使之生效：
 
 ```
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/flume/config
+$ mkdir /usr/local/flume/config
 ```
 
 7. 配置文件
@@ -3749,13 +3749,13 @@ export PATH=$FLUME_HOME/bin:$PATH
 - 复制`flume-env.sh.template `到`flume-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/flume/conf/flume-env.sh.template /usr/local/flume/conf/flume-env.sh
+$ cp /usr/local/flume/conf/flume-env.sh.template /usr/local/flume/conf/flume-env.sh
 ```
 
 - 编辑`flume-env.sh`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/flume/conf/flume-env.sh
+$ vim /usr/local/flume/conf/flume-env.sh
 ```
 
 ```bash
@@ -3772,25 +3772,25 @@ export JAVA_HOME=${JAVA_HOME}
 历史发行版下载页面：http://archive.apache.org/dist/flume/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/flume/1.9.0/apache-flume-1.9.0-bin.tar.gz --no-check-certificate
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/flume/1.9.0/apache-flume-1.9.0-bin.tar.gz --no-check-certificate
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Flume
+$ mkdir /usr/local/Flume
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/apache-flume-1.9.0-bin.tar.gz -C /usr/local/Flume/
+$ tar -zxvf /usr/local/src/apache-flume-1.9.0-bin.tar.gz -C /usr/local/Flume/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Flume/apache-flume-1.9.0-bin/ /usr/local/flume
+$ ln -snf /usr/local/Flume/apache-flume-1.9.0-bin/ /usr/local/flume
 ```
 
 5. 配置环境变量
@@ -3798,7 +3798,7 @@ export JAVA_HOME=${JAVA_HOME}
 在`/etc/profile.d`目录创建`flume.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/flume.sh
+$ sudo vim /etc/profile.d/flume.sh
 export FLUME_HOME=/usr/local/flume
 export PATH=$FLUME_HOME/bin:$PATH
 ```
@@ -3806,13 +3806,13 @@ export PATH=$FLUME_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/flume/config
+$ mkdir /usr/local/flume/config
 ```
 
 7. 配置文件
@@ -3820,13 +3820,13 @@ export PATH=$FLUME_HOME/bin:$PATH
 - 复制`flume-env.sh.template`到`flume-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/flume/conf/flume-env.sh.template /usr/local/flume/conf/flume-env.sh
+$ cp /usr/local/flume/conf/flume-env.sh.template /usr/local/flume/conf/flume-env.sh
 ```
 
 - 编辑`flume-env.sh`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/flume/conf/flume-env.sh
+$ vim /usr/local/flume/conf/flume-env.sh
 ```
 
 ```bash
@@ -3843,7 +3843,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/example.conf
+  $ vim /usr/local/flume/config/example.conf
   ```
 
   ```bash
@@ -3875,13 +3875,13 @@ export JAVA_HOME=${JAVA_HOME}
   - 启动
 
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/example.conf --name a1 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/example.conf --name a1 -Dflume.root.logger=INFO,console
   ```
 
   - 测试
 
   ```bash
-  [emon@emon ~]$ telnet localhost 44444
+  $ telnet localhost 44444
   Trying ::1...
   Connected to localhost.
   Escape character is '^]'.
@@ -3896,7 +3896,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume-exec-hdfs.conf 
+  $ vim /usr/local/flume/config/flume-exec-hdfs.conf 
   ```
 
   ```bash
@@ -3928,26 +3928,26 @@ export JAVA_HOME=${JAVA_HOME}
   - 准备文件`flumedata.log`
 
   ```bash
-  [emon@emon ~]$ touch /usr/local/flume/config/flumedata.log 
+  $ touch /usr/local/flume/config/flumedata.log 
   ```
 
   - 启动
 
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-exec-hdfs.conf --name exec-hdfs-agent -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-exec-hdfs.conf --name exec-hdfs-agent -Dflume.root.logger=INFO,console
   ```
 
   - 测试
 
   ```bash
-  [emon@emon ~]$ echo aaa >> /usr/local/flume/config/flumedata.log 
+  $ echo aaa >> /usr/local/flume/config/flumedata.log 
   ```
 
   - 验证
 
   ```bash
   # 查看hdfs文件
-  [emon@emon ~]$ hadoop fs -ls -R /data/flume/
+  $ hadoop fs -ls -R /data/flume/
   ```
 
 - 示例3：文件夹=>hdfs
@@ -3955,7 +3955,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume-spooling.conf
+  $ vim /usr/local/flume/config/flume-spooling.conf
   ```
 
   ```bash
@@ -3993,27 +3993,27 @@ export JAVA_HOME=${JAVA_HOME}
 
   ```bash
   # 文件被put到hdfs后，文件会被重命名带 .COMPLETED 后缀
-  [emon@emon ~]$ mkdir /usr/local/flume/config/spool_data
+  $ mkdir /usr/local/flume/config/spool_data
   ```
 
   - 启动
 
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-spooling.conf --name spooling-hdfs-agent -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-spooling.conf --name spooling-hdfs-agent -Dflume.root.logger=INFO,console
   ```
 
   - 测试
 
   ```bash
-  [emon@emon ~]$ echo "this is a test for flume spool" >> /usr/local/flume/config/1.log 
-  [emon@emon ~]$ echo "this is a test for flume spool" >> /usr/local/flume/config/2.txt
+  $ echo "this is a test for flume spool" >> /usr/local/flume/config/1.log 
+  $ echo "this is a test for flume spool" >> /usr/local/flume/config/2.txt
   ```
 
   - 验证
 
   ```bash
   # 查看hdfs文件
-  [emon@emon ~]$ hadoop fs -ls -R /data/flume/
+  $ hadoop fs -ls -R /data/flume/
   ```
 
 - 示例4：增量到hdfs【优秀】
@@ -4021,7 +4021,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/taildir-memory-logger.conf
+  $ vim /usr/local/flume/config/taildir-memory-logger.conf
   ```
 
   ```bash
@@ -4060,22 +4060,22 @@ export JAVA_HOME=${JAVA_HOME}
   - 准备
 
   ```bash
-  [emon@emon ~]$ mkdir -p /usr/local/flume/config/taildir_data/{test1,test2}
+  $ mkdir -p /usr/local/flume/config/taildir_data/{test1,test2}
   ```
 
   - 启动
 
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/taildir-memory-logger.conf --name a1 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/taildir-memory-logger.conf --name a1 -Dflume.root.logger=INFO,console
   ```
 
   - 测试
 
   ```bash
-  [emon@emon ~]$ echo aaa >> /usr/local/flume/config/taildir_data/test1/example.log
-  [emon@emon ~]$ echo bbb >> /usr/local/flume/config/taildir_data/test1/example.log
-  [emon@emon ~]$ echo 111 >> /usr/local/flume/config/taildir_data/test2/1.log
-  [emon@emon ~]$ echo 222 >> /usr/local/flume/config/taildir_data/test2/2.log
+  $ echo aaa >> /usr/local/flume/config/taildir_data/test1/example.log
+  $ echo bbb >> /usr/local/flume/config/taildir_data/test1/example.log
+  $ echo 111 >> /usr/local/flume/config/taildir_data/test2/1.log
+  $ echo 222 >> /usr/local/flume/config/taildir_data/test2/2.log
   ```
 
   写入后，查看`flume-ng`的启动窗口输出情况。
@@ -4085,7 +4085,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置1：flume01.conf
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume01.conf
+  $ vim /usr/local/flume/config/flume01.conf
   ```
   
   ```bash
@@ -4129,7 +4129,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置2：flume02.conf
   
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume02.conf
+  $ vim /usr/local/flume/config/flume02.conf
   ```
   
   ```bash
@@ -4156,7 +4156,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置3：flume03.conf
   
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume03.conf
+  $ vim /usr/local/flume/config/flume03.conf
   ```
   
   ```bash
@@ -4189,16 +4189,16 @@ export JAVA_HOME=${JAVA_HOME}
   - 启动：先启动flume02.conf->flume03.conf->flume01.conf，必须flue01在后面，flume02和flume03的先后数据没关系
   
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume02.conf --name a2 -Dflume.root.logger=INFO,console
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume03.conf --name a3 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume02.conf --name a2 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume03.conf --name a3 -Dflume.root.logger=INFO,console
   
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume01.conf --name a1 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume01.conf --name a1 -Dflume.root.logger=INFO,console
   ```
   
   - 测试
   
   ```bash
-  [emon@emon ~]$ telnet localhost 44444
+  $ telnet localhost 44444
   Trying ::1...
   Connected to localhost.
   Escape character is '^]'.
@@ -4216,7 +4216,7 @@ export JAVA_HOME=${JAVA_HOME}
   - 配置：flume-kafka.conf
 
   ```bash
-  [emon@emon ~]$ vim /usr/local/flume/config/flume-kafka.conf
+  $ vim /usr/local/flume/config/flume-kafka.conf
   ```
   
   ```bash
@@ -4255,19 +4255,19 @@ export JAVA_HOME=${JAVA_HOME}
 
   ```bash
   # 打开kafka消费者
-  [emon@emon ~]$ kafka-console-consumer.sh --bootstrap-server emon:9092 --topic test --from-beginning
+  $ kafka-console-consumer.sh --bootstrap-server emon:9092 --topic test --from-beginning
   ```
   
   - 启动
   
   ```bash
-  [emon@emon ~]$ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-kafka.conf --name a1 -Dflume.root.logger=INFO,console
+  $ /usr/local/flume/bin/flume-ng agent --conf $FLUME_HOME/conf --conf-file $FLUME_HOME/config/flume-kafka.conf --name a1 -Dflume.root.logger=INFO,console
   ```
   
     - 测试
   
   ```bash
-  [emon@emon ~]$ telnet localhost 44444
+  $ telnet localhost 44444
   Trying ::1...
   Connected to localhost.
   Escape character is '^]'.
@@ -4284,7 +4284,7 @@ export JAVA_HOME=${JAVA_HOME}
 
 ```bash
 # 打开生产者命令行模式
-[emon@emon ~]$ kafka-console-producer.sh --bootstrap-server emon:9092 --topic tests
+$ kafka-console-producer.sh --bootstrap-server emon:9092 --topic tests
 ```
 
 - 消费者
@@ -4305,19 +4305,19 @@ export JAVA_HOME=${JAVA_HOME}
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/HBase
+$ mkdir /usr/local/HBase
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/hbase-1.2.0-cdh5.16.2.tar.gz -C /usr/local/HBase/
+$ tar -zxvf /usr/local/src/hbase-1.2.0-cdh5.16.2.tar.gz -C /usr/local/HBase/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/HBase/hbase-1.2.0-cdh5.16.2/ /usr/local/hbase
+$ ln -snf /usr/local/HBase/hbase-1.2.0-cdh5.16.2/ /usr/local/hbase
 ```
 
 5. 配置环境变量
@@ -4325,7 +4325,7 @@ export JAVA_HOME=${JAVA_HOME}
 在`/etc/profile.d`目录创建`hbase.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/hbase.sh
+$ sudo vim /etc/profile.d/hbase.sh
 export HBASE_HOME=/usr/local/hbase
 export PATH=$HBASE_HOME/bin:$PATH
 ```
@@ -4333,13 +4333,13 @@ export PATH=$HBASE_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
-[emon@emon ~]$ mkdir -p /usr/local/hbase/tmp
+$ mkdir -p /usr/local/hbase/tmp
 ```
 
 7. 配置文件
@@ -4347,7 +4347,7 @@ export PATH=$HBASE_HOME/bin:$PATH
 - 配置`hbase-env.sh`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hbase/conf/hbase-env.sh 
+$ vim /usr/local/hbase/conf/hbase-env.sh 
 ```
 
 ```bash
@@ -4360,7 +4360,7 @@ export HBASE_MANAGES_ZK=false
 - 配置`hbase-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hbase/conf/hbase-site.xml 
+$ vim /usr/local/hbase/conf/hbase-site.xml 
 ```
 
 ```xml
@@ -4394,13 +4394,13 @@ export HBASE_MANAGES_ZK=false
 - 启动（端口号60010）
 
 ```bash
-[emon@emon ~]$ start-hbase.sh
+$ start-hbase.sh
 ```
 
 验证1：
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 10849 HRegionServer
 10703 HMaster
 ```
@@ -4412,13 +4412,13 @@ http://emon:60010/
 - 停止
 
 ```bash
-[emon@emon ~]$ stop-hbase.sh 
+$ stop-hbase.sh 
 ```
 
 - 进入hbase命令行
 
 ```bash
-[emon@emon ~]$ hbase shell
+$ hbase shell
 ```
 
 - 退出hbase命令行
@@ -4444,31 +4444,31 @@ hbase(main):014:0> exit
 下载地址：http://archive.apache.org/dist/sqoop/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ http://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
+$ wget -cP /usr/local/src/ http://archive.apache.org/dist/sqoop/1.4.7/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Sqoop
+$ mkdir /usr/local/Sqoop
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -C /usr/local/Sqoop/
+$ tar -zxvf /usr/local/src/sqoop-1.4.7.bin__hadoop-2.6.0.tar.gz -C /usr/local/Sqoop/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Sqoop/sqoop-1.4.7.bin__hadoop-2.6.0/ /usr/local/sqoop
+$ ln -snf /usr/local/Sqoop/sqoop-1.4.7.bin__hadoop-2.6.0/ /usr/local/sqoop
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/sqoop.sh
+$ sudo vim /etc/profile.d/sqoop.sh
 export SQOOP_HOME=/usr/local/sqoop
 export PATH=$SQOOP_HOME/bin:$PATH
 ```
@@ -4476,7 +4476,7 @@ export PATH=$SQOOP_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 配置文件
@@ -4484,7 +4484,7 @@ export PATH=$SQOOP_HOME/bin:$PATH
 - 复制`sqoop-env-template.sh`到`flume-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/sqoop/conf/sqoop-env-template.sh /usr/local/sqoop/conf/sqoop-env.sh
+$ cp /usr/local/sqoop/conf/sqoop-env-template.sh /usr/local/sqoop/conf/sqoop-env.sh
 ```
 
 7. 为sqoop库
@@ -4492,7 +4492,7 @@ export PATH=$SQOOP_HOME/bin:$PATH
 - 加入mysql的jar包
 
 ```bash
-[emon@emon ~]$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/sqoop/lib/
+$ cp /usr/local/src/mysql-connector-java-5.1.27-bin.jar /usr/local/sqoop/lib/
 ```
 
 ## 10、安装Zeppelin
@@ -4510,31 +4510,31 @@ export PATH=$SQOOP_HOME/bin:$PATH
 下载地址：https://zeppelin.apache.org/download.html
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/zeppelin/zeppelin-0.10.0/zeppelin-0.10.0-bin-all.tgz --no-check-certificate
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/zeppelin/zeppelin-0.10.0/zeppelin-0.10.0-bin-all.tgz --no-check-certificate
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Zeppelin
+$ mkdir /usr/local/Zeppelin
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/zeppelin-0.10.0-bin-all.tgz -C /usr/local/Zeppelin/
+$ tar -zxvf /usr/local/src/zeppelin-0.10.0-bin-all.tgz -C /usr/local/Zeppelin/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Zeppelin/zeppelin-0.10.0-bin-all/ /usr/local/zep
+$ ln -snf /usr/local/Zeppelin/zeppelin-0.10.0-bin-all/ /usr/local/zep
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/zep.sh
+$ sudo vim /etc/profile.d/zep.sh
 export ZEP_HOME=/usr/local/zep
 export PATH=$ZEP_HOME/bin:$PATH
 ```
@@ -4542,7 +4542,7 @@ export PATH=$ZEP_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 ### 10.2、配置
@@ -4552,7 +4552,7 @@ export PATH=$ZEP_HOME/bin:$PATH
 - 复制`zeppelin-env.sh.template.sh`到`zeppelin-env.sh`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/zep/conf/zeppelin-env.sh.template /usr/local/zep/conf/zeppelin-env.sh
+$ cp /usr/local/zep/conf/zeppelin-env.sh.template /usr/local/zep/conf/zeppelin-env.sh
 ```
 
 #### 10.2.2、配置`zeppelin-site.xml`
@@ -4560,13 +4560,13 @@ export PATH=$ZEP_HOME/bin:$PATH
 - 复制`zeppelin-site.xml.template`到`zeppelin-site.xml`
 
 ```bash
-[emon@emon ~]$ cp /usr/local/zep/conf/zeppelin-site.xml.template /usr/local/zep/conf/zeppelin-site.xml
+$ cp /usr/local/zep/conf/zeppelin-site.xml.template /usr/local/zep/conf/zeppelin-site.xml
 ```
 
 - 配置`zeppelin-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/zep/conf/zeppelin-site.xml
+$ vim /usr/local/zep/conf/zeppelin-site.xml
 ```
 
 ```xml
@@ -4589,7 +4589,7 @@ export PATH=$ZEP_HOME/bin:$PATH
 - zeppelin会依赖hive，添加hive依赖包
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hive/lib/*.jar /usr/local/zep/interpreter/jdbc/
+$ cp /usr/local/hive/lib/*.jar /usr/local/zep/interpreter/jdbc/
 ```
 
 - 还需要添加hadoop的jar包
@@ -4599,7 +4599,7 @@ export PATH=$ZEP_HOME/bin:$PATH
 需要添加hadoop的jar包，如下：
 
 ```bash
-[emon@emon ~]$ cp /usr/local/hadoop/share/hadoop/common/hadoop-common-3.2.2.jar /usr/local/zep/interpreter/jdbc/
+$ cp /usr/local/hadoop/share/hadoop/common/hadoop-common-3.2.2.jar /usr/local/zep/interpreter/jdbc/
 ```
 
 ### 10.3、启动与停止
@@ -4607,7 +4607,7 @@ export PATH=$ZEP_HOME/bin:$PATH
 - 启动
 
 ```bash
-[emon@emon ~]$ zeppelin-daemon.sh start
+$ zeppelin-daemon.sh start
 ```
 
 访问：http://emon:8080/#/
@@ -4633,13 +4633,13 @@ select * from app_warehousedb.app_user_platform_distrib
 - 查看启动状态
 
 ```bash
-[emon@emon ~]$ zeppelin-daemon.sh status
+$ zeppelin-daemon.sh status
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ zeppelin-daemon.sh stop
+$ zeppelin-daemon.sh stop
 ```
 
 ## 11、安装Azkaban
@@ -4665,25 +4665,25 @@ Azkaban是一个轻量级任务调度器；Ooize是重量级任务调度器；Cr
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Azkaban
+$ mkdir /usr/local/Azkaban
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/azkaban-solo-server-0.1.0-SNAPSHOT.tar.gz -C /usr/local/Azkaban/
+$ tar -zxvf /usr/local/src/azkaban-solo-server-0.1.0-SNAPSHOT.tar.gz -C /usr/local/Azkaban/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Azkaban/azkaban-solo-server-0.1.0-SNAPSHOT/ /usr/local/azk
+$ ln -snf /usr/local/Azkaban/azkaban-solo-server-0.1.0-SNAPSHOT/ /usr/local/azk
 ```
 
 5. 配置环境变量
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/azk.sh
+$ sudo vim /etc/profile.d/azk.sh
 export AZK_HOME=/usr/local/azk
 export PATH=$AZK_HOME/bin:$PATH
 ```
@@ -4691,7 +4691,7 @@ export PATH=$AZK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 ### 11.2、配置
@@ -4699,7 +4699,7 @@ export PATH=$AZK_HOME/bin:$PATH
 - 配置时区
 
 ```bash
-[emon@emon ~]$ vim /usr/local/azk/conf/azkaban.properties
+$ vim /usr/local/azk/conf/azkaban.properties
 ```
 
 ```properties
@@ -4750,25 +4750,25 @@ default.timezone.id=Asia/Shanghai
 各个版本：https://archive.apache.org/dist/flink/
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/flink/flink-1.11.6/flink-1.11.6-bin-scala_2.12.tgz --no-check-certificate
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/flink/flink-1.11.6/flink-1.11.6-bin-scala_2.12.tgz --no-check-certificate
 ```
 
 2. 创建解压目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Flink
+$ mkdir /usr/local/Flink
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/flink-1.11.6-bin-scala_2.12.tgz -C /usr/local/Flink/
+$ tar -zxvf /usr/local/src/flink-1.11.6-bin-scala_2.12.tgz -C /usr/local/Flink/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Flink/flink-1.11.6/ /usr/local/flink
+$ ln -snf /usr/local/Flink/flink-1.11.6/ /usr/local/flink
 ```
 
 5. 配置环境变量
@@ -4776,7 +4776,7 @@ default.timezone.id=Asia/Shanghai
 在`/etc/profile.d`目录创建`flink.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/flink.sh
+$ sudo vim /etc/profile.d/flink.sh
 export FLINK_HOME=/usr/local/flink
 export PATH=$FLINK_HOME/bin:$PATH
 ```
@@ -4784,7 +4784,7 @@ export PATH=$FLINK_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 #### 12.1.2、tandalone独立集群模式
@@ -4802,7 +4802,7 @@ export PATH=$FLINK_HOME/bin:$PATH
 - `flink-conf.yaml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/flink/conf/flink-conf.yaml 
+$ vim /usr/local/flink/conf/flink-conf.yaml 
 ```
 
 ```bash
@@ -4813,7 +4813,7 @@ jobmanager.rpc.address: localhost => jobmanager.rpc.address: emon
 - `masters`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/flink/conf/masters 
+$ vim /usr/local/flink/conf/masters 
 ```
 
 ```bash
@@ -4824,7 +4824,7 @@ emon:8081
 - `works`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/flink/conf/workers 
+$ vim /usr/local/flink/conf/workers 
 ```
 
 ```bash
@@ -4845,8 +4845,8 @@ emon3
 - 拷贝到emon2和emon3安装目录
 
 ```bash
-[emon@emon ~]$ scp -rq /usr/local/Flink/flink-1.11.6/ emon@emon2:/usr/local/Flink/
-[emon@emon ~]$ scp -rq /usr/local/Flink/flink-1.11.6/ emon@emon3:/usr/local/Flink/
+$ scp -rq /usr/local/Flink/flink-1.11.6/ emon@emon2:/usr/local/Flink/
+$ scp -rq /usr/local/Flink/flink-1.11.6/ emon@emon3:/usr/local/Flink/
 ```
 
 - 配置emon2和emon3上软连接
@@ -4859,13 +4859,13 @@ emon3
 4. 启动与停止
 
 ```bash
-[emon@emon ~]$ /usr/local/flink/bin/start-cluster.sh 
+$ /usr/local/flink/bin/start-cluster.sh 
 ```
 
 - 验证主节点
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 1375 StandaloneSessionClusterEntrypoint
 ```
 
@@ -4883,7 +4883,7 @@ http://emon:8081/#/overview
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/flink/bin/stop-cluster.sh
+$ /usr/local/flink/bin/stop-cluster.sh
 ```
 
 5. Standalone集群核心参数
@@ -4924,7 +4924,7 @@ http://emon:8081/#/overview
 - 修改原hadoop环境变量
 
 ```bash
-[emon@emon ~]$ vim /etc/profile.d/hadoop.sh 
+$ vim /etc/profile.d/hadoop.sh 
 ```
 
 ```bash
@@ -4939,20 +4939,20 @@ export HADOOP_CLASSPATH=`$HADOOP_HOME/bin/hadoop classpath`
 使之生效:
 
 ```bash
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 - 查看hadoop classpath是什么？
 
 ```bash
-[emon@emon ~]$ hadoop classpath
+$ hadoop classpath
 /usr/local/hadoop/etc/hadoop:/usr/local/hadoop/share/hadoop/common/lib/*:/usr/local/hadoop/share/hadoop/common/*:/usr/local/hadoop/share/hadoop/hdfs:/usr/local/hadoop/share/hadoop/hdfs/lib/*:/usr/local/hadoop/share/hadoop/hdfs/*:/usr/local/hadoop/share/hadoop/mapreduce/lib/*:/usr/local/hadoop/share/hadoop/mapreduce/*:/usr/local/hadoop/share/hadoop/yarn:/usr/local/hadoop/share/hadoop/yarn/lib/*:/usr/local/hadoop/share/hadoop/yarn/*
 ```
 
 2. 创建一个一直运行的Flink集群
 
 ```bash
-[emon@emon ~]$ /usr/local/flink/bin/yarn-session.sh -jm 1024m -tm 1024m -d
+$ /usr/local/flink/bin/yarn-session.sh -jm 1024m -tm 1024m -d
 # 命令行输出结果
 ......省略......
 JobManager Web Interface: http://emon:36484
@@ -4981,7 +4981,7 @@ Note that killing Flink might not clean up all job artifacts and temporary files
 3. 执行内置案例验证
 
 ```bash
-[emon@emon ~]$ /usr/local/flink/bin/flink run /usr/local/flink/examples/batch/WordCount.jar 
+$ /usr/local/flink/bin/flink run /usr/local/flink/examples/batch/WordCount.jar 
 # 命令行输出结果
 ......省略......
 2022-03-05 08:06:32,447 INFO  org.apache.flink.yarn.cli.FlinkYarnSessionCli                [] - Found Yarn properties file under /tmp/.yarn-properties-emon.
@@ -4994,7 +4994,7 @@ Note that killing Flink might not clean up all job artifacts and temporary files
 
 ```bash
 # 从启动日志获取该命令，每次启动的 application_xx 是不一样的
-[emon@emon ~]$ yarn application -kill application_1646438050523_0002
+$ yarn application -kill application_1646438050523_0002
 ```
 
 5. yarn-session命令分析
@@ -5024,7 +5024,7 @@ flink run -m yarn-cluster（创建Flink集群+提交任务）
 2. 提交内置任务
 
 ```bash
-[emon@emon ~]$ flink run -m yarn-cluster -yjm 1024 -ytm 1024 /usr/local/flink/examples/batch/WordCount.jar 
+$ flink run -m yarn-cluster -yjm 1024 -ytm 1024 /usr/local/flink/examples/batch/WordCount.jar 
 ```
 
 3. flink run命令解析
@@ -5079,7 +5079,7 @@ flink run -m yarn-cluster -yjm 1024 -ytm 1024 /usr/local/flink/examples/batch/Wo
 其中：flinkJobId和【Cancel Jobe】同一个界面找到
 
 ```bash
-[emon@emon ~]$ flink cancel -yid application_1646438050523_0004 8df9d2bc80a01ce5b71023e1482f8d3f
+$ flink cancel -yid application_1646438050523_0004 8df9d2bc80a01ce5b71023e1482f8d3f
 ```
 
 
@@ -5101,25 +5101,25 @@ flink run -m yarn-cluster -yjm 1024 -ytm 1024 /usr/local/flink/examples/batch/Wo
 下载地址：https://hbase.apache.org/downloads.html
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/hbase/2.2.1/hbase-2.2.1-bin.tar.gz
+$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/hbase/2.2.1/hbase-2.2.1-bin.tar.gz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/HBase
+$ mkdir /usr/local/HBase
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/hbase-2.2.1-bin.tar.gz -C /usr/local/HBase/
+$ tar -zxvf /usr/local/src/hbase-2.2.1-bin.tar.gz -C /usr/local/HBase/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/HBase/hbase-2.2.1/ /usr/local/hbase
+$ ln -snf /usr/local/HBase/hbase-2.2.1/ /usr/local/hbase
 ```
 
 5. 配置环境变量
@@ -5127,20 +5127,20 @@ flink run -m yarn-cluster -yjm 1024 -ytm 1024 /usr/local/flink/examples/batch/Wo
 在`/etc/profile.d`目录创建`hbase.sh`文件：
 
 ```
-[emon@emon ~]$ sudo vim /etc/profile.d/hbase.sh
+$ sudo vim /etc/profile.d/hbase.sh
 export PATH=/usr/local/hbase/bin:$PATH
 ```
 
 使之生效：
 
 ```
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 目录规划
 
 ```bash
-[emon@emon ~]$ mkdir -p /usr/local/hbase/data
+$ mkdir -p /usr/local/hbase/data
 ```
 
 7. 配置文件
@@ -5148,7 +5148,7 @@ export PATH=/usr/local/hbase/bin:$PATH
 - 配置使用外部的`zookeeper`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hbase/conf/hbase-env.sh 
+$ vim /usr/local/hbase/conf/hbase-env.sh 
 ```
 
 ```bash
@@ -5159,7 +5159,7 @@ export HBASE_MANAGES_ZK=true => export HBASE_MANAGES_ZK=false
 - 配置`hbase-site.xml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hbase/conf/hbase-site.xml
+$ vim /usr/local/hbase/conf/hbase-site.xml
 ```
 
 ```xml
@@ -5190,19 +5190,19 @@ export HBASE_MANAGES_ZK=true => export HBASE_MANAGES_ZK=false
 - 启动（端口号16000）
 
 ```bash
-[emon@emon ~]$ start-hbase.sh 
+$ start-hbase.sh 
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ stop-hbase.sh 
+$ stop-hbase.sh 
 ```
 
 - 进入hbase命令行
 
 ```bash
-[emon@emon ~]$ hbase shell
+$ hbase shell
 ```
 
 - 退出hbase命令行
@@ -5230,25 +5230,25 @@ hbase(main):014:0> exit
 ![1570272639317](images/1570272639317.png)
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz
+$ wget -cP /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@emon ~]$ mkdir /usr/local/Spark
+$ mkdir /usr/local/Spark
 ```
 
 3. 解压安装
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/spark-2.4.4-bin-hadoop2.7.tgz -C /usr/local/Spark/
+$ tar -zxvf /usr/local/src/spark-2.4.4-bin-hadoop2.7.tgz -C /usr/local/Spark/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@emon ~]$ ln -snf /usr/local/Spark/spark-2.4.4-bin-hadoop2.7/ /usr/local/spark
+$ ln -snf /usr/local/Spark/spark-2.4.4-bin-hadoop2.7/ /usr/local/spark
 ```
 
 5. 配置环境变量
@@ -5256,7 +5256,7 @@ hbase(main):014:0> exit
 在`/etc/profile.d`目录创建`spark.sh`文件：
 
 ```bash
-[emon@emon ~]$ sudo vim /etc/profile.d/spark.sh
+$ sudo vim /etc/profile.d/spark.sh
 export SPARK_HOME=/usr/local/spark
 export PATH=$SPARK_HOME/bin:$PATH
 ```
@@ -5264,7 +5264,7 @@ export PATH=$SPARK_HOME/bin:$PATH
 使之生效：
 
 ```
-[emon@emon ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 修改日志级别（推荐使用默认的WARN）
@@ -5272,13 +5272,13 @@ export PATH=$SPARK_HOME/bin:$PATH
 - 复制
 
 ```bash
-[emon@emon ~]$ cp /usr/local/spark/conf/log4j.properties.template /usr/local/spark/conf/log4j.properties
+$ cp /usr/local/spark/conf/log4j.properties.template /usr/local/spark/conf/log4j.properties
 ```
 
 - 编辑
 
 ```bash
-[emon@emon ~]$ vim /usr/local/spark/conf/log4j.properties
+$ vim /usr/local/spark/conf/log4j.properties
 ```
 
 比如，调整为INFO级别：
@@ -5317,7 +5317,7 @@ scala>
 - jps查看JAVA进程
 
 ```bash
-[emon@emon ~]$ jps
+$ jps
 60273 Jps
 60202 SparkSubmit
 15854 jar
@@ -5326,7 +5326,7 @@ scala>
 - 查看60202进程下端口，访问4040端口
 
 ```bash
-[emon@emon ~]$ sudo netstat -tnlp|grep 60202
+$ sudo netstat -tnlp|grep 60202
 tcp6       0      0 :::4040                 :::*                    LISTEN      60202/java          
 tcp6       0      0 192.168.1.116:37676     :::*                    LISTEN      60202/java          
 tcp6       0      0 192.168.1.116:32793     :::*                    LISTEN      60202/java 
@@ -5351,90 +5351,90 @@ scala> :quit
 - 查看文件
 
 ```bash
-[emon@emon ~]$ hadoop fs -ls /
+$ hadoop fs -ls /
 ```
 
 - 查看文件2
 
 ```bash
 # 如果写入文件时不指定 /，等于于写入了 /user/emon
-[emon@emon ~]$ hadoop fs -ls 
+$ hadoop fs -ls 
 # 等效于
-[emon@emon ~]$ hadoop fs -ls /user/emon
+$ hadoop fs -ls /user/emon
 ```
 
 - 递归查看文件
 
 ```bash
-[emon@emon ~]$ hadoop fs -ls -R /hdfsapi/test
+$ hadoop fs -ls -R /hdfsapi/test
 ```
 
 - 存放文件
 
 ```bash
-[emon@emon ~]$ echo "this is a test txt" > test.txt 
-[emon@emon ~]$ hadoop fs -put test.txt /
+$ echo "this is a test txt" > test.txt 
+$ hadoop fs -put test.txt /
 ```
 
 - 查看文件内容
 
 ```bash
-[emon@emon ~]$ hadoop fs -cat /test.txt
+$ hadoop fs -cat /test.txt
 或者
-[emon@emon ~]$ hadoop fs -text /test.txt
+$ hadoop fs -text /test.txt
 ```
 
 - 从本地拷贝文件到hdfs
 
 ```bash
-[emon@emon ~]$ echo "this is a copy txt" > copy.txt
-[emon@emon ~]$ hadoop fs -copyFromLocal copy.txt /
+$ echo "this is a copy txt" > copy.txt
+$ hadoop fs -copyFromLocal copy.txt /
 ```
 
 - 从本地移动文件到hdfs
 
 ```bash
-[emon@emon ~]$ echo "this is a move txt" > move.txt
-[emon@emon ~]$ hadoop fs -moveFromLocal move.txt /
+$ echo "this is a move txt" > move.txt
+$ hadoop fs -moveFromLocal move.txt /
 ```
 
 - 获取文件
 
 ```bash
-[emon@emon ~]$ hadoop fs -get /move.txt
+$ hadoop fs -get /move.txt
 ```
 
 - 创建目录
 
 ```bash
-[emon@emon ~]$ hadoop fs -mkdir /hdfs-test
+$ hadoop fs -mkdir /hdfs-test
 # 递归创建
-[emon@emon ~]$ hadoop fs -mkdir -p /wordcount/input
+$ hadoop fs -mkdir -p /wordcount/input
 ```
 
 - 移动文件到目录或改名
 
 ```bash
-[emon@emon ~]$ hadoop fs -mv /test.txt /hdfs-test
+$ hadoop fs -mv /test.txt /hdfs-test
 ```
 
 - 拷贝文件到新文件
 
 ```bash
-[emon@emon ~]$ hadoop fs -cp /hdfs-test/test.txt /hdfs-test/test.txt.bak
+$ hadoop fs -cp /hdfs-test/test.txt /hdfs-test/test.txt.bak
 ```
 
 - 合并文件
 
 ```bash
 # 把hdfs的/hdfs-test目录下所有文件合并到本地目录下t.txt文件中
-[emon@emon ~]$ hadoop fs -getmerge /hdfs-test ./t.txt
+$ hadoop fs -getmerge /hdfs-test ./t.txt
 ```
 
 - 删除文件
 
 ```bash
-[emon@emon ~]$ hadoop fs -rm /copy.txt
+$ hadoop fs -rm /copy.txt
 Deleted /copy.txt
 ```
 
@@ -5442,13 +5442,13 @@ Deleted /copy.txt
 
 ```bash
 # 仅能删除空目录
-[emon@emon ~]$ hadoop fs -rmdir /hdfs-test
+$ hadoop fs -rmdir /hdfs-test
 ```
 
 - 删除目录
 
 ```bash
-[emon@emon ~]$ hadoop fs -rmr /hdfs-test
+$ hadoop fs -rmr /hdfs-test
 rmr: DEPRECATED: Please use 'rm -r' instead.
 Deleted /hdfs-test
 ```
@@ -5869,7 +5869,7 @@ hive (default)> desc formatted emp;
 数据准备：注意，分隔符是`\t`，使用`cat -A file`时应该可以看到`^I`字符表示的tab，如果不是，导入时会出现NULL数据。
 
 ```bash
-[emon@emon ~]$ vim /usr/local/hadoop/custom/data/emp.txt 
+$ vim /usr/local/hadoop/custom/data/emp.txt 
 ```
 
 ```tex
@@ -5891,7 +5891,7 @@ hive (default)> desc formatted emp;
 ```
 
 ```sql
-[emon@emon ~]$ vim /usr/local/hadoop/custom/data/dept.txt 
+$ vim /usr/local/hadoop/custom/data/dept.txt 
 ```
 
 ```sql

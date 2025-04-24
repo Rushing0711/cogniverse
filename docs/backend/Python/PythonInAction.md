@@ -19,13 +19,13 @@
 安装教程： https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+$ wget -cP /usr/local/src/ https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 ```
 
 2. 安装
 
 ```bash
-[emon@emon ~]$ bash /usr/local/src/Miniconda3-latest-Linux-x86_64.sh 
+$ bash /usr/local/src/Miniconda3-latest-Linux-x86_64.sh 
 ```
 
 根据提示安装，一些关键信息如下：
@@ -63,16 +63,16 @@
 如果不需要启动就切换到base，可以配置如下：
 
 ```bash
-# 配置后会保存在文件 [emon@emon ~]$ vim .condarc 中
-[emon@emon ~]$ conda config --set auto_activate_base false
-[emon@emon ~]$ conda config --show|grep activate
+# 配置后会保存在文件 $ vim .condarc 中
+$ conda config --set auto_activate_base false
+$ conda config --show|grep activate
 auto_activate_base: False
 ```
 
 4、更新
 
 ```bash
-[emon@emon ~]$ conda update conda
+$ conda update conda
 ```
 
 5、卸载
@@ -80,14 +80,14 @@ auto_activate_base: False
 删除即可：
 
 ```bash
-[emon@emon ~]$ rm -rf ~/miniconda3/
+$ rm -rf ~/miniconda3/
 ```
 
 删除环境配置：
 
 ```bash
 # 打开文件，并删除如下部分
-[emon@emon ~]$ vim ~/.bashrc
+$ vim ~/.bashrc
 ```
 
 ```bash
@@ -110,7 +110,7 @@ unset __conda_setup
 删除其他可能创建的conda隐藏文件或文件夹：
 
 ```bash
-[emon@emon ~]$ rm -rf ~/.condarc ~/.conda ~/.continuum
+$ rm -rf ~/.condarc ~/.conda ~/.continuum
 ```
 
 6、配置
@@ -118,29 +118,29 @@ unset __conda_setup
 - 查看配置帮助
 
 ```bash
-[emon@emon ~]$ conda config -h
+$ conda config -h
 ```
 
 - 查看所有配置
 
 ```bash
-[emon@emon ~]$ conda config --show
+$ conda config --show
 ```
 
 - 配置国内源
 
 ```bash
-[emon@emon ~]$ conda config --set show_channel_urls yes
-[emon@emon ~]$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-[emon@emon ~]$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-[emon@emon ~]$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
-[emon@emon ~]$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+$ conda config --set show_channel_urls yes
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+$ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
 ```
 
 - 查看配置
 
 ```bash
-[emon@emon ~]$ conda config --show-sources
+$ conda config --show-sources
 ==> /home/emon/.condarc <==
 auto_activate_base: False
 channels:
@@ -154,10 +154,10 @@ show_channel_urls: true
 - 删除配置源
 
 ```bash
-[emon@emon ~]$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-[emon@emon ~]$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-[emon@emon ~]$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
-[emon@emon ~]$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
+$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+$ conda config --remove channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/bioconda/
 ```
 
 
@@ -191,9 +191,9 @@ show_channel_urls: true
 1. 安装
 
 ```bash
-[emon@emon ~]$ conda install scrapy
+$ conda install scrapy
 或者指定安装渠道：
-[emon@emon ~]$ conda install -c conda-forge scrapy
+$ conda install -c conda-forge scrapy
 ```
 
 2. 验证
@@ -201,14 +201,14 @@ show_channel_urls: true
 - 查看命令
 
 ```bash
-[emon@emon ~]$ scrapy
+$ scrapy
 Scrapy 2.4.0 - no active project
 ```
 
 - 执行简单shell
 
 ```bash
-[emon@emon ~]$ scrapy shell 'http://www.huiba123.com'
+$ scrapy shell 'http://www.huiba123.com'
 ```
 
 
@@ -228,7 +228,7 @@ Scrapy 2.4.0 - no active project
 1. 安装
 
 ```bash
-(firstenv) [emon@emon ~]$ pip install Scrapy
+(firstenv) $ pip install Scrapy
 ```
 
 2. 验证
@@ -236,14 +236,14 @@ Scrapy 2.4.0 - no active project
 - 查看命令
 
 ```bash
-(firstenv) [emon@emon ~]$ scrapy
+(firstenv) $ scrapy
 Scrapy 2.4.1 - no active project
 ```
 
 - 执行简单shell
 
 ```bash
-(firstenv) [emon@emon ~]$ scrapy shell 'http://www.huiba123.com'
+(firstenv) $ scrapy shell 'http://www.huiba123.com'
 ```
 
 执行报错：
@@ -254,7 +254,7 @@ Scrapy 2.4.1 - no active project
 
 ```bash
 # 安装依赖
-(firstenv) [emon@emon ~]$ sudo yum install -y sqlite-devel
+(firstenv) $ sudo yum install -y sqlite-devel
 # 重新编译
 (firstenv) [emon@emon Python-3.7.7]$ ./configure --enable-optimizations --enable-loadable-sqlite-extensions --prefix=/usr/local/Python/Python3.7.7
 # 清理之前的安装
@@ -263,7 +263,7 @@ Scrapy 2.4.1 - no active project
 (firstenv) [emon@emon Python-3.7.7]$ make
 (firstenv) [emon@emon Python-3.7.7]$ make install
 # 解决后再次执行
-(firstenv) [emon@emon ~]$ scrapy shell 'http://www.huiba123.com'
+(firstenv) $ scrapy shell 'http://www.huiba123.com'
 ```
 
 ## 2、安装ModelScope

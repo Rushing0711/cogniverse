@@ -27,31 +27,31 @@
 下载地址页： <https://www.elastic.co/downloads>
 
 ```shell
-[emon@emon ~]$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/logstash/logstash-5.6.11.tar.gz
+$ wget -cP /usr/local/src/ https://artifacts.elastic.co/downloads/logstash/logstash-5.6.11.tar.gz
 ```
 
 ### 1.3、创建安装目录
 
 ```shell
-[emon@emon ~]$ mkdir /usr/local/Logstash
+$ mkdir /usr/local/Logstash
 ```
 
 ### 1.4、解压安装
 
 ```shell
-[emon@emon ~]$ tar -zxvf /usr/local/src/logstash-5.6.11.tar.gz -C /usr/local/Logstash/
+$ tar -zxvf /usr/local/src/logstash-5.6.11.tar.gz -C /usr/local/Logstash/
 ```
 
 ### 1.5、创建软连接
 
 ```shell
-[emon@emon ~]$ ln -s /usr/local/Logstash/logstash-5.6.11/ /usr/local/logstash
+$ ln -s /usr/local/Logstash/logstash-5.6.11/ /usr/local/logstash
 ```
 
 ### 1.6、配置`logstash.yml`文件
 
 ```shell
-[emon@emon ~]$ vim /usr/local/logstash/config/logstash.yml 
+$ vim /usr/local/logstash/config/logstash.yml 
 ```
 
 ```
@@ -102,7 +102,7 @@ output {
 ### 1.8、测试
 
 ```shell
-[emon@emon ~]$ head -n 2 /usr/local/nginx/logs/access.log | /usr/local/logstash/bin/logstash -f /usr/local/logstash/nginx_logstash.conf 
+$ head -n 2 /usr/local/nginx/logs/access.log | /usr/local/logstash/bin/logstash -f /usr/local/logstash/nginx_logstash.conf 
 ```
 
 

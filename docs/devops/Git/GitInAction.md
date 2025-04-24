@@ -18,9 +18,9 @@
 ## 1.1 安装Git之后，使用之前需要进行的Git配置
 
 ```bash
-[emon@emon ~]$ git config --global user.name "emon"
-[emon@emon ~]$ git config --global user.email "liming20110711@163.com"
-[emon@emon ~]$ git config --list
+$ git config --global user.name "emon"
+$ git config --global user.email "liming20110711@163.com"
+$ git config --list
 user.name=emon
 user.email=liming20110711@163.com
 ```
@@ -85,32 +85,32 @@ git remote add origin http://yourname:password@git.oschina.net/name/project.git
    创建`git`用户：
 
    ```bash
-   [emon@emon ~]$ sudo useradd -c "Git User" git
+   $ sudo useradd -c "Git User" git
    ```
 
    修改`git`用户密码：
 
    ```bash
-   [emon@emon ~]$ sudo passwd git
+   $ sudo passwd git
    ```
 
 2. 导入客户端SSH公钥
 
    ```bash
-   [emon@emon ~]$ ssh-copy-id git@39.107.97.197
+   $ ssh-copy-id git@39.107.97.197
    ```
 
 3. 创建裸仓库
 
    ```bash
-   [emon@emon ~]$ ssh git@39.107.97.197 "git init --bare empty.git"
+   $ ssh git@39.107.97.197 "git init --bare empty.git"
    Initialized empty Git repository in /home/git/empty.git/
    ```
 
 4. 克隆裸仓库（也称远程仓库）
 
    ```bash
-   [emon@emon ~]$ cd /usr/local/src/git-repository/
+   $ cd /usr/local/src/git-repository/
    [emon@emon git-repository]$ git clone git@39.107.97.197:/home/git/empty.git
    Cloning into 'empty'...
    warning: You appear to have cloned an empty repository.
@@ -120,7 +120,7 @@ git remote add origin http://yourname:password@git.oschina.net/name/project.git
 
    ```bash
    [emon@emon git-repository]$ cd
-   [emon@emon ~]$ sudo usermod -s /usr/bin/git-shell git
+   $ sudo usermod -s /usr/bin/git-shell git
    ```
 
 - 特殊说明
@@ -168,7 +168,7 @@ git remote add origin http://yourname:password@git.oschina.net/name/project.git
    关键命令： `git init`
 
    ```bash
-   [emon@emon ~]$ cd /usr/local/src/git-repository/
+   $ cd /usr/local/src/git-repository/
    [emon@emon git-repository]$ mkdir emonnote
    [emon@emon git-repository]$ cd emonnote/
    [emon@emon emonnote]$ git init
@@ -208,7 +208,7 @@ git remote add origin http://yourname:password@git.oschina.net/name/project.git
 2. 克隆远程仓库到本地
 
    ```bash
-   [emon@emon ~]$ cd /usr/local/src/git-repository/
+   $ cd /usr/local/src/git-repository/
    [emon@emon git-repository]$ git clone git@github.com:Rushing0711/emonnote.git
    Cloning into 'emonnote'...
    remote: Counting objects: 5, done.
@@ -1681,7 +1681,7 @@ git push --tags
 1. 下载
 
 ```shell
-[emon@emon ~]$ cd /usr/local/src/
+$ cd /usr/local/src/
 [emon@emon src]$ curl -OL https://raw.github.com/nvie/gitflow/develop/contrib/gitflow-installer.sh
 [emon@emon src]$ chmod +x gitflow-installer.sh
 ```

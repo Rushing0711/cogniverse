@@ -69,7 +69,7 @@ Java官方工具文档：https://docs.oracle.com/javase/8/docs/technotes/tools/u
 **jps**（Java Virtual Machine Process Status Tool)是java提供的一个显示当前所有java进程pid的命令，适合在linux/unix平台上简单查看当前java进程的一些简单情况。
 
 ```bash
-[emon@emon ~]$ jps -help
+$ jps -help
 usage: jps [-help]
        jps [-q] [-mlvV] [<hostid>]
 
@@ -81,7 +81,7 @@ Definitions:
 
 ```bash
 # 带参数 -l 可以查询时输出应用程序 main class 的完整 package 名称或者应用程序的 jar 文件完整路径名
-[emon@emon ~]$ jps -l
+$ jps -l
 46592 sun.tools.jps.Jps
 10913 com.install4j.runtime.launcher.UnixLauncher
 111842 service-config-provider.jar
@@ -180,7 +180,7 @@ $ java -XX:+PrintFlagsFinal -version
 **jinfo**是jdk自带的命令，可以用来查看正在运行的java应用程序的扩展参数，包括Java System属性和JVM命令行参数；也可以动态的修改正在运行的JVM一些参数。当系统崩溃时，jinfo可以从core文件里面知道崩溃的Java应用程序的配置信息。
 
 ```bash
-[emon@emon ~]$ jinfo
+$ jinfo
 Usage:
     jinfo [option] <pid>
         (to connect to running process)
@@ -292,7 +292,7 @@ $ jinfo -flag -PrintGCTimeStamps 61572
 ### 3.1、命令介绍
 
 ```bash
-[emon@emon ~]$ jstack -h
+$ jstack -h
 Usage:
     jstack [-l] <pid>
         (to connect to running process)
@@ -313,16 +313,16 @@ Options:
 ### 3.2、统计线程数
 
 ```bash
-[emon@emon ~]$ jstack -l 61572 | grep "java.lang.Thread.State" | wc -l
+$ jstack -l 61572 | grep "java.lang.Thread.State" | wc -l
 168
 ```
 
 ### 3.3、查看线程详情
 
 ```bash
-[emon@emon ~]$ jstack -l 61572 > 61572.log
+$ jstack -l 61572 > 61572.log
 # 统计各个线程状态数量
-[emon@emon ~]$ grep java.lang.Thread.State 61572.log | awk '{print $2$3$4$5}'|sort|uniq -c
+$ grep java.lang.Thread.State 61572.log | awk '{print $2$3$4$5}'|sort|uniq -c
 ```
 
 ### 3.4、jstack得到的线程信息解读
@@ -355,7 +355,7 @@ $ top -H -p 61572
 ### 4.1、命令介绍
 
 ```bash
-[emon@emon ~]$ jmap -h
+$ jmap -h
 Usage:
     jmap [option] <pid>
         (to connect to running process)
@@ -398,7 +398,7 @@ where <option> is one of:
 ### 4.2、查看进程的内存映像信息
 
 ```bash
-[emon@emon ~]$ jmap 61572
+$ jmap 61572
 Attaching to process ID 61572, please wait...
 Debugger attached successfully.
 Server compiler detected.
@@ -426,7 +426,7 @@ JVM version is 25.251-b08
 ### 4.3、显示Java堆详细信息
 
 ```bash
-[emon@emon ~]$ jmap -heap 61572
+$ jmap -heap 61572
 Attaching to process ID 61572, please wait...
 Debugger attached successfully.
 Server compiler detected.
@@ -492,7 +492,7 @@ concurrent mark-sweep generation:
 ### 4.4、显示堆中对象的统计信息
 
 ```bash
-[emon@emon ~]$ jmap -histo:live 61572 > 61572.log
+$ jmap -histo:live 61572 > 61572.log
 ```
 
 **拓展：**
@@ -525,7 +525,7 @@ $ jhat 61572.hprof
 ### 4.6、打印类加载器信息【比较耗费时间的一个命令】
 
 ```bash
-[emon@emon ~]$ jmap -clstats 61572
+$ jmap -clstats 61572
 Attaching to process ID 61572, please wait...
 Debugger attached successfully.
 Server compiler detected.
@@ -541,7 +541,7 @@ class_loader	classes	bytes	parent_loader	alive?	type
 ### 4.7、打印等待终结的对象信息
 
 ```bash
-[emon@emon ~]$ jmap -finalizerinfo 61572
+$ jmap -finalizerinfo 61572
 Attaching to process ID 61572, please wait...
 Debugger attached successfully.
 Server compiler detected.
@@ -562,7 +562,7 @@ Number of objects pending for finalization: 0
 ### 5.1、命令介绍
 
 ```bash
-[emon@emon ~]$ jstat -h
+$ jstat -h
 -h requires an integer argument
 Usage: jstat -help|-options
        jstat -<option> [-t] [-h<lines>] <vmid> [<interval> [<count>]]
@@ -589,7 +589,7 @@ Definitions:
 - `option`参数选项
 
 ```bash
-[emon@emon ~]$ jstat -options
+$ jstat -options
 -class					显示ClassLoad的相关信息；
 -compiler				显示JIT编译的相关信息；
 -gc						显示和gc相关的堆信息；
@@ -614,7 +614,7 @@ Definitions:
 ### 5.2、显示加载class的数量，以及所占用空间等信息
 
 ```bash
-[emon@emon ~]$ jstat -class 61572
+$ jstat -class 61572
 Loaded  Bytes  Unloaded  Bytes     Time   
  19017 33150.0       89    98.6       6.20
 ```
@@ -629,7 +629,7 @@ Loaded  Bytes  Unloaded  Bytes     Time
 ### 5.3、显示VM实时编译（JIT）的数量等信息
 
 ```bash
-[emon@emon ~]$ jstat -compiler 61572
+$ jstat -compiler 61572
 Compiled Failed Invalid   Time   FailedType FailedMethod
    27068      0       0   151.97          0  
 ```
@@ -645,7 +645,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.4、显示gc相关的堆信息，查看gc的次数和时间
 
 ```bash
-[emon@emon ~]$ jstat -gc 61572
+$ jstat -gc 61572
  S0C    S1C    S0U    S1U      EC       EU        OC         OU       MC     MU    CCSC   CCSU   YGC     YGCT    FGC    FGCT     GCT   
 8704.0 8704.0  0.0   442.5  69952.0  55167.5   174784.0   112815.7  104408.0 94483.6 15100.0 12222.2   8427   51.535 57645 1527.104 1578.638
 ```
@@ -673,7 +673,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.5、显示VM内存中三代（young、old、perm）对象的使用和占用大小
 
 ```bash
-[emon@emon ~]$ jstat -gccapacity 61572
+$ jstat -gccapacity 61572
  NGCMN    NGCMX     NGC     S0C   S1C       EC      OGCMN      OGCMX       OGC         OC       MCMN     MCMX      MC     CCSMN    CCSMX     CCSC    YGC    FGC 
  87360.0  87360.0  87360.0 8704.0 8704.0  69952.0   174784.0   174784.0   174784.0   174784.0      0.0 1138688.0 104408.0      0.0 1048576.0  15100.0   8431 57645
 ```
@@ -704,7 +704,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.6、metaspace中对象的信息及其占用量
 
 ```bash
-[emon@emon ~]$ jstat -gcmetacapacity 61572
+$ jstat -gcmetacapacity 61572
    MCMN       MCMX        MC       CCSMN      CCSMX       CCSC     YGC   FGC    FGCT     GCT   
        0.0  1138688.0   104408.0        0.0  1048576.0    15100.0  8437 57645 1527.104 1578.671
 ```
@@ -726,7 +726,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.7、年轻代对象的信息
 
 ```bash
-[emon@emon ~]$ jstat -gcnew 61572
+$ jstat -gcnew 61572
  S0C    S1C    S0U    S1U   TT MTT  DSS      EC       EU     YGC     YGCT  
 8704.0 8704.0  240.8    0.0  6   6 4352.0  69952.0  24754.6   8438   51.570
 ```
@@ -750,7 +750,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.8、年轻代对象的信息及其占用量
 
 ```bash
-[emon@emon ~]$ jstat -gcnewcapacity 61572
+$ jstat -gcnewcapacity 61572
   NGCMN      NGCMX       NGC      S0CMX     S0C     S1CMX     S1C       ECMX        EC      YGC   FGC 
    87360.0    87360.0    87360.0   8704.0   8704.0   8704.0   8704.0    69952.0    69952.0  8439 57645
 ```
@@ -777,7 +777,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.9、old代对象的信息
 
 ```bash
-[emon@emon ~]$ jstat -gcold 61572
+$ jstat -gcold 61572
    MC       MU      CCSC     CCSU       OC          OU       YGC    FGC    FGCT     GCT   
 104408.0  94483.6  15100.0  12222.2    174784.0    112822.2   8440 57645 1527.104 1578.678
 ```
@@ -807,7 +807,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.10、old代对象的信息及其占用量
 
 ```bash
-[emon@emon ~]$ jstat -gcoldcapacity 61572
+$ jstat -gcoldcapacity 61572
    OGCMN       OGCMX        OGC         OC       YGC   FGC    FGCT     GCT   
    174784.0    174784.0    174784.0    174784.0  8448 57645 1527.104 1578.703
 ```
@@ -832,7 +832,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.11 统计gc信息
 
 ```bash
-[emon@emon ~]$ jstat -gcutil 61572
+$ jstat -gcutil 61572
   S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT   
   0.00   3.35  71.82  64.55  90.49  80.94   8441   51.578 57645 1527.104 1578.681
 ```
@@ -858,7 +858,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 同时显示最后一次或当前正在发生的垃圾回收的诱因。
 
 ```bash
-[emon@emon ~]$ jstat -gccause 61572
+$ jstat -gccause 61572
   S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     GCT    LGCC                 GCC                 
   4.45   0.00  65.30  64.55  90.49  80.94   8442   51.583 57645 1527.104 1578.687 Allocation Failure   No GC
 ```
@@ -870,7 +870,7 @@ Compiled Failed Invalid   Time   FailedType FailedMethod
 ### 5.13、当前VM执行的信息
 
 ```bash
-[emon@emon ~]$ jstat -printcompilation 61572
+$ jstat -printcompilation 61572
 Compiled  Size  Type Method
    27069    298    1 java/util/concurrent/ThreadPoolExecutor processWorkerExit
 ```
@@ -892,11 +892,11 @@ Arthas（阿尔萨斯）是Alibaba开源的Java诊断工具。
 - 使用`arthas-boot`（推荐）
 
 ```bash
-[emon@emon ~]$ curl -O https://arthas.aliyun.com/arthas-boot.jar
+$ curl -O https://arthas.aliyun.com/arthas-boot.jar
 # 打印帮助信息
-[emon@emon ~]$ java -jar arthas-boot.jar -h
+$ java -jar arthas-boot.jar -h
 # 启动
-[emon@emon ~]$ java -jar arthas-boot.jar 
+$ java -jar arthas-boot.jar 
 [INFO] arthas-boot version: 3.3.9
 [INFO] Found existing java process, please choose one and input the serial number of the process, eg : 1. Then hit ENTER.
 * [1]: 10913 com.install4j.runtime.launcher.UnixLauncher
@@ -929,7 +929,7 @@ time      2020-09-01 16:45:08
 Arthas支持在Linux/Unix?Mac等平台上一键安装，请复制一下内容，并粘贴到命令行中，敲`回车`执行即可。
 
 ```bash
-[emon@emon ~]$ curl -L https://arthas.aliyun.com/install.sh | sh
+$ curl -L https://arthas.aliyun.com/install.sh | sh
 ```
 
 上述命令会下载启动脚本文件`as.sh`到当前目录，你可以放在任何地方或将其加入到`$PATH`中。
@@ -937,7 +937,7 @@ Arthas支持在Linux/Unix?Mac等平台上一键安装，请复制一下内容，
 可以使用`./as.sh`启动，也可以`./as.sh -h`查看更多参数信息。但也可能报错：
 
 ```bash
-[emon@emon ~]$ ./as.sh 
+$ ./as.sh 
 Error: telnet is not installed. Try to use java -jar arthas-boot.jar
 ```
 
@@ -946,7 +946,7 @@ Error: telnet is not installed. Try to use java -jar arthas-boot.jar
 在Linux/Unix/Mac平台：
 
 ```bash
-[emon@emon ~]$ rm -rf ~/.arthas/ ~/logs/arthas*
+$ rm -rf ~/.arthas/ ~/logs/arthas*
 ```
 
 ### 6.2、arthas使用

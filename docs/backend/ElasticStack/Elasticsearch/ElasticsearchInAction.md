@@ -42,7 +42,7 @@
 整体安装的目录规划：
 
 ```bash
-[emon@emon ~]$ mkdir -pv /usr/local/canal/{adapter,admin,deployer,example}
+$ mkdir -pv /usr/local/canal/{adapter,admin,deployer,example}
 ```
 
 ## 2、同步mysql到es
@@ -52,7 +52,7 @@
 - 对于自建`MySQL`服务，需要开启`Binlog`写入功能
 
 ```bash
-[emon@emon ~]$ sudo vim /usr/local/mysql/etc/my.cnf
+$ sudo vim /usr/local/mysql/etc/my.cnf
 ```
 
 ```bash
@@ -110,17 +110,17 @@ INSERT INTO loginfo (id, log_type, content, deleted, create_time, modify_time, v
 - 下载
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.deployer-1.1.4.tar.gz
+$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.deployer-1.1.4.tar.gz
 ```
 
 - 解压
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/canal.deployer-1.1.4.tar.gz -C /usr/local/canal/deployer/
+$ tar -zxvf /usr/local/src/canal.deployer-1.1.4.tar.gz -C /usr/local/canal/deployer/
 ```
 
 ```bash
-[emon@emon ~]$ ls /usr/local/canal/deployer/
+$ ls /usr/local/canal/deployer/
 bin  conf  lib  logs
 ```
 
@@ -129,7 +129,7 @@ bin  conf  lib  logs
 [配置文件详解](https://blog.csdn.net/my201110lc/article/details/80765356)
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/deployer/conf/canal.properties 
+$ vim /usr/local/canal/deployer/conf/canal.properties 
 ```
 
 ```properties
@@ -142,8 +142,8 @@ canal.destinations = develop
 - 复制`conf/example`配置文件进行修改
 
 ```bash
-[emon@emon ~]$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/develop
-[emon@emon ~]$ vim /usr/local/canal/deployer/conf/develop/instance.properties 
+$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/develop
+$ vim /usr/local/canal/deployer/conf/develop/instance.properties 
 ```
 
 ```properties
@@ -166,13 +166,13 @@ canal.instance.filter.regex=canaldb\\..*
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/deployer/bin/startup.sh
+$ /usr/local/canal/deployer/bin/startup.sh
 ```
 
 - 查看server日志
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/deployer/logs/canal/canal.log 
+$ vim /usr/local/canal/deployer/logs/canal/canal.log 
 ```
 
 ```
@@ -187,7 +187,7 @@ canal.instance.filter.regex=canaldb\\..*
 - 查看instance的日志
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/deployer/logs/develop/develop.log 
+$ vim /usr/local/canal/deployer/logs/develop/develop.log 
 ```
 
 ```
@@ -203,7 +203,7 @@ canal.instance.filter.regex=canaldb\\..*
 - 关闭
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/deployer/bin/stop.sh
+$ /usr/local/canal/deployer/bin/stop.sh
 ```
 
 ### 2.2、部署`adapter`服务
@@ -211,24 +211,24 @@ canal.instance.filter.regex=canaldb\\..*
 - 下载
 
 ```bash
-[emon@emon ~]$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.adapter-1.1.4.tar.gz
+$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.adapter-1.1.4.tar.gz
 ```
 
 - 解压
 
 ```bash
-[emon@emon ~]$ tar -zxvf /usr/local/src/canal.adapter-1.1.4.tar.gz -C /usr/local/canal/adapter
+$ tar -zxvf /usr/local/src/canal.adapter-1.1.4.tar.gz -C /usr/local/canal/adapter
 ```
 
 ```bash
-[emon@emon ~]$ ls /usr/local/canal/adapter/
+$ ls /usr/local/canal/adapter/
 bin  conf  lib  logs  plugin
 ```
 
 - 修改启动器配置：`application.yml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/adapter/conf/application.yml
+$ vim /usr/local/canal/adapter/conf/application.yml
 ```
 
 ```yaml
@@ -283,13 +283,13 @@ adapter将会自动加载conf/es下的所有.yml结尾的配置文件
 
 ```bash
 # 拷贝创建
-[emon@emon ~]$ cp /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/loginfo.yml
+$ cp /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/loginfo.yml
 # 备份默认的几个yml文件
-[emon@emon ~]$ mv /usr/local/canal/adapter/conf/es/biz_order.yml /usr/local/canal/adapter/conf/es/biz_order.yml.bak
-[emon@emon ~]$ mv /usr/local/canal/adapter/conf/es/customer.yml /usr/local/canal/adapter/conf/es/customer.yml.bak
-[emon@emon ~]$ mv /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/mytest_user.yml.bak
+$ mv /usr/local/canal/adapter/conf/es/biz_order.yml /usr/local/canal/adapter/conf/es/biz_order.yml.bak
+$ mv /usr/local/canal/adapter/conf/es/customer.yml /usr/local/canal/adapter/conf/es/customer.yml.bak
+$ mv /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/mytest_user.yml.bak
 # 编辑文件
-[emon@emon ~]$ vim /usr/local/canal/adapter/conf/es/loginfo.yml 
+$ vim /usr/local/canal/adapter/conf/es/loginfo.yml 
 ```
 
 ```yaml
@@ -331,12 +331,12 @@ PUT loginfo
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/adapter/bin/startup.sh 
+$ /usr/local/canal/adapter/bin/startup.sh 
 ```
 
 - 查看日志
 
-[emon@emon ~]$ vim /usr/local/canal/adapter/logs/adapter/adapter.log 
+$ vim /usr/local/canal/adapter/logs/adapter/adapter.log 
 
 ```
 2020-08-15 22:57:43.297 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterService - ## start the canal client adapters.
@@ -359,7 +359,7 @@ PUT loginfo
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/adapter/bin/stop.sh 
+$ /usr/local/canal/adapter/bin/stop.sh 
 ```
 
 - 全量数据同步
@@ -371,7 +371,7 @@ epoch      timestamp count
 1597503719 15:01:59  0
 
 # 全量数据同步
-[emon@emon ~]$ curl http://192.168.1.66:8081/etl/es/loginfo.yml -X POST
+$ curl http://192.168.1.66:8081/etl/es/loginfo.yml -X POST
 {"succeeded":true,"resultMessage":"导入ES 数据：2 条"}
 
 # `kibana`查看es的索引loginfo文档数
@@ -493,7 +493,7 @@ Caused by: java.lang.RuntimeException: com.mysql.jdbc.exceptions.jdbc4.Communica
 - 配置`canal.properties`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/deployer/conf/canal.properties 
+$ vim /usr/local/canal/deployer/conf/canal.properties 
 ```
 
 ```properties
@@ -507,8 +507,8 @@ canal.destinations = develop,rdbsync
 - 复制`conf/example`配置文件进行修改
 
 ```bash
-[emon@emon ~]$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/rdbsync
-[emon@emon ~]$ vim /usr/local/canal/deployer/conf/rdbsync/instance.properties 
+$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/rdbsync
+$ vim /usr/local/canal/deployer/conf/rdbsync/instance.properties 
 ```
 
 ```properties
@@ -531,19 +531,19 @@ canal.instance.filter.regex=canaldb\\..*
 - 启动
 
 ```
-[emon@emon ~]$ /usr/local/canal/deployer/bin/startup.sh
+$ /usr/local/canal/deployer/bin/startup.sh
 ```
 
 - 查看server日志
 
 ```
-[emon@emon ~]$ vim /usr/local/canal/deployer/logs/canal/canal.log 
+$ vim /usr/local/canal/deployer/logs/canal/canal.log 
 ```
 
 - 查看instance的日志
 
 ```
-[emon@emon ~]$ vim /usr/local/canal/deployer/logs/rdbsync/rdbsync.log
+$ vim /usr/local/canal/deployer/logs/rdbsync/rdbsync.log
 ```
 
 ### 3.2、部署`adapter`服务
@@ -551,7 +551,7 @@ canal.instance.filter.regex=canaldb\\..*
 - 修改启动器配置：`application.yml`
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/adapter/conf/application.yml
+$ vim /usr/local/canal/adapter/conf/application.yml
 ```
 
 ```bash
@@ -584,9 +584,9 @@ adapter将会自动加载conf/es下的所有.yml结尾的配置文件
 
   ```bash
   # 拷贝创建
-  [emon@emon ~]$ cp /usr/local/canal/adapter/conf/rdb/mytest_user.yml /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml
+  $ cp /usr/local/canal/adapter/conf/rdb/mytest_user.yml /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml
   # 编辑文件
-  [emon@emon ~]$ vim /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml 
+  $ vim /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml 
   ```
 
   ```yaml
@@ -626,19 +626,19 @@ adapter将会自动加载conf/es下的所有.yml结尾的配置文件
 - 启动
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/adapter/bin/startup.sh 
+$ /usr/local/canal/adapter/bin/startup.sh 
 ```
 
 - 查看日志
 
 ```bash
-[emon@emon ~]$ vim /usr/local/canal/adapter/logs/adapter/adapter.log
+$ vim /usr/local/canal/adapter/logs/adapter/adapter.log
 ```
 
 - 停止
 
 ```bash
-[emon@emon ~]$ /usr/local/canal/adapter/bin/stop.sh 
+$ /usr/local/canal/adapter/bin/stop.sh 
 ```
 
 - 全量数据同步
