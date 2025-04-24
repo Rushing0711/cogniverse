@@ -1,5 +1,5 @@
 import {defineConfig} from 'vitepress'
-import {set_sidebar} from './gen_sidebar.js'
+import {autoGenSidebar} from './auto-gen-sidebar.js'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -21,6 +21,7 @@ export default defineConfig({
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {text: '后端（旧）', link: '/backend/old'},
+                    {text: '数据结构与算法分析', link: '/backend/new/数据结构与算法分析/01-引言'},
                 ]
             },
             {
@@ -57,14 +58,15 @@ export default defineConfig({
                     {text: '自动生成侧边栏', link: '/readme/auto-side-bar'}
                 ]
             },
-            '/frontend/old': set_sidebar('frontend/old'),
-            '/backend/old': set_sidebar('backend/old'),
-            '/design/old': set_sidebar('design/old'),
-            '/database/old': set_sidebar('database/old'),
-            '/bigdata/old': set_sidebar('bigdata/old'),
-            '/ai': set_sidebar('ai'),
-            '/devops/old': set_sidebar('devops/old'),
-            '/misc': set_sidebar('misc')
+            '/frontend/old': autoGenSidebar('frontend/old'),
+            '/backend/old': autoGenSidebar('backend/old'),
+            '/design/old': autoGenSidebar('design/old'),
+            '/database/old': autoGenSidebar('database/old'),
+            '/bigdata/old': autoGenSidebar('bigdata/old'),
+            '/ai': autoGenSidebar('ai'),
+            '/devops/old': autoGenSidebar('devops/old'),
+            '/misc': autoGenSidebar('misc'),
+            '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
         },
 
         socialLinks:

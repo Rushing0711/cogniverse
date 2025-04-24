@@ -40,6 +40,8 @@ function getList(files, dirPath, pathname) {
                 items: getList(files, dir, `${pathname}/${items[file]}`),
             })
         } else {
+            // 获取不带后缀的文件名
+            const basename = path.parse(items[file]).name
             // 获取名字
             const name = path.basename(items[file])
             // 排除非 md 文件
@@ -48,7 +50,7 @@ function getList(files, dirPath, pathname) {
                 continue
             }
             res.push({
-                text: name,
+                text: basename,
                 link: `${pathname}/${name}`,
             })
         }
@@ -56,7 +58,7 @@ function getList(files, dirPath, pathname) {
     return res
 }
 
-export const set_sidebar = (pathname) => {
+export const autoGenSidebar = (pathname) => {
     // 获取 pathname 的路径
     const dirPath = path.join(DIR_PATH, pathname)
     // 读取 pathname 下的所有文件或者文件夹
