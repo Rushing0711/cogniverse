@@ -30,13 +30,13 @@ export default defineConfig({
                 ]
             },
             {
-                text: '大数据', items: [
-                    {text: '数据库（旧）', link: '/bigdata/old'},
+                text: '数据库', items: [
+                    {text: '数据库（旧）', link: '/database/old'},
                 ]
             },
             {
-                text: '数据库', items: [
-                    {text: '数据库（旧）', link: '/database/old'},
+                text: '大数据', items: [
+                    {text: '数据库（旧）', link: '/bigdata/old'},
                 ]
             },
             {text: 'AI大模型', link: '/ai'},
