@@ -14,27 +14,36 @@ export default defineConfig({
             {
                 text: '<img src="/frontend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="前端">',
                 items: [
-                    {text: '前端', link: '/frontend'},
+                    {text: '前端（旧）', link: '/frontend/old'},
                 ]
             },
             {
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
-                    {text: '后端', link: '/backend'},
+                    {text: '后端（旧）', link: '/backend/old'},
                 ]
             },
             {
                 text: '<img src="/design.png" style="height: 32px;margin-top: 25px;display: inline;" alt="设计">',
                 items: [
-                    {text: '设计', link: '/design'}
+                    {text: '设计（旧）', link: '/design/old'},
                 ]
             },
-            {text: '大数据', link: '/bigdata'},
+            {
+                text: '大数据', items: [
+                    {text: '数据库（旧）', link: '/bigdata/old'},
+                ]
+            },
+            {
+                text: '数据库', items: [
+                    {text: '数据库（旧）', link: '/database/old'},
+                ]
+            },
             {text: 'AI大模型', link: '/ai'},
             {
                 text: 'DevOps',
                 items: [
-                    {text: 'DevOps', link: '/devops'},
+                    {text: 'DevOps（旧）', link: '/devops/old'},
                 ]
             },
             {text: '杂项', link: '/misc'},
@@ -48,12 +57,13 @@ export default defineConfig({
                     {text: '自动生成侧边栏', link: '/readme/auto-side-bar'}
                 ]
             },
-            '/frontend': set_sidebar('frontend'),
-            '/backend': set_sidebar('backend'),
-            '/design': set_sidebar('design'),
-            '/bigdata': set_sidebar('bigdata'),
+            '/frontend/old': set_sidebar('frontend/old'),
+            '/backend/old': set_sidebar('backend/old'),
+            '/design/old': set_sidebar('design/old'),
+            '/database/old': set_sidebar('database/old'),
+            '/bigdata/old': set_sidebar('bigdata/old'),
             '/ai': set_sidebar('ai'),
-            '/devops': set_sidebar('devops'),
+            '/devops/old': set_sidebar('devops/old'),
             '/misc': set_sidebar('misc')
         },
 
