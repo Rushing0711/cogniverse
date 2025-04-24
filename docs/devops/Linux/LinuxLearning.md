@@ -1689,7 +1689,7 @@ job 3 at Sun Dec 29 23:36:00 2024
 
 命令：`lsblk`或`lsblk -f`
 
-`<img src="images/image-20241229235008254.png" alt="image-20241229235008254" style="zoom:50%;" />`
+<img src="./images/image-20241229235008254.png" alt="image-20241229235008254" style="zoom:50%;" />
 
 - 硬盘说明
 
@@ -1717,11 +1717,11 @@ job 3 at Sun Dec 29 23:36:00 2024
     在【虚拟机】菜单中，选择【设置】，然后设备列表里添加硬盘，然后一路【下一步】，中间只有选择硬盘大小的地方需要修改，直到完成。然后<span style="color:red;font-weight:bold;">
     重启系统</span>（才能识别）！
 
-   `<img src="images/image-20241230125028507.png" alt="image-20241230125028507" style="zoom:50%;" />`
+   <img src="./images/image-20241230125028507.png" alt="image-20241230125028507" style="zoom:50%;" />
 
-   `<img src="images/image-20241230125101169.png" alt="image-20241230125101169" style="zoom:50%;" />`
+   <img src="./images/image-20241230125101169.png" alt="image-20241230125101169" style="zoom:50%;" />
 
-   `<img src="images/image-20241230125248536.png" alt="image-20241230125248536" style="zoom:50%;" />`
+   <img src="./images/image-20241230125248536.png" alt="image-20241230125248536" style="zoom:50%;" />
 
    ![image-20241230125810471](images/image-20241230125810471.png)
 
@@ -1729,7 +1729,7 @@ job 3 at Sun Dec 29 23:36:00 2024
 
     1. 查看挂载的硬盘
 
-   `<img src="images/image-20241230130306500.png" alt="image-20241230130306500" style="zoom:50%;" />`
+   <img src="./images/image-20241230130306500.png" alt="image-20241230130306500" style="zoom:50%;" />
 
     2. 分区命令
 
@@ -1737,11 +1737,11 @@ job 3 at Sun Dec 29 23:36:00 2024
    % fdisk /dev/nvme0n2
    ```
 
-   `<img src="images/image-20241230132015075.png" alt="image-20241230132015075" style="zoom:50%;" />`
+   <img src="./images/image-20241230132015075.png" alt="image-20241230132015075" style="zoom:50%;" />
 
     3. 查看挂载信息
 
-   `<img src="images/image-20241230132400388.png" alt="image-20241230132400388" style="zoom:50%;" />`
+   <img src="./images/image-20241230132400388.png" alt="image-20241230132400388" style="zoom:50%;" />
 
 3. 格式化
 
@@ -1910,9 +1910,9 @@ nvme0n2            259:4    0    1G  0 disk
 % vim /etc/NetworkManager/system-connections/ens160.nmconnection
 ```
 
-`<img src="images/image-20250109171308445.png" alt="image-20250109171308445" style="zoom:50%;" />`
+<img src="./images/image-20250109171308445.png" alt="image-20250109171308445" style="zoom:50%;" />
 
-`<img src="images/image-20250109171519133.png" alt="image-20250109171519133" style="zoom:50%;" />`
+<img src="./images/image-20250109171519133.png" alt="image-20250109171519133" style="zoom:50%;" />
 
 | 命令                                                          | 说明                                                |
 |-------------------------------------------------------------|---------------------------------------------------|
@@ -3532,7 +3532,7 @@ echo "备份数据库 $DATABASE 成功"
 
 - 手动配置网络
 
-`<img src="images/image-20250107161654648.png" alt="image-20250107161654648" style="zoom:50%;" />`
+<img src="./images/image-20250107161654648.png" alt="image-20250107161654648" style="zoom:50%;" />
 
 说明：
 
@@ -3540,7 +3540,7 @@ Search domains也可以是`192.168.200.2,8.8.8.8`
 
 - 创建一个用户
 
-`<img src="images/image-20250107161922278.png" alt="image-20250107161922278" style="zoom:50%;" />`
+<img src="./images/image-20250107161922278.png" alt="image-20250107161922278" style="zoom:50%;" />
 
 - 注意，安装OpenSSH服务。
 
