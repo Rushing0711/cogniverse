@@ -45,6 +45,7 @@ export default defineConfig({
                 text: 'DevOps',
                 items: [
                     {text: 'DevOps（旧）', link: '/devops/old'},
+                    {text: '容器与云原生', link: '/devops/new/容器与云原生/01-引言'},
                 ]
             },
             {text: '杂项', link: '/misc'},
@@ -67,6 +68,7 @@ export default defineConfig({
             '/devops/old': autoGenSidebar('devops/old'),
             '/misc': autoGenSidebar('misc'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
+            '/devops/new/容器与云原生/01-引言': autoGenSidebar('/devops/new/容器与云原生/01-引言'),
         },
 
         socialLinks:
