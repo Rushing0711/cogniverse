@@ -800,11 +800,11 @@ pod/ingress-nginx-controller-mpx75         1/1     Running     0          57m   
 pod/ingress-nginx-controller-vx8qg         1/1     Running     0          57m   10.244.2.22   emon3   <none>           <none>
 
 NAME                                         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                 AGE   SELECTOR
-service/ingress-nginx-controller             NodePort    10.96.57.167   <none>        80:80/TCP,443:443/TCP   57m   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
-service/ingress-nginx-controller-admission   ClusterIP   10.96.171.51   <none>        443/TCP                 57m   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+service/ingress-nginx-controller             NodePort    10.96.57.167   <none>        80:80/TCP,443:443/TCP   57m   app.kubernetes.io/components=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+service/ingress-nginx-controller-admission   ClusterIP   10.96.171.51   <none>        443/TCP                 57m   app.kubernetes.io/components=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
 
 NAME                                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE   CONTAINERS   IMAGES                                            SELECTOR
-daemonset.apps/ingress-nginx-controller   2         2         2       2            2           kubernetes.io/os=linux   57m   controller   registry.k8s.io/ingress-nginx/controller:v1.6.3   app.kubernetes.io/component=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
+daemonset.apps/ingress-nginx-controller   2         2         2       2            2           kubernetes.io/os=linux   57m   controller   registry.k8s.io/ingress-nginx/controller:v1.6.3   app.kubernetes.io/components=controller,app.kubernetes.io/instance=ingress-nginx,app.kubernetes.io/name=ingress-nginx
 
 NAME                                       COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                                                                    SELECTOR
 job.batch/ingress-nginx-admission-create   1/1           3s         57m   create       registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20220916-gd32f8c343   controller-uid=e4a52a60-df3f-48e7-92f7-e60dacdb5cde
@@ -9294,7 +9294,7 @@ $ iptables-save
 ```bash
 # 1. 重新生成新的token:
 [root@host1 flannel]# kubeadm  token create
-W0514 10:44:17.973722   26813 configset.go:202] WARNING: kubeadm cannot validate component configs for API groups [kubelet.config.k8s.io kubeproxy.config.k8s.io]
+W0514 10:44:17.973722   26813 configset.go:202] WARNING: kubeadm cannot validate components configs for API groups [kubelet.config.k8s.io kubeproxy.config.k8s.io]
 38lqh5.w6csafdt0cqkxz4e
 [root@host1 flannel]# kubeadm  token list
 TOKEN                     TTL         EXPIRES                     USAGES                   DESCRIPTION                                                EXTRA GROUPS

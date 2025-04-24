@@ -1620,7 +1620,7 @@ Re-enter new password:
 VALIDATE PASSWORD COMPONENT can be used to test passwords
 and improve security. It checks the strength of password
 and allows the users to set only those passwords which are
-secure enough. Would you like to setup VALIDATE PASSWORD component?
+secure enough. Would you like to setup VALIDATE PASSWORD components?
 
 Press y|Y for Yes, any other key for No: y
 
