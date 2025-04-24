@@ -18,7 +18,7 @@ const intersections = (arr1, arr2) => Array.from(new Set(arr1.filter((item) => !
  * @param files 需要处理的文件或文件夹数组
  * @param dirPath 初始路径
  * @param pathname 当前路径名
- * @returns 格式化后的文件列表数据
+ * @returns *[]
  */
 function getList(files, dirPath, pathname) {
     // 过滤掉
