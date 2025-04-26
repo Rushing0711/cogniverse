@@ -21,7 +21,7 @@ export default defineConfig({
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {text: '后端（旧）', link: '/backend/old'},
-                    {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇-前言篇'},
+                    {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇 前言篇.md'},
                     {text: '数据结构与算法分析', link: '/backend/new/数据结构与算法分析/01-引言'},
                 ]
             },
@@ -160,7 +160,7 @@ export default defineConfig({
     },
 
     vite: {
-        assetsInclude: ['**/*.image'] // 解决 [plugin vite:build-import-analysis] docs/frontend/Vue/Vue2And3/images/OptionsAPI2.image 报错
+        assetsInclude: ['**/*.image'], // 解决 [plugin vite:build-import-analysis] docs/frontend/Vue/Vue2And3/images/OptionsAPI2.image 报错
     },
 
     ignoreDeadLinks: [

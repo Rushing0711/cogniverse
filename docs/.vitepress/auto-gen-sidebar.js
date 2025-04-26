@@ -4,7 +4,7 @@ import fs from 'node:fs'
 // 文件根目录
 const DIR_PATH = path.resolve(__dirname, '..')
 // 白名单，过滤不是文章的文件和文件夹
-const WHITE_LIST = ['.DS_Store', 'images']
+const WHITE_LIST = ['.DS_Store', 'images', 'index.md']
 
 // 判断是否文件夹
 const isDirectory = (path) => fs.lstatSync(path).isDirectory();
