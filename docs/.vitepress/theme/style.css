@@ -173,3 +173,12 @@
 .aside-container {
     width: 380px !important;
 }
+
+/**
+ * 自定义自动侧边栏中的特殊标题样式
+ * --------------------------------------------------------------------------*/
+.special-title {
+    font-size: 1rem; /* 增大字号 */
+    font-weight: bold; /* 加粗字体 */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* 给字体加立体效果 */
+}

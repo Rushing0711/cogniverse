@@ -12,6 +12,22 @@ const isDirectory = (path) => fs.lstatSync(path).isDirectory();
 // 去差值
 const intersections = (arr1, arr2) => Array.from(new Set(arr1.filter((item) => !new Set(arr2).has(item))));
 
+// 对“00-第零篇”、“01-第一篇”等标题特殊处理
+const regex = /^\d{2}--第[零一二三四五六七八九十]篇/;
+
+/**
+ * 给文件名添加特殊标题
+ *
+ * @param basename 文件名
+ * @returns string
+ */
+function specialTitle(basename) {
+    if (basename.match(regex)) {
+        return `<span class="special-title">${basename}</span>`
+    }
+    return basename;
+}
+
 /**
  * 递归获取文件夹及其子文件夹中的文件列表，并转换为特定格式的数据
  *
@@ -49,8 +65,10 @@ function getList(files, dirPath, pathname) {
             if (suffix !== '.md') {
                 continue
             }
+            // 对“00-第零篇”、“01-第一篇”等标题特殊处理
+            const title = specialTitle(basename)
             res.push({
-                text: basename,
+                text: title,
                 link: `${pathname}/${name}`,
             })
         }

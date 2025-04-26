@@ -21,6 +21,7 @@ export default defineConfig({
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {text: '后端（旧）', link: '/backend/old'},
+                    {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇-前言篇'},
                     {text: '数据结构与算法分析', link: '/backend/new/数据结构与算法分析/01-引言'},
                 ]
             },
@@ -45,7 +46,7 @@ export default defineConfig({
                 text: 'DevOps',
                 items: [
                     {text: 'DevOps（旧）', link: '/devops/old'},
-                    {text: '容器与云原生', link: '/devops/new/容器与云原生/01-引言'},
+                    {text: '容器与云原生', link: '/devops/new/容器与云原生/01--第一篇-Docker篇'},
                 ]
             },
             {text: '杂项', link: '/misc'},
@@ -67,8 +68,9 @@ export default defineConfig({
             '/ai': autoGenSidebar('ai'),
             '/devops/old': autoGenSidebar('devops/old'),
             '/misc': autoGenSidebar('misc'),
+            '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
-            '/devops/new/容器与云原生/01-引言': autoGenSidebar('/devops/new/容器与云原生/01-引言'),
+            '/devops/new/容器与云原生': autoGenSidebar('/devops/new/容器与云原生'),
         },
 
         socialLinks:
