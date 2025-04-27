@@ -15,6 +15,8 @@ export default defineConfig({
                 text: '<img src="/frontend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="前端">',
                 items: [
                     {text: '前端（旧）', link: '/frontend/old'},
+                    {text: 'HTML知识点', link: '/frontend/new/HTML知识点/00-引言'},
+                    {text: 'CSS知识点', link: '/frontend/new/CSS知识点/00-引言'},
                 ]
             },
             {
@@ -68,6 +70,8 @@ export default defineConfig({
             '/ai': autoGenSidebar('ai'),
             '/devops/old': autoGenSidebar('devops/old'),
             '/misc': autoGenSidebar('misc'),
+            '/frontend/new/HTML知识点/': autoGenSidebar('/frontend/new/HTML知识点'),
+            '/frontend/new/CSS知识点/': autoGenSidebar('/frontend/new/CSS知识点'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
             '/devops/new/容器与云原生': autoGenSidebar('/devops/new/容器与云原生'),
