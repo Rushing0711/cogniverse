@@ -14,16 +14,21 @@ export default defineConfig({
             {
                 text: '<img src="/frontend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="前端">',
                 items: [
-                    {text: '前端（旧）', link: '/frontend/old'},
-                    {text: 'HTML', link: '/frontend/new/HTML/00-引言'},
-                    {text: 'CSS', link: '/frontend/new/CSS/00-引言'},
-                    {text: 'JavaScript', link: '/frontend/new/JavaScript/00-引言'},
+                    {items: [{text: '前端（旧）', link: '/frontend/old'},]},
+                    {
+                        text: '前端基础', items: [
+                            {text: 'HTML', link: '/frontend/new/HTML/00-引言'},
+                            {text: 'CSS', link: '/frontend/new/CSS/00-引言'},
+                            {text: 'JavaScript', link: '/frontend/new/JavaScript/00-引言'},
+                        ]
+                    },
+                    {text: '前端框架', items: []}
                 ]
             },
             {
                 text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
-                    {text: '后端（旧）', link: '/backend/old'},
+                    {items: [{text: '后端（旧）', link: '/backend/old'},]},
                     {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇 前言篇.md'},
                     {text: '数据结构与算法分析', link: '/backend/new/数据结构与算法分析/01-引言'},
                 ]
@@ -36,20 +41,29 @@ export default defineConfig({
             },
             {
                 text: '数据库', items: [
-                    {text: '数据库（旧）', link: '/database/old'},
+                    {items: [{text: '数据库（旧）', link: '/database/old'},]}
                 ]
             },
             {
                 text: '大数据', items: [
-                    {text: '数据库（旧）', link: '/bigdata/old'},
+                    {items: [{text: '大数据（旧）', link: '/bigdata/old'},]}
                 ]
             },
             {text: 'AI大模型', link: '/ai'},
             {
                 text: 'DevOps',
                 items: [
-                    {text: 'DevOps（旧）', link: '/devops/old'},
-                    {text: '容器与云原生', link: '/devops/new/容器与云原生/01--第一篇-Docker篇'},
+                    {items: [{text: 'DevOps（旧）', link: '/devops/old'}]},
+                    {text: 'Linux', link: '/devops/new/Linux/00-引言'},
+                    {text: 'Nginx', link: '/devops/new/Nginx/00-引言'},
+                    {
+                        text: '云原生', items: [
+                            {text: 'Docker', link: '/devops/new/Docker/00-引言'},
+                            {text: 'Kubernetes', link: '/devops/new/Kubernetes/00-引言'},
+                            {text: 'KubeSphere', link: '/devops/new/KubeSphere/00-引言'},
+                        ]
+                    },
+                    {items: [{text: 'Git', link: '/devops/new/Linux/00-引言'}]},
                 ]
             },
             {text: '杂项', link: '/misc'},
@@ -76,7 +90,12 @@ export default defineConfig({
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
-            '/devops/new/容器与云原生': autoGenSidebar('/devops/new/容器与云原生'),
+            '/devops/new/Linux': autoGenSidebar('/devops/new/Linux'),
+            '/devops/new/Nginx': autoGenSidebar('/devops/new/Nginx'),
+            '/devops/new/Docker': autoGenSidebar('/devops/new/Docker'),
+            '/devops/new/Kubernetes': autoGenSidebar('/devops/new/Kubernetes'),
+            '/devops/new/KubeSphere': autoGenSidebar('/devops/new/KubeSphere'),
+            '/devops/new/Git': autoGenSidebar('/devops/new/Git'),
         },
 
         socialLinks:

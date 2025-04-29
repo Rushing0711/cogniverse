@@ -1,0 +1,241 @@
+# 第13章 RPM与YUM
+
+## 13.1 rpm包的管理
+
+### 13.1.1 查询rpm包
+
+- 介绍
+
+rpm用于互联网下载包的打包及安装工具，它包含在某些Linux分发版中。它生成具有`.rpm`扩展名的文件。rpm是RedHat Package
+Manager（RedHat软件包管理工具）的缩写，类似windows的setup.exe，这一文件格式名称虽然打上了RedHat的标志，但理念是通用的。
+
+Linux的分发版本都有采用（suse、redhat、centos等等），可以算是公认的行业标准了。
+
+- rpm包的简单查询指令
+
+查询已安装的rpm列表：`rpm -qa|grep xx`
+
+```bash
+# 看看当前系统是否安装了firefox
+% rpm -qa|grep firefox
+firefox-68.10.0-1.el7.centos.aarch64
+```
+
+- rpm包名基本格式
+
+一个rpm包名：firefox-60.2.2-1.el7.centos.x86_64
+
+名称：firefox
+
+版本号：60.2.2-1
+
+适用操作系统：el7.centos.x86_64
+
+表示centos7.x的64位操作系统
+
+如果是i686、i368表示32位系统，noarch表示通用。
+
+- rpm包的其它查询指令
+
+    - `rpm -qa` 查询所安装的所有rpm软件包
+
+  ```bash
+  % rpm -qa | more
+  % rpm -qa | grep firefox
+  ```
+
+    - `rpm -q 软件包名` 查询软件包是否安装
+
+  如果软件包已经安装，该命令会输出软件包的版本信息；如果未安装，则会输出“package <package_name> is not installed”
+
+  ```bash
+  % rpm -q firefox
+  firefox-68.10.0-1.el7.centos.aarch64
+  # 如果命令的输出为空，则说明所有列出的软件包都已安装；如果输出包含“not installed”，则说明至少有一个软件包未安装。
+  % rpm -q wget curl git | grep "not installed"
+  ```
+
+    - `rpm -qi 软件包名` 查询软件包信息
+
+  ```bash
+  % rpm -qi firefox
+  Name        : firefox
+  Version     : 68.10.0
+  Release     : 1.el7.centos
+  Architecture: aarch64
+  Install Date: 2024年12月22日 星期日 19时44分25秒
+  Group       : Unspecified
+  Size        : 225389870
+  License     : MPLv1.1 or GPLv2+ or LGPLv2+
+  Signature   : RSA/SHA256, 2020年07月09日 星期四 00时26分19秒, Key ID 6c7cb6ef305d49d6
+  Source RPM  : firefox-68.10.0-1.el7.centos.src.rpm
+  Build Date  : 2020年07月08日 星期三 07时21分07秒
+  Build Host  : aarch64-02.bsys.centos.org
+  Relocations : (not relocatable)
+  Packager    : CentOS BuildSystem <http://bugs.centos.org>
+  Vendor      : CentOS
+  URL         : https://www.mozilla.org/firefox/
+  Summary     : Mozilla Firefox Web browser
+  Description :
+  Mozilla Firefox is an open-source web browser, designed for standards
+  compliance, performance and portability.
+  ```
+
+    - `rpm -ql 软件包名` 查询软件包中的文件
+
+  ```bash
+  % rpm -ql firefox
+  /etc/firefox
+  /etc/firefox/pref
+  /usr/bin/firefox
+  ......
+  ```
+
+    - `rpm -qf 文件全路径名` 查询文件所属的软件包
+
+  ```bash
+  % rpm -qf /etc/passwd
+  setup-2.8.71-11.el7.noarch
+  % rpm -qf /root/install.log
+  错误：文件 /root/install.log：没有那个文件或目录
+  % rpm -qf /root/anaconda-ks.cfg 
+  文件 /root/anaconda-ks.cfg 不属于任何软件包
+  ```
+
+    - `rpm -qc 软件包名` 显示已安装的指定软件的配置文件
+
+  ```bash
+  % rpm -qc wget
+  /etc/wgetrc
+  % rpm -qc yum
+  /etc/logrotate.d/yum
+  /etc/yum.conf
+  /etc/yum/version-groups.conf
+  ```
+
+    - `rpm -qd 软件包名` 显示已安装的指定软件的软件包文档所在位置
+
+  ```bash
+  % rpm -qd yum
+  /usr/share/doc/yum-3.4.3/AUTHORS
+  /usr/share/doc/yum-3.4.3/COPYING
+  /usr/share/doc/yum-3.4.3/ChangeLog
+  /usr/share/doc/yum-3.4.3/INSTALL
+  /usr/share/doc/yum-3.4.3/PLUGINS
+  /usr/share/doc/yum-3.4.3/README
+  /usr/share/doc/yum-3.4.3/TODO
+  /usr/share/doc/yum-3.4.3/comps.rng
+  /usr/share/man/man5/yum.conf.5
+  /usr/share/man/man8/yum-shell.8
+  /usr/share/man/man8/yum.8
+  ```
+
+    - `rpm -qR 软件包名` 显示已安装的指定软件的依赖的软件包及文件
+
+  ```bash
+  % rpm -qR yum
+  /usr/bin/python
+  config(yum) = 3.4.3-168.el7.centos
+  cpio
+  diffutils
+  pygpgme
+  pyliblzma
+  python >= 2.4
+  python(abi) = 2.7
+  python-iniparse
+  python-sqlite
+  python-urlgrabber >= 3.10-8
+  pyxattr
+  rpm >= 0:4.11.3-22
+  rpm-python
+  rpmlib(CompressedFileNames) <= 3.0.4-1
+  rpmlib(FileDigests) <= 4.6.0-1
+  rpmlib(PayloadFilesHavePrefix) <= 4.0-1
+  yum-metadata-parser >= 1.1.0
+  yum-plugin-fastestmirror
+  rpmlib(PayloadIsXz) <= 5.2-1
+  ```
+
+### 13.1.2 卸载rpm包
+
+- 基本语法
+
+`rpm -e RPM包的名称`
+
+- 应用案例
+
+1. 案例1：删除firefox软件包
+
+```bash
+% rpm -e firefox
+```
+
+- 细节讨论
+
+1. 如果其他软件包依赖于你要卸载的软件包，卸载时会产生错误信息。
+
+```bash
+% rpm -e cpio
+错误：依赖检测失败：
+        cpio 被 (已安裝) yum-3.4.3-168.el7.centos.noarch 需要
+        cpio 被 (已安裝) dracut-033-572.el7.aarch64 需要
+        cpio 被 (已安裝) initscripts-9.49.53-1.el7.aarch64 需要
+        cpio 被 (已安裝) plymouth-scripts-0.8.9-0.34.20140113.el7.centos.aarch64 需要
+        cpio 被 (已安裝) abrt-addon-ccpp-2.1.11-60.el7.centos.aarch64 需要
+        cpio 被 (已安裝) rpm-build-4.11.3-45.el7.aarch64 需要
+        /usr/bin/cpio 被 (已安裝) kmod-20-28.el7.aarch64 需要
+        /usr/bin/cpio 被 (已安裝) file-roller-3.28.1-2.el7.aarch64 需要
+```
+
+2. 如果我们就是要删除 cpio 这个rpm包，可以增加参数 -nodeps ，就可以强制删除，但是一般不推荐这样做，因为依赖于该软件包的程序可能无法运行。
+
+比如：`rpm -e --nodeps cpio`
+
+### 13.1.3 安装rpm包
+
+- 基本语法
+
+`rpm -ivh RPM包全路径名称`
+
+- 参数说明
+
+| 参数        | 功能  |
+|-----------|-----|
+| i=install | 安装  |
+| v=verbose | 提示  |
+| h=hash    | 进度条 |
+
+- 应用实例
+
+1. 案例1：演示卸载和安装firefox浏览器
+
+![image-20250104163714123](images/image-20250104163714123.png)
+
+## 13.2 yum
+
+### 13.2.1 基本用法
+
+- 介绍
+
+yum是一个shell前端软件包管理器。基于RPM包管理，能够从指定的服务器自动下载RPM包并且安装，可以自动处理依赖性关系，并且一次安装所有依赖的软件包。
+
+- yum的基本指令
+
+查询yum服务器是否有需要安装的软件
+
+`yum list | grep xxx`
+
+安装指定的yum包
+
+`yum install xxx`
+
+- 应用实例
+
+案例1：请使用yum的方式来安装firefox
+
+```bash
+% rpm -e firefox
+% yum list firefox
+% yum install -y firefox
+```
+
