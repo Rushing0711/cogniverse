@@ -15,7 +15,7 @@ hero:
       link: /readme/cogniverse『typora+vitepress』
     - theme: alt
       text: "自动生成侧边栏"
-      link: /readme/auto-side-bar
+      link: /readme/auto-sidebar
 
 features:
   - title: 热爱而不是强迫
