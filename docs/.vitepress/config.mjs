@@ -63,7 +63,7 @@ export default defineConfig({
                             {text: 'KubeSphere', link: '/devops/new/KubeSphere/00-引言'},
                         ]
                     },
-                    {items: [{text: 'Git', link: '/devops/new/Linux/00-引言'}]},
+                    {items: [{text: 'Git', link: '/devops/new/Git/00-引言'}]},
                 ]
             },
             {text: '杂项', link: '/misc'},
