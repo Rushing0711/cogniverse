@@ -187,7 +187,7 @@ net.bridge.bridge-nf-call-iptables = 1
 
 - 配置
 
-      - 阿里云
+  - 阿里云
 
   登录阿里开发者平台： https://promotion.aliyun.com/ntms/act/kubernetes.html#industry
 
@@ -255,19 +255,9 @@ $ sudo systemctl restart docker
 
 ### 3.3 配置docker代理服务器
 
+[官网Docker代理配置](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration)
+
 若加速器不好使，请使用代理服务器，前提是能科学上网，这里推荐一个：Aurora 和 [ClashX](https://bigbearvpn.sodtool.com/login)
-
-- 安装了Aurora后，通过【设置】=>【网络和 Internet】=>【代理】=>【手动设置代理】（发现是开启的）=>编辑，查看代理地址。
-
-![image-20240623081417693](images/image-20240623081417693.png)
-
-点击编辑后，看到的代理配置：
-
-![image-20240623081523824](images/image-20240623081523824.png)
-
-其中127.0.0.1可以更换为其他网卡地址（比如VMware Network Adapter VMnet8）：192.168.32.1
-
-![image-20240623081740357](images/image-20240623081740357.png)
 
 - 配置Docker代理
 
@@ -293,6 +283,8 @@ $ systemctl show --property=Environment docker
 ```bash
 Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116
 ```
+
+
 
 ## 4 配置Docker服务
 
@@ -338,6 +330,8 @@ $ docker images
 [sudo] emon 的密码：
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 ```
+
+
 
 ## 5 升级Docker
 
@@ -386,6 +380,8 @@ $ sudo rm -rf /var/lib/containerd
 您必须手动删除任何已编辑的配置文件。
 
 :::
+
+
 
 ### 5.2 安装高版本Docker
 

@@ -1,4 +1,4 @@
-# 第13章 RPM与YUM
+# 第13章 RPM、YUM、DNF
 
 ## 13.1 rpm包的管理
 
@@ -211,31 +211,242 @@ firefox-68.10.0-1.el7.centos.aarch64
 
 ![image-20250104163714123](images/image-20250104163714123.png)
 
-## 13.2 yum
+## 13.2 yum与dnf
 
-### 13.2.1 基本用法
+### 13.2.1 介绍
 
-- 介绍
+- yum (Yellowdog Updater,Modified)
 
-yum是一个shell前端软件包管理器。基于RPM包管理，能够从指定的服务器自动下载RPM包并且安装，可以自动处理依赖性关系，并且一次安装所有依赖的软件包。
+YUM 是基于 RPM（Red Hat Package Manager）的 Linux 发行版（如 CentOS、RHEL、Fedora）的包管理工具，用于安装、更新、删除软件包，并自动处理依赖关系。
 
-- yum的基本指令
+- dnf （Dandified YUM）
 
-查询yum服务器是否有需要安装的软件
+DNF 是 YUM 的改进版本，旨在解决 YUM 的性能和设计问题。现为 Fedora、CentOS 8+、RHEL 8+ 等系统的默认包管理器。
 
-`yum list | grep xxx`
+### 13.2.2 基本用法
 
-安装指定的yum包
+- 安装软件包
 
-`yum install xxx`
+::: code-group
 
-- 应用实例
+```bash [yum]
+$ sudo yum install package_name
+```
 
-案例1：请使用yum的方式来安装firefox
+```bash [dnf]
+$ sudo dnf install package_name
+```
+
+:::
+
+::: tip
+
+- **自动确认**：添加 `-y` 参数（如 `sudo dnf install -y httpd`）。
+
+:::
+
+- 更新软件包
+
+::: code-group
+
+```bash [yum]
+$ sudo yum update
+```
+
+```bash [dnf]
+$ sudo dnf upgrade
+```
+
+:::
+
+::: tip
+
+- **更新指定包**：`sudo dnf upgrade package_name`
+
+:::
+
+- 删除软件包
+
+::: code-group
+
+```bash [yum]
+sudo yum remove package_name
+```
+
+```bash [dnf]
+sudo dnf remove package_name
+```
+
+:::
+
+- 搜索软件包
+
+::: code-group
+
+```bash [yum]
+$ yum search keyword
+```
+
+```bash [dnf]
+$ dnf search keyword
+```
+
+:::
+
+- 查看软件包信息
+
+::: code-group
+
+```bash [yum]
+$ yum info package_name
+```
+
+```bash [dnf]
+$ dnf info package_name
+```
+
+:::
+
+- 清理缓存
+
+::: code-group
+
+```bash [yum]
+$ sudo yum clean all
+```
+
+```bash [dnf]
+$ sudo dnf clean all
+```
+
+:::
+
+- 列出已经安装的软件包
+
+::: code-group
+
+```bash [yum]
+$ yum list installed
+```
+
+```bash [dnf]
+$ dnf list installed
+```
+
+:::
+
+- 查看仓库列表
+
+::: code-group
+
+```bash [yum]
+$ yum repolist
+```
+
+```bash [dnf]
+$ dnf repolist
+```
+
+:::
+
+::: tip
 
 ```bash
-% rpm -e firefox
-% yum list firefox
-% yum install -y firefox
+$ dnf repolist all
 ```
+
+可以查看所有仓库（含禁用的）
+
+:::
+
+- 更新本地软件仓库的元数据缓存
+
+`dnf makecache` 用于 **更新本地软件仓库的元数据缓存**。它会从配置的仓库（repo）中下载最新的软件包列表、依赖关系等元数据，并存储在本地，以加速后续操作（如搜索、安装、更新等）。
+
+::: code-group
+
+```bash [yum]
+$ sudo yum makecache
+```
+
+```bash [dnf]
+$ sudo dnf makecache
+```
+
+:::
+
+- 安装本地 RPM 包（自动解决依赖）
+
+::: code-group
+
+```bash [yum]
+$ sudo yum localinstall path/to/file.rpm
+```
+
+```bash [dnf]
+$ sudo dnf install path/to/file.rpm
+```
+
+:::
+
+- 软件包组管理
+
+::: code-group
+
+```bash [yum]
+$ sudo groupinstall "Development Tools"
+```
+
+```bash [dnf]
+$ sudo dnf group install "Development Tools"
+# 或使用@语法
+$ sudo dnf install @development-tools
+```
+
+:::
+
+- 查看历史操作
+
+::: code-group
+
+```bash [yum]
+$ yum history
+```
+
+```bash [dnf]
+$ dnf history
+```
+
+:::
+
+### 13.2.3 dnf特有功能
+
+- 回滚操作（dnf）特有
+
+```bash
+# 回滚操作（dnf 特有）
+$ sudo dnf history undo <事务ID>
+```
+
+- 模块化管理（适用于RHEL/CentOS 8+）：
+
+```bash
+$ dnf module list                 # 列出可用模块
+$ dnf module enable nodejs:14     # 启用指定模块流
+$ dnf module install postgresql   # 安装模块
+```
+
+- 自动删除无用依赖
+
+```bash
+$ sudo dnf autoremove             # 删除不再需要的依赖
+```
+
+- 更快的依赖解析
+
+```bash
+$ dnf 使用现代依赖解析算法，处理复杂依赖关系更高效。
+```
+
+
 
