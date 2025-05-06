@@ -22,8 +22,9 @@
 查看Docker后台进程：
 
 ```bash
-[vagrant@localhost ~]$ ps -ef|grep docker
-root      1952     1  0 02:02 ?        00:00:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+$ ps -ef|grep docker
+root         921       1  0 15:09 ?        00:00:01 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+root        1514    1106  0 15:57 pts/0    00:00:00 grep --color=auto docker
 ```
 
 

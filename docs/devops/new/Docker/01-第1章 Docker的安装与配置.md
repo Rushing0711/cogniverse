@@ -351,13 +351,13 @@ docker-ce-20.10.24-3.el9.aarch64
 - 查看已安装镜像
 
 ```bash
-$ docker images
+$ sudo docker images
 ```
 
 - 查看镜像存放路径
 
 ```bash
-$ docker inspect <image_name>|grep HostsPath
+$ sudo docker inspect <image_name>|grep HostsPath
 ```
 
 > Linux系统下，Docker默认存储路径是`/var/lib/docker`
@@ -386,6 +386,69 @@ $ sudo rm -rf /var/lib/containerd
 ### 5.2 安装高版本Docker
 
 ```bash
-$ yum install -y docker-ce-20.10.24
-$ systemctl enable docker && systemctl start docker
+$ sudo dnf install -y docker-ce-20.10.24
+$ sudo systemctl enable docker && systemctl start docker
 ```
+
+
+
+## 6 帮助与启动类命令
+
+- 启动
+
+```bash
+$ sudo systemctl start docker
+```
+
+- 停止
+
+```bash
+$ sudo systemctl stop docker
+```
+
+- 重启
+
+```bash
+$ sudo systemctl restart docker
+```
+
+- 设置开机启动
+
+```bash
+$ sudo systemctl enable docker
+```
+
+- 查看docker概要信息
+
+```bash
+$ sudo docker info
+```
+
+- 查看docker版本信息
+
+```bash
+$ sudo docker version
+```
+
+- 查看docker帮助文档
+
+```bash
+$ docker --help
+```
+
+- 查看docker命令帮助文档
+
+```bash
+$ docker <command> --help
+```
+
+
+
+
+
+
+
+
+
+
+
