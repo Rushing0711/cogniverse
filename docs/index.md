@@ -24,5 +24,7 @@ features:
     details: 种一棵树，最好的时间是十年前，其次是现在。
   - title: 一切皆数据
     details: 人类掌握了文字，一切皆数据！
+  - title: DevOps
+    details: 编码开发微服务，<br/>上线部署容器化，<br/>时时刻刻要监控！！！
 ---
 

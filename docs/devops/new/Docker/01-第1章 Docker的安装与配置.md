@@ -183,6 +183,13 @@ net.bridge.bridge-nf-call-iptables = 1
 
 无需重启，此时docker info就看不到此报错了。
 
+5. 隐含安装了compose
+
+```bash
+$ docker compose version
+Docker Compose version v2.35.1
+```
+
 ### 3.2 配置docker加速器
 
 - 配置
@@ -270,21 +277,25 @@ $ vim /etc/systemd/system/docker.service.d/proxy.conf
 [Service]
 Environment="HTTP_PROXY=http://192.168.200.1:7890"
 Environment="HTTPS_PROXY=http://192.168.200.1:7890"
-Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116"
+Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon"
 ```
 
 - 重启Docker并查看代理配置情况
 
 ```bash
-$ systemctl daemon-reload && systemctl restart docker
+$ sudo systemctl daemon-reload && sudo systemctl restart docker
 $ systemctl show --property=Environment docker
 ```
 
 ```bash
-Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116
+Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon
 ```
 
+::: warning
 
+注意NO_PROXY的配置，其中的emon是本地DNS配置：`192.168.200.116	emon`。
+
+:::
 
 ## 4 配置Docker服务
 
