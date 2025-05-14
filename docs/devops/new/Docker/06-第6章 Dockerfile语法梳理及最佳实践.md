@@ -1,4 +1,4 @@
-                                                               # 第5章 Dockerfile语法梳理及最佳实践
+# 第6章 Dockerfile语法梳理及最佳实践
 
 [Docker reference](https://docs.docker.com/engine/reference/builder/)
 
