@@ -394,6 +394,137 @@ redis-server /etc/redis/redis.conf
 $ docker exec -it redis redis-cli
 ```
 
+### 90.4.2 集群
+
+3主3从方式，从为了同步备份，主进行slot数据分片。
+
+![image-20240706090715349](images/image-20240706090715349.png)
+
+- 循环部署6台独立节点
+
+```bash
+for port in $(seq 7001 7006); \
+do \
+mkdir -p /usr/local/dockerv/redis-cluster/node-${port}/conf
+touch /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf
+cat << EOF > /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf
+port ${port}
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+cluster-announce-ip 192.168.32.116
+cluster-announce-port ${port}
+cluster-announce-bus-port 1${port}
+appendonly yes
+EOF
+docker run --name redis-${port} \
+	-v /usr/local/dockerv/redis-cluster/node-${port}/data:/data \
+	-v /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf:/etc/redis/redis.conf \
+	-p ${port}:${port} -p 1${port}:1${port} \
+	-d redis:5.0 redis-server /etc/redis/redis.conf; \
+done
+```
+
+- 建立集群
+
+```bash
+$ docker exec -it redis-7001 bash
+> redis-cli --cluster create 192.168.32.116:7001 192.168.32.116:7002 192.168.32.116:7003 192.168.32.116:7004 192.168.32.116:7005 192.168.32.116:7006 --cluster-replicas 1
+```
+
+```bash
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 192.168.32.116:7005 to 192.168.32.116:7001
+Adding replica 192.168.32.116:7006 to 192.168.32.116:7002
+Adding replica 192.168.32.116:7004 to 192.168.32.116:7003
+>>> Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001
+   slots:[0-5460] (5461 slots) master
+M: 01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002
+   slots:[5461-10922] (5462 slots) master
+M: 4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003
+   slots:[10923-16383] (5461 slots) master
+S: b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004
+   replicates 4337f26afac8aa9be53136514bac6d9f2ea37510
+S: 96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005
+   replicates 5cc060783e11574e2c44b243f5d33174fe0e879c
+S: d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006
+   replicates 01a1caeccf76439faf00cf74d89df3188cbaf30c
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+.
+>>> Performing Cluster Check (using node 192.168.32.116:7001)
+M: 5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+M: 4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+S: b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004
+   slots: (0 slots) slave
+   replicates 4337f26afac8aa9be53136514bac6d9f2ea37510
+M: 01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+S: 96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005
+   slots: (0 slots) slave
+   replicates 5cc060783e11574e2c44b243f5d33174fe0e879c
+S: d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006
+   slots: (0 slots) slave
+   replicates 01a1caeccf76439faf00cf74d89df3188cbaf30c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
+
+- 访问集群
+
+```bash
+# 注意：参数 -c 表示集群访问
+$ root@4137abdfcbff:/data# redis-cli -c -h 192.168.32.116 -p 7001
+192.168.32.116:7001> cluster info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:2
+cluster_stats_messages_ping_sent:1414
+cluster_stats_messages_pong_sent:1425
+cluster_stats_messages_meet_sent:1
+cluster_stats_messages_sent:2840
+cluster_stats_messages_ping_received:1425
+cluster_stats_messages_pong_received:1415
+cluster_stats_messages_received:2840
+192.168.32.116:7001> cluster nodes
+4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003@17003 master - 0 1720231197053 3 connected 10923-16383
+b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004@17004 slave 4337f26afac8aa9be53136514bac6d9f2ea37510 0 1720231196046 4 connected
+01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002@17002 master - 0 1720231197000 2 connected 5461-10922
+5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001@17001 myself,master - 0 1720231197000 1 connected 0-5460
+96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005@17005 slave 5cc060783e11574e2c44b243f5d33174fe0e879c 0 1720231196548 5 connected
+d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006@17006 slave 01a1caeccf76439faf00cf74d89df3188cbaf30c 0 1720231198057 6 connected
+```
+
+- 停止删除
+
+```bash
+$ docker stop $(docker ps -a|grep redis-700|awk '{print $1}')
+$ docker rm -v $(docker ps -a|grep redis-700|awk '{print $1}')
+```
+
+
+
 ## 90.5 Zookeeper
 
 ### 90.5.1 单机版
