@@ -26,5 +26,7 @@ features:
     details: 人类掌握了文字，一切皆数据！
   - title: DevOps
     details: 编码开发微服务，<br/>上线部署容器化，<br/>时时刻刻要监控！！！
+  - title: 三板斧
+    details: 理论，<br/>实操，<br/>小总结！！！
 ---
 

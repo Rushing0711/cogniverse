@@ -74,7 +74,7 @@ export default defineConfig({
                 text: '首页',
                 items: [
                     {text: '笔记构建指南', link: '/readme/cogniverse『typora+vitepress』'},
-                    {text: '自动生成侧边栏', link: '/readme/auto-side-bar'}
+                    {text: '自动生成侧边栏', link: '/readme/auto-sidebar'}
                 ]
             },
             '/frontend/old': autoGenSidebar('frontend/old'),

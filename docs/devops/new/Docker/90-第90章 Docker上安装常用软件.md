@@ -396,6 +396,8 @@ $ docker exec -it redis redis-cli
 
 ### 90.4.2 集群
 
+#### 90.4.2.1 3主3从
+
 3主3从方式，从为了同步备份，主进行slot数据分片。
 
 ![image-20240706090715349](images/image-20240706090715349.png)
@@ -412,7 +414,7 @@ port ${port}
 cluster-enabled yes
 cluster-config-file nodes.conf
 cluster-node-timeout 5000
-cluster-announce-ip 192.168.32.116
+cluster-announce-ip 192.168.200.116
 cluster-announce-port ${port}
 cluster-announce-bus-port 1${port}
 appendonly yes
@@ -421,15 +423,35 @@ docker run --name redis-${port} \
 	-v /usr/local/dockerv/redis-cluster/node-${port}/data:/data \
 	-v /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf:/etc/redis/redis.conf \
 	-p ${port}:${port} -p 1${port}:1${port} \
-	-d redis:5.0 redis-server /etc/redis/redis.conf; \
+	-d redis:7.0 redis-server /etc/redis/redis.conf; \
 done
 ```
+
+说明：
+
+> cluster-config-file
+>
+> 每个集群节点都有一个集群配置文件。该文件不应手动编辑。它由 Redis 节点创建和更新。每个 Redis 集群节点都需要一个不同的集群配置文件。确保在同一系统中运行的实例不会具有重叠的集群配置文件名。集群配置文件 nodes-6379.conf
+>
+> cluster-node-timeout
+>
+> 集群节点超时是节点必须不可达多少毫秒才会被考虑为故障状态。大多数其他内部时间限制都是节点超时的倍数。集群节点超时 15000
+>
+> cluster-port
+>
+> 集群端口是集群总线监听传入连接的端口。设置为默认值 0 时，它将绑定到命令端口 + 10000。设置此值需要在执行 cluster meet 时指定集群总线端口。集群端口 0。
+>
+> 所以，在默认值 0 的情况下，总线监听端口就是 10000 + port
+>
+> cluster-announce-ip
+>
+> 指定节点在集群中**对外宣告的 IP 地址**，主要解决 Redis 集群在复杂网络环境（如容器化、云服务器、NAT 网络）中节点间通信和客户端连接的地址问题
 
 - 建立集群
 
 ```bash
 $ docker exec -it redis-7001 bash
-> redis-cli --cluster create 192.168.32.116:7001 192.168.32.116:7002 192.168.32.116:7003 192.168.32.116:7004 192.168.32.116:7005 192.168.32.116:7006 --cluster-replicas 1
+> redis-cli --cluster create 192.168.200.116:7001 192.168.200.116:7002 192.168.200.116:7003 192.168.200.116:7004 192.168.200.116:7005 192.168.200.116:7006 --cluster-replicas 1
 ```
 
 ```bash
@@ -437,48 +459,48 @@ $ docker exec -it redis-7001 bash
 Master[0] -> Slots 0 - 5460
 Master[1] -> Slots 5461 - 10922
 Master[2] -> Slots 10923 - 16383
-Adding replica 192.168.32.116:7005 to 192.168.32.116:7001
-Adding replica 192.168.32.116:7006 to 192.168.32.116:7002
-Adding replica 192.168.32.116:7004 to 192.168.32.116:7003
+Adding replica 192.168.200.116:7005 to 192.168.200.116:7001
+Adding replica 192.168.200.116:7006 to 192.168.200.116:7002
+Adding replica 192.168.200.116:7004 to 192.168.200.116:7003
 >>> Trying to optimize slaves allocation for anti-affinity
 [WARNING] Some slaves are in the same host as their master
-M: 5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
    slots:[0-5460] (5461 slots) master
-M: 01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
    slots:[5461-10922] (5462 slots) master
-M: 4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
    slots:[10923-16383] (5461 slots) master
-S: b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004
-   replicates 4337f26afac8aa9be53136514bac6d9f2ea37510
-S: 96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005
-   replicates 5cc060783e11574e2c44b243f5d33174fe0e879c
-S: d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006
-   replicates 01a1caeccf76439faf00cf74d89df3188cbaf30c
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
 Can I set the above configuration? (type 'yes' to accept): yes
 >>> Nodes configuration updated
 >>> Assign a different config epoch to each node
 >>> Sending CLUSTER MEET messages to join the cluster
 Waiting for the cluster to join
 .
->>> Performing Cluster Check (using node 192.168.32.116:7001)
-M: 5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
    slots:[0-5460] (5461 slots) master
    1 additional replica(s)
-M: 4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003
-   slots:[10923-16383] (5461 slots) master
-   1 additional replica(s)
-S: b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004
-   slots: (0 slots) slave
-   replicates 4337f26afac8aa9be53136514bac6d9f2ea37510
-M: 01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
    slots:[5461-10922] (5462 slots) master
    1 additional replica(s)
-S: 96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
    slots: (0 slots) slave
-   replicates 5cc060783e11574e2c44b243f5d33174fe0e879c
-S: d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
    slots: (0 slots) slave
-   replicates 01a1caeccf76439faf00cf74d89df3188cbaf30c
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
 [OK] All nodes agree about slots configuration.
 >>> Check for open slots...
 >>> Check slots coverage...
@@ -489,8 +511,8 @@ S: d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006
 
 ```bash
 # 注意：参数 -c 表示集群访问
-$ root@4137abdfcbff:/data# redis-cli -c -h 192.168.32.116 -p 7001
-192.168.32.116:7001> cluster info
+> redis-cli -c -h 192.168.200.116 -p 7001
+192.168.200.116:7001> cluster info
 cluster_state:ok
 cluster_slots_assigned:16384
 cluster_slots_ok:16384
@@ -499,21 +521,74 @@ cluster_slots_fail:0
 cluster_known_nodes:6
 cluster_size:3
 cluster_current_epoch:6
-cluster_my_epoch:2
-cluster_stats_messages_ping_sent:1414
-cluster_stats_messages_pong_sent:1425
-cluster_stats_messages_meet_sent:1
-cluster_stats_messages_sent:2840
-cluster_stats_messages_ping_received:1425
-cluster_stats_messages_pong_received:1415
-cluster_stats_messages_received:2840
-192.168.32.116:7001> cluster nodes
-4337f26afac8aa9be53136514bac6d9f2ea37510 192.168.32.116:7003@17003 master - 0 1720231197053 3 connected 10923-16383
-b025f171d9252fa70bb4ec5fce19ab02bec0b75b 192.168.32.116:7004@17004 slave 4337f26afac8aa9be53136514bac6d9f2ea37510 0 1720231196046 4 connected
-01a1caeccf76439faf00cf74d89df3188cbaf30c 192.168.32.116:7002@17002 master - 0 1720231197000 2 connected 5461-10922
-5cc060783e11574e2c44b243f5d33174fe0e879c 192.168.32.116:7001@17001 myself,master - 0 1720231197000 1 connected 0-5460
-96d41a5b6d1cf50161be14a546c605af3343dddb 192.168.32.116:7005@17005 slave 5cc060783e11574e2c44b243f5d33174fe0e879c 0 1720231196548 5 connected
-d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006@17006 slave 01a1caeccf76439faf00cf74d89df3188cbaf30c 0 1720231198057 6 connected
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:445
+cluster_stats_messages_pong_sent:467
+cluster_stats_messages_sent:912
+cluster_stats_messages_ping_received:462
+cluster_stats_messages_pong_received:445
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:912
+total_cluster_links_buffer_limit_exceeded:0
+
+192.168.200.116:7001> cluster nodes
+b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002@17002 master - 0 1746745067253 2 connected 5461-10922
+30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006@17006 slave 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 0 1746745068267 3 connected
+e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004@17004 slave 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 0 1746745068572 1 connected
+2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001@17001 myself,master - 0 1746745068000 1 connected 0-5460
+f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005@17005 slave b205f6cd79e7d69105a99e870f1a61997790cdde 0 1746745067759 2 connected
+1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003@17003 master - 0 1746745066240 3 connected 10923-16383
+```
+
+- 检查集群
+
+```bash
+> redis-cli --cluster check 192.168.200.116:7001
+```
+
+```bash
+192.168.200.116:7001 (2bb4b59d...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.200.116:7002 (b205f6cd...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.200.116:7003 (1f2eac0c...) -> 1 keys | 5461 slots | 1 slaves.
+[OK] 1 keys in 3 masters.
+0.00 keys per slot on average.
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
+
+- 查看集群信息
+
+```bash
+> redis-cli --cluster info 192.168.200.116:7001
+```
+
+```bash
+192.168.200.116:7001 (2bb4b59d...) -> 0 keys | 5461 slots | 1 slaves.
+192.168.200.116:7002 (b205f6cd...) -> 0 keys | 5462 slots | 1 slaves.
+192.168.200.116:7003 (1f2eac0c...) -> 1 keys | 5461 slots | 1 slaves.
+[OK] 1 keys in 3 masters.
+0.00 keys per slot on average.
 ```
 
 - 停止删除
@@ -522,6 +597,319 @@ d86604e17be98ab35d3075dd76eda71ba4bcb770 192.168.32.116:7006@17006 slave 01a1cae
 $ docker stop $(docker ps -a|grep redis-700|awk '{print $1}')
 $ docker rm -v $(docker ps -a|grep redis-700|awk '{print $1}')
 ```
+
+#### 90.4.2.2 扩容到4主4从
+
+- 循环扩展2台节点
+
+```bash
+for port in $(seq 7007 7008); \
+do \
+mkdir -p /usr/local/dockerv/redis-cluster/node-${port}/conf
+touch /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf
+cat << EOF > /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf
+port ${port}
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+cluster-announce-ip 192.168.200.116
+cluster-announce-port ${port}
+cluster-announce-bus-port 1${port}
+appendonly yes
+EOF
+docker run --name redis-${port} \
+	-v /usr/local/dockerv/redis-cluster/node-${port}/data:/data \
+	-v /usr/local/dockerv/redis-cluster/node-${port}/conf/redis.conf:/etc/redis/redis.conf \
+	-p ${port}:${port} -p 1${port}:1${port} \
+	-d redis:7.0 redis-server /etc/redis/redis.conf; \
+done
+```
+
+##### 添加主节点
+
+- 将新增的其中一台节点添加到集群
+
+```bash
+> redis-cli --cluster add-node 192.168.200.116:7007 192.168.200.116:7001
+```
+
+```bash
+>>> Adding node 192.168.200.116:7007 to cluster 192.168.200.116:7001
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Getting functions from cluster
+>>> Send FUNCTION LIST to 192.168.200.116:7007 to verify there is no functions in it
+>>> Send FUNCTION RESTORE to 192.168.200.116:7007
+>>> Send CLUSTER MEET to node 192.168.200.116:7007 to make it join the cluster.
+[OK] New node added correctly.
+```
+
+:::info
+
+说明：
+
+```bash
+  add-node       new_host:new_port existing_host:existing_port
+                 --cluster-slave
+                 --cluster-master-id <arg>
+```
+
+- **参数说明**：
+  - `新节点IP:端口`：待加入的节点地址。
+  - `集群已知节点IP:端口`：现有集群中的任意节点（如 7001）。
+
+:::
+
+- 分配主节点角色
+
+新节点默认以**主节点**身份加入，但未分配哈希槽（不存储数据）。
+
+```bash
+> redis-cli --cluster reshard 192.168.200.116:7001
+```
+
+```bash
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+M: 4358f81dfc2fda759f01ff5dc32eb0c868c328ec 192.168.200.116:7007
+   slots: (0 slots) master
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+How many slots do you want to move (from 1 to 16384)? 4096 # 输入要移动的槽数量
+What is the receiving node ID? 4358f81dfc2fda759f01ff5dc32eb0c868c328ec # 输入目标节点 ID（新主节点 7007 ID）
+Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1: all # 输入源节点 ID（输入 all 从所有现有主节点平均迁移，或指定源节点 ID）
+```
+
+##### 添加从节点
+
+- 将新增的另外一台节点添加到集群
+
+```bash
+# cluster-master-id 指定为 <7007节点的ID> 表示 7008 从属于 7007
+> redis-cli --cluster add-node 192.168.200.116:7008 192.168.200.116:7007 --cluster-slave --cluster-master-id 4358f81dfc2fda759f01ff5dc32eb0c868c328ec
+```
+
+```bash
+>>> Adding node 192.168.200.116:7008 to cluster 192.168.200.116:7007
+>>> Performing Cluster Check (using node 192.168.200.116:7007)
+M: 4358f81dfc2fda759f01ff5dc32eb0c868c328ec 192.168.200.116:7007
+   slots:[0-1364],[5461-6826],[10923-12287] (4096 slots) master
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[12288-16383] (4096 slots) master
+   1 additional replica(s)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[1365-5460] (4096 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[6827-10922] (4096 slots) master
+   1 additional replica(s)
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Send CLUSTER MEET to node 192.168.200.116:7008 to make it join the cluster.
+Waiting for the cluster to join
+
+>>> Configure node as replica of 192.168.200.116:7007.
+```
+
+- 查看分配结果
+
+```bash
+> redis-cli --cluster check 192.168.200.116:7001
+```
+
+```bash
+192.168.200.116:7001 (2bb4b59d...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.200.116:7003 (1f2eac0c...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.200.116:7002 (b205f6cd...) -> 0 keys | 4096 slots | 1 slaves.
+192.168.200.116:7007 (4358f81d...) -> 0 keys | 4096 slots | 1 slaves.
+[OK] 1 keys in 4 masters.
+0.00 keys per slot on average.
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[1365-5460] (4096 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[12288-16383] (4096 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[6827-10922] (4096 slots) master
+   1 additional replica(s)
+S: bd8f32b8883f9c3f8bf2b2720e2aea947bab5d67 192.168.200.116:7008
+   slots: (0 slots) slave
+   replicates 4358f81dfc2fda759f01ff5dc32eb0c868c328ec
+M: 4358f81dfc2fda759f01ff5dc32eb0c868c328ec 192.168.200.116:7007
+   slots:[0-1364],[5461-6826],[10923-12287] (4096 slots) master
+   1 additional replica(s)
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
+
+#### 90.4.2.2 缩容到3主3从从
+
+1. 删除从节点7008
+
+```bash
+> redis-cli --cluster del-node 192.168.200.116:7008 bd8f32b8883f9c3f8bf2b2720e2aea947bab5d67
+```
+
+2. 清空7007的哈希槽
+
+```bash
+> redis-cli --cluster reshard 192.168.200.116:7001
+```
+
+```bash
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[1365-5460] (4096 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[12288-16383] (4096 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[6827-10922] (4096 slots) master
+   1 additional replica(s)
+M: 4358f81dfc2fda759f01ff5dc32eb0c868c328ec 192.168.200.116:7007
+   slots:[0-1364],[5461-6826],[10923-12287] (4096 slots) master
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+How many slots do you want to move (from 1 to 16384)? 4096 # 输入要移动的槽数量
+What is the receiving node ID? 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c # 输入目标节点 ID（7001节点槽位增加）
+Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1: 4358f81dfc2fda759f01ff5dc32eb0c868c328ec # 输入源节点 ID（7007拿出槽位）
+Source node #2: done
+```
+
+3. 删除节点7007
+
+```bash
+> redis-cli --cluster del-node 192.168.200.116:7007 4358f81dfc2fda759f01ff5dc32eb0c868c328ec
+```
+
+4. 查看集群
+
+```bash
+> redis-cli --cluster del-node 192.168.200.116:7007 4358f81dfc2fda759f01ff5dc32eb0c868c328ec
+```
+
+```bash
+>>> Removing node 4358f81dfc2fda759f01ff5dc32eb0c868c328ec from cluster 192.168.200.116:7007
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> Sending CLUSTER RESET SOFT to the deleted node.
+root@1468fe6ab402:/data# redis-cli --cluster check 192.168.200.116:7001
+192.168.200.116:7001 (2bb4b59d...) -> 0 keys | 8192 slots | 1 slaves.
+192.168.200.116:7003 (1f2eac0c...) -> 1 keys | 4096 slots | 1 slaves.
+192.168.200.116:7002 (b205f6cd...) -> 0 keys | 4096 slots | 1 slaves.
+[OK] 1 keys in 3 masters.
+0.00 keys per slot on average.
+>>> Performing Cluster Check (using node 192.168.200.116:7001)
+M: 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c 192.168.200.116:7001
+   slots:[0-6826],[10923-12287] (8192 slots) master
+   1 additional replica(s)
+S: 30a813bb94a938e5b7745fffcc596e416793ca7a 192.168.200.116:7006
+   slots: (0 slots) slave
+   replicates 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6
+M: 1f2eac0ca453580a7d9a406d1f82a42ff3d1ced6 192.168.200.116:7003
+   slots:[12288-16383] (4096 slots) master
+   1 additional replica(s)
+M: b205f6cd79e7d69105a99e870f1a61997790cdde 192.168.200.116:7002
+   slots:[6827-10922] (4096 slots) master
+   1 additional replica(s)
+S: f9d3cf0e8f9fc1685644db5728fda74967db7708 192.168.200.116:7005
+   slots: (0 slots) slave
+   replicates b205f6cd79e7d69105a99e870f1a61997790cdde
+S: e29f25b1ad65f45278dde2eb2ceb2a4191184d06 192.168.200.116:7004
+   slots: (0 slots) slave
+   replicates 2bb4b59da4339b5d8cce7a70646fe9d89e217b4c
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
+
+
+
+
+
+
 
 
 
