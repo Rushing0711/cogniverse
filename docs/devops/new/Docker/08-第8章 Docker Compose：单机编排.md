@@ -302,7 +302,7 @@ $ docker build -t docker-spring-boot .
 $ vim compose.yaml
 ```
 
-```dockerfile
+```yaml
 services:
   app:		# 这个名字无所谓，网络和存储卷的前缀是docker compose执行时所在目录（这里是bootapp）
     image: docker-spring-boot
