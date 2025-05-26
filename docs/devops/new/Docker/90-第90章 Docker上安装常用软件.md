@@ -186,7 +186,6 @@ $ docker exec -it mysql-master /bin/bash
 
 ```bash
 bash-4.2# mysql -uroot -proot123
-# 在主库上将复制用户的认证插件改为 mysql_native_password（兼容旧协议，不强制 SSL）
 mysql> create user 'repl'@'%' identified by 'repl123';
 mysql> grant replication slave, replication client on *.* to 'repl'@'%';
 mysql> flush privileges;
