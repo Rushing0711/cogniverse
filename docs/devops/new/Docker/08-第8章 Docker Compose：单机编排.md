@@ -95,7 +95,7 @@ $ docker compose up -d
 
 `-d`参数：后台运行容器
 
-- 停止并删除正在运行的服务
+- 停止并删除正在运行的服务、网络（不指定-v，会保留存储卷）
 
 ```bash
 $ docker compose down -v
@@ -130,7 +130,7 @@ $ docker compose restart
 $ docker compose start
 ```
 
-- 停止服务
+- 停止服务（仅停止容器）
 
 ```bash
 $ docker compose stop
