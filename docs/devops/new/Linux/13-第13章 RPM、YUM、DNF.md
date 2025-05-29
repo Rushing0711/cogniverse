@@ -225,23 +225,17 @@ DNF 是 YUM 的改进版本，旨在解决 YUM 的性能和设计问题。现为
 
 ### 13.2.2 基本用法
 
-- 安装软件包
+- 清理缓存
 
 ::: code-group
 
 ```bash [yum]
-$ sudo yum install package_name
+$ sudo yum clean all
 ```
 
 ```bash [dnf]
-$ sudo dnf install package_name
+$ sudo dnf clean all
 ```
-
-:::
-
-::: tip
-
-- **自动确认**：添加 `-y` 参数（如 `sudo dnf install -y httpd`）。
 
 :::
 
@@ -262,6 +256,72 @@ $ sudo dnf upgrade
 ::: tip
 
 - **更新指定包**：`sudo dnf upgrade package_name`
+
+:::
+
+- 更新本地软件仓库的元数据缓存
+
+`dnf makecache` 用于 **更新本地软件仓库的元数据缓存**。它会从配置的仓库（repo）中下载最新的软件包列表、依赖关系等元数据，并存储在本地，以加速后续操作（如搜索、安装、更新等）。
+
+::: code-group
+
+```bash [yum]
+$ sudo yum makecache
+```
+
+```bash [dnf]
+$ sudo dnf makecache
+```
+
+:::
+
+- 清理缓存并更新软件包并更新本地软件仓库的元数据缓存
+
+```bash
+$ sudo dnf clean all && sudo dnf update && sudo dnf makecache
+```
+
+- 安装软件包
+
+::: code-group
+
+```bash [yum]
+$ sudo yum install package_name
+```
+
+```bash [dnf]
+$ sudo dnf install package_name
+```
+
+:::
+
+::: tip
+
+- **自动确认**：添加 `-y` 参数（如 `sudo dnf install -y httpd`）。
+
+:::
+
+- 查看仓库列表
+
+::: code-group
+
+```bash [yum]
+$ yum repolist
+```
+
+```bash [dnf]
+$ dnf repolist
+```
+
+:::
+
+::: tip
+
+```bash
+$ dnf repolist all
+```
+
+可以查看所有仓库（含禁用的）
 
 :::
 
@@ -307,20 +367,6 @@ $ dnf info package_name
 
 :::
 
-- 清理缓存
-
-::: code-group
-
-```bash [yum]
-$ sudo yum clean all
-```
-
-```bash [dnf]
-$ sudo dnf clean all
-```
-
-:::
-
 - 列出已经安装的软件包
 
 ::: code-group
@@ -331,46 +377,6 @@ $ yum list installed
 
 ```bash [dnf]
 $ dnf list installed
-```
-
-:::
-
-- 查看仓库列表
-
-::: code-group
-
-```bash [yum]
-$ yum repolist
-```
-
-```bash [dnf]
-$ dnf repolist
-```
-
-:::
-
-::: tip
-
-```bash
-$ dnf repolist all
-```
-
-可以查看所有仓库（含禁用的）
-
-:::
-
-- 更新本地软件仓库的元数据缓存
-
-`dnf makecache` 用于 **更新本地软件仓库的元数据缓存**。它会从配置的仓库（repo）中下载最新的软件包列表、依赖关系等元数据，并存储在本地，以加速后续操作（如搜索、安装、更新等）。
-
-::: code-group
-
-```bash [yum]
-$ sudo yum makecache
-```
-
-```bash [dnf]
-$ sudo dnf makecache
 ```
 
 :::

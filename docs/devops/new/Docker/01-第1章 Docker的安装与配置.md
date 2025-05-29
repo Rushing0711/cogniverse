@@ -216,7 +216,7 @@ Docker Compose version v2.35.1
 
         - exec-root: Docker执行状态文件的存储路径，默认为/var/run/docker。
 
-        - exec-opts：设置cgroup driver（默认是cgroupfs，不推荐设置systemd）
+        - exec-opts：设置cgroup driver（默认是cgroupfs）
 
           > 比如：  `"exec-opts": ["native.cgroupdriver=cgroupfs"],`
 
@@ -233,21 +233,34 @@ Docker Compose version v2.35.1
         - live-restore: 是否启用“实时恢复”功能，允许Docker在更新或重启时不终止运行中的容器。
         - debug：开启调试，若启动失败，可以在 /var/log/messages 查看原因
   
-  ```bash
+  ```bash {3,4,13}
   $ sudo tee /etc/docker/daemon.json <<-'EOF'
   {
     "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],
-    "exec-opts": ["native.cgroupdriver=cgroupfs"],
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "log-driver": "json-file",
+    "log-opts": {
+    	"max-size": "100m",
+    	"max-file": "5",
+    	"compress": "true"
+    },
+    "storage-driver": "overlay2",
+    "storage-opts": [
+    	"overlay2.override_kernel_check=true"
+    ],
     "insecure-registries": ["emon:5080"]
   }
   EOF
   
   ```
+  
 
-  说明：
-  
-    1. 阿里云加速器
-  
+说明：
+
+  1. `  "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],` 阿里云加速器
+  2. `  "exec-opts": ["native.cgroupdriver=systemd"],`  // 关键：必须与 kubelet 一致
+  3. `  	"overlay2.override_kernel_check=true"` // 解决新内核兼容问题
+
 - 查看
 
 ```bash
