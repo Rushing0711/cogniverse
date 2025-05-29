@@ -34,7 +34,7 @@ $ hostnamectl set-hostname wenqiu
 配置host，使得所有节点之间可以通过hostname互相访问。
 
 ```bash
-$ tee >> /etc/hosts <<- 'EOF'
+$ sudo cat <<-'EOF' | sudo tee -a /etc/hosts
 192.168.200.116	emon
 192.168.200.117 emon2
 192.168.200.118 emon3
@@ -95,29 +95,48 @@ $ sysctl -p /etc/sysctl.d/kubernetes.conf
 > >
 > > sysctl: cannot stat /proc/sys/net/bridge/bridge-nf-call-iptables: 没有那个文件或目录
 >
-> 临时方案！无需重启！
+> 可能的原因分析：
 >
-> > modprobe br_netfilter
+> 1. **内核模块未加载**：
+>    - `bridge` 和 `br_netfilter` 内核模块未激活
+>    - 这些模块提供网络桥接和防火墙过滤功能
+> 2. **系统配置问题**：
+>    - 内核参数未正确设置
+>    - 常见于新安装的系统或云服务器
+> 3. **容器平台依赖**：
+>    - Docker/Kubernetes 需要这些模块实现容器网络
 >
-> 永久方案！重启后生效！
+> - ### 步骤一：确保模块持久化（重启后有效）
 >
-> > cat > /etc/rc.sysinit << EOF
-> > #!/bin/bash
-> > for file in /etc/sysconfig/modules/*.modules ; do
-> > [ -x $file ] && $file
-> > done
-> > EOF
-> >
-> >
-> >
-> > cat > /etc/sysconfig/modules/br_netfilter.modules << EOF
-> > modprobe br_netfilter
-> > EOF
-> >
-> >
-> >
-> > chmod 755 /etc/sysconfig/modules/br_netfilter.modules
-> > lsmod |grep br_netfilter
+> ```bash
+> # 创建模块加载配置文件
+> cat <<EOF | sudo tee /etc/modules-load.d/br_netfilter.conf
+> bridge
+> br_netfilter
+> EOF
+> 
+> # 验证配置
+> sudo systemctl restart systemd-modules-load.service
+> ```
+>
+> - ### 步骤二：配置后，再重新执行“生效文件”的命令
+>
+> ```bash
+> # 生效文件
+> $ sysctl -p /etc/sysctl.d/kubernetes.conf
+> ```
+>
+> - ### 步骤三：验证
+>
+> ```bash
+> # 检查参数是否生效
+> sysctl net.bridge.bridge-nf-call-iptables
+> sysctl net.bridge.bridge-nf-call-ip6tables
+> 
+> # 应返回：
+> # net.bridge.bridge-nf-call-iptables = 1
+> # net.bridge.bridge-nf-call-ip6tables = 1
+> ```
 
 #### 1.2.6、配置SSH免密登录（仅中转节点）
 
@@ -139,7 +158,7 @@ $ ssh-copy-id -i ~/.ssh/id_rsa.pub emon3
 #### 1.2.7、移除docker相关软件包（可选）
 
 ```bash
-$ yum remove -y docker* container-selinux
+$ dnf remove -y docker* container-selinux
 $ rm -f /etc/docker/daemon.json
 $ rm -rf /var/lib/docker/
 ```
@@ -152,133 +171,8 @@ $ rm -rf /var/lib/docker/
 
 ### 2.1、安装Docker
 
-[查看官方CentOS安装Docker教程](https://docs.docker.com/engine/install/centos/)
+参考安装：[01-第1章 Docker的安装与配置.md](http://localhost:8751/devops/new/Docker/01-%E7%AC%AC1%E7%AB%A0%20Docker%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html)
 
-#### 2.1.1、CentOS环境下安装Docker
-
-1. 安装需要的软件包，yum-util提供yum-config-manager功能，另外两个是devicemapper驱动依赖的
-
-```shell
-$ yum install -y yum-utils device-mapper-persistent-data lvm2
-```
-
-2. 设置yum源
-
-```shell
-# $ yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-# 若上面命令网络不可达，请利用阿里云
-$ yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
-```
-
-3. 可以查看所有仓库中所有docker版本，并选择安装特定的版本
-
-```shell
-$ yum list docker-ce --showduplicates |sort -r
-```
-
-4. 安装docker
-
-```shell
-# 安装最新
-# $ yum install -y docker-ce
-# 安装指定版本
-# $ yum install -y docker-ce-18.06.3.ce 【一个使用了很久的版本】
-# $ yum install -y docker-ce-19.03.15
-$ yum install -y docker-ce-20.10.24
-# $ yum install -y docker-ce-23.0.6
-# $ yum install -y docker-ce-24.0.9
-# $ yum install -y docker-ce-25.0.5
-# $ yum install -y docker-ce-26.1.4
-```
-
-> `docker-ce-cli` 是Docker的命令行客户端，用于与Docker守护程序交互；`docker-ce` 是Docker的社区版，提供了完整的容器化平台；而  `containerd.io`则是底层的容器运行时组件，用于管理容器的生命周期和镜像管理。这些组件在Docker生态系统中各自发挥着不同的作用，共同构成了强大的容器化解决方案。
->
-> `docker-ce`：它是一个完整的容器化平台，包括了**Docker-ce-cli**以及其他必要的组件，如Docker守护程序和基础设施管理工具
-
-5. 启动
-
-```shell
-$ systemctl enable docker && systemctl start docker
-```
-
-6. 验证安装
-
-```shell
-$ docker version
-$ docker info
-$ docker run hello-world
-```
-
-7. 隐含安装了compose
-
-```bash
-$ docker compose version
-Docker Compose version v2.33.1
-```
-
-#### 2.1.2、配置Docker的cgroup driver
-
-k8s的v1.23版本使用的 systemd，而Docker的20.10版本默认
-
-- 查看Docker的cgroup
-
-```bash
-$ docker info|grep group
- Cgroup Driver: cgroupfs
- Cgroup Version: 1
-```
-
-```bash
-$ sudo tee /etc/docker/daemon.json <<-'EOF'
-{
-  "exec-opts": ["native.cgroupdriver=systemd"]
-}
-EOF
-$ systemctl restart docker
-```
-
-#### 2.1.3、配置Docker代理服务
-
-- 配置Docker代理
-
-```bash
-$ mkdir -p /etc/systemd/system/docker.service.d
-$ vim /etc/systemd/system/docker.service.d/proxy.conf
-```
-
-```bash
-[Service]
-Environment="HTTP_PROXY=http://192.168.200.1:7890"
-Environment="HTTPS_PROXY=http://192.168.200.1:7890"
-Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116"
-```
-
-- 重启Docker并查看代理配置情况
-
-```bash
-$ systemctl daemon-reload && systemctl restart docker
-$ systemctl show --property=Environment docker
-# Environment=HTTP_PROXY=http://192.168.32.1:29290 HTTPS_PROXY=http://192.168.32.1:29290
-Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116
-```
-
-#### 2.1.4、配置alias
-
-配置永久的alias：
-
-```shell
-# 如果是root用户安装的，不需要带sudo命令
-$ vim ~/.bashrc
-alias docker="sudo /usr/bin/docker"
-alias dockerpsf="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.RunningFor}}\t{{.Ports}}\""
-alias dockerps="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Status}}\t{{.Names}}\""
-```
-
-使之生效：
-
-```shell
-$ source ~/.bashrc
-```
 
 ### 2.2、安装kubeadm/kubelet/kubectl
 

@@ -219,17 +219,19 @@ Docker Compose version v2.35.1
         - exec-opts：设置cgroup driver（默认是cgroupfs）
 
           > 比如：  `"exec-opts": ["native.cgroupdriver=cgroupfs"],`
+          >
+          > 推荐配置systemd，原因：https://kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/
 
         - log-driver: Docker日志驱动类型，默认为json-file。
 
         - log-level: Docker日志记录级别，如debug、info、warn、error、fatal。
-
-        - insecure-registries: 可以通过HTTP连接的镜像仓库地址。
   
+        - insecure-registries: 可以通过HTTP连接的镜像仓库地址。
+
         - registry-mirrors: 镜像仓库加速地址。
 
         - storage-driver: Docker存储驱动类型，推荐overlay2。
-
+        
         - live-restore: 是否启用“实时恢复”功能，允许Docker在更新或重启时不终止运行中的容器。
         - debug：开启调试，若启动失败，可以在 /var/log/messages 查看原因
   
