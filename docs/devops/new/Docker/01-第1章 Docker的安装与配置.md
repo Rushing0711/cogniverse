@@ -82,12 +82,15 @@ $ sudo dnf remove docker \
 $ sudo yum install -y yum-utils device-mapper-persistent-data lvm2
 # 设置yum源
 $ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+$ yum clean all && yum makecache
 ```
 
 ```bash [Rocky9]
 # 安装 dnf-plugins-core 软件包（提供管理 DNF 仓库的命令）并设置仓库。
 $ sudo dnf -y install dnf-plugins-core
-$ sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+# $ sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+$ sudo dnf config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+$ dnf clean all && dnf makecache
 ```
 
 :::
@@ -163,25 +166,25 @@ $ sudo docker run hello-world
 > 说明：如果docker info有提示：
 > WARNING: bridge-nf-call-iptables is disabled
 > WARNING: bridge-nf-call-ip6tables is disabled
-
-解决办法：
-
-```bash
-[emon@emon2 ~]$ sudo vim /etc/sysctl.conf 
-```
-
-```bash
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-```
-
-使之生效：
-
-```bash
-[emon@emon2 ~]$ sudo sysctl -p
-```
-
-无需重启，此时docker info就看不到此报错了。
+>
+> 解决办法：
+>
+> ```bash
+> [emon@emon2 ~]$ sudo vim /etc/sysctl.conf 
+> ```
+>
+> ```bash
+> net.bridge.bridge-nf-call-ip6tables = 1
+> net.bridge.bridge-nf-call-iptables = 1
+> ```
+>
+> 使之生效：
+>
+> ```bash
+> [emon@emon2 ~]$ sudo sysctl -p
+> ```
+>
+> 无需重启，此时docker info就看不到此报错了。
 
 5. 隐含安装了compose
 
@@ -253,7 +256,6 @@ Docker Compose version v2.35.1
     "insecure-registries": ["emon:5080"]
   }
   EOF
-  
   ```
   
 
@@ -285,14 +287,15 @@ $ sudo systemctl restart docker
 
 ```bash
 $ mkdir -p /etc/systemd/system/docker.service.d
-$ vim /etc/systemd/system/docker.service.d/proxy.conf
 ```
 
 ```bash
+$ sudo tee /etc/systemd/system/docker.service.d/proxy.conf <<-'EOF'
 [Service]
 Environment="HTTP_PROXY=http://192.168.200.1:7890"
 Environment="HTTPS_PROXY=http://192.168.200.1:7890"
 Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon"
+EOF
 ```
 
 - 重启Docker并查看代理配置情况
@@ -305,12 +308,6 @@ $ systemctl show --property=Environment docker
 ```bash
 Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon
 ```
-
-::: warning
-
-注意NO_PROXY的配置，其中的emon是本地DNS配置：`192.168.200.116	emon`。
-
-:::
 
 ## 4 配置Docker服务
 

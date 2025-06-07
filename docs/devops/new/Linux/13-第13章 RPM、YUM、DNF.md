@@ -239,6 +239,22 @@ $ sudo dnf clean all
 
 :::
 
+- 更新本地软件仓库的元数据缓存
+
+`dnf makecache` 用于 **更新本地软件仓库的元数据缓存**。它会从配置的仓库（repo）中下载最新的软件包列表、依赖关系等元数据，并存储在本地，以加速后续操作（如搜索、安装、更新等）。
+
+::: code-group
+
+```bash [yum]
+$ sudo yum makecache
+```
+
+```bash [dnf]
+$ sudo dnf makecache
+```
+
+:::
+
 - 更新软件包
 
 ::: code-group
@@ -259,47 +275,28 @@ $ sudo dnf upgrade
 
 :::
 
-- 更新本地软件仓库的元数据缓存
+------
 
-`dnf makecache` 用于 **更新本地软件仓库的元数据缓存**。它会从配置的仓库（repo）中下载最新的软件包列表、依赖关系等元数据，并存储在本地，以加速后续操作（如搜索、安装、更新等）。
 
-::: code-group
 
-```bash [yum]
-$ sudo yum makecache
-```
-
-```bash [dnf]
-$ sudo dnf makecache
-```
-
-:::
-
-- 清理缓存并更新软件包并更新本地软件仓库的元数据缓存
+- 清理缓存并更新本地软件仓库的元数据缓存
 
 ```bash
-$ sudo dnf clean all && sudo dnf update && sudo dnf makecache
+# 请注意，若不需要更新全部，可以单独指定更新某些，或者不更新
+$ sudo dnf clean all && sudo dnf makecache && sudo dnf update
 ```
 
-- 安装软件包
+:::warning
 
-::: code-group
+非必要，不要执行更新，因为可能把一些不需要更新的软件包升级。
 
-```bash [yum]
-$ sudo yum install package_name
-```
-
-```bash [dnf]
-$ sudo dnf install package_name
-```
+比如：你安装了指定版本的docker，更新后会升级到最新。
 
 :::
 
-::: tip
+------
 
-- **自动确认**：添加 `-y` 参数（如 `sudo dnf install -y httpd`）。
-
-:::
+ 
 
 - 查看仓库列表
 
@@ -322,6 +319,26 @@ $ dnf repolist all
 ```
 
 可以查看所有仓库（含禁用的）
+
+:::
+
+- 安装软件包
+
+::: code-group
+
+```bash [yum]
+$ sudo yum install package_name
+```
+
+```bash [dnf]
+$ sudo dnf install package_name
+```
+
+:::
+
+::: tip
+
+- **自动确认**：添加 `-y` 参数（如 `sudo dnf install -y httpd`）。
 
 :::
 
@@ -380,6 +397,12 @@ $ dnf list installed
 ```
 
 :::
+
+- 查看是否安装过指定软件包
+
+```bash
+$ sudo dnf list installed open-vm-tools
+```
 
 - 安装本地 RPM 包（自动解决依赖）
 
