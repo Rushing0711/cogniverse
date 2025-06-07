@@ -411,7 +411,9 @@ $ kubectl rollout undo deploy/my-dep --to-revision=1
 
 
 
-## 3 Service `N`
+## 3 服务 `N`
+
+### 3.1 Service
 
 > 将一组 Pods 公开为网络服务的抽象方法。
 >
@@ -493,13 +495,217 @@ $ kubectl get endpoints my-dep -n default
 $ kubectl get svc
 ```
 
+### 3.2 Ingress
 
+参考：[安装ingress-nginx](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_5-%E5%AE%89%E8%A3%85ingress-nginx-%E5%9C%A8master%E8%8A%82%E7%82%B9%E6%89%A7%E8%A1%8C)
 
-## 5 Ingress
+#### 3.2.1 域名访问
 
+:::details ingress-domain.yaml配置
 
+```bash
+$ tee ingress-domain.yaml << EOF
+#deploy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: domain-deploy
+spec:
+  selector:
+    matchLabels:
+      app: domain-pod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: domain-pod
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25.4
+        ports:
+        - containerPort: 80
+---
+#service
+apiVersion: v1
+kind: Service
+metadata:
+  name: domain-service
+spec:
+  selector:
+    app: domain-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+#ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: domain-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nginx.fsmall.com
+    http:
+      paths:
+      # /nginx 表示把请求转发给pod处理，若有映射但无资源则404；若pod无映射则ingress自身处理，找不到则（404）。
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: domain-service
+            port:
+              number: 80
+EOF
+```
 
+:::
 
+配置资源生效：
+
+:::code-group
+
+```bash [创建]
+$ kubectl apply -f ingress-domain.yaml
+```
+
+```bash [在集群外通过ing域名访问]
+$ kubectl get ing
+NAME           CLASS   HOSTS              ADDRESS   PORTS   AGE
+ingress-http   nginx   nginx.fsmall.com             80      19s
+
+# 配置本地DNS：访问emon2或emon3的DNS
+$ vim /etc/hosts
+192.168.200.117 nginx.fsmall.com
+
+# 访问
+http://nginx.fsmall.com # 看到正常nginx界面
+```
+
+```bash [删除]
+$ kubectl delete -f ingress-domain.yaml
+```
+
+:::
+
+#### 3.2.2 路径重写
+
+:::details ingress-rewrite.yaml配置
+
+```js
+tee ingress-rewrite.yaml << EOF
+#deploy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rewrite-deploy
+spec:
+  selector:
+    matchLabels:
+      app: rewrite-pod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: rewrite-pod
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25.4
+        ports:
+        - containerPort: 80
+---
+#service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rewrite-service
+spec:
+  selector:
+    app: rewrite-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+#ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations: // [!code focus:3] [!code ++]
+    nginx.ingress.kubernetes.io/use-regex: "true" // [!code ++]
+    nginx.ingress.kubernetes.io/rewrite-target: /\$1 // [!code ++]
+  name: rewrite-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nginx.fsmall.com
+    http:
+      paths:
+      - path: / // [!code focus:4] [!code --]
+        pathType: Prefix // [!code --]
+      - path: "/something$" // [!code ++]
+        pathType: ImplementationSpecific // [!code ++]
+        backend:
+          service:
+            name: rewrite-service
+            port:
+              number: 80
+      - path: "/something/(.*)" // [!code focus:7] [!code ++]
+        pathType: ImplementationSpecific // [!code ++]
+        backend: // [!code ++]
+          service: // [!code ++]
+            name: rewrite-service // [!code ++]
+            port: // [!code ++]
+              number: 80 // [!code ++]
+EOF
+```
+
+> ingress-nginx v1.6.4对正则表达式中的`|`不支持，需要转换为等效的2个正则。
+> `/something(/|$)(.*)` ==> `/something$` 和 `/something/(.*)`
+
+效果：
+
+http://nginx.fsmall.com ingress返回404
+
+http://nginx.fsmall.com/something 有效
+
+http://nginx.fsmall.com/something/ 有效
+
+http://nginx.fsmall.com/something/abc rewrite-pod返回404
+
+:::
+
+配置资源生效：
+
+:::code-group
+
+```bash [创建]
+$ kubectl apply -f ingress-rewrite.yaml
+```
+
+```bash [在集群外通过ing域名访问]
+$ kubectl get ing
+NAME           CLASS   HOSTS                                ADDRESS        PORTS   AGE
+ingress-http   nginx   nginx.fsmall.com,tomcat.fsmall.com   10.96.217.34   80      11m
+
+# 配置本地DNS：访问emon2或emon3的DNS
+$ vim /etc/hosts
+192.168.200.117 nginx.fsmall.com
+
+# 访问
+http://nginx.fsmall.com # 看到正常nginx界面
+```
+
+```bash [删除]
+$ kubectl delete -f ingress-rewrite.yaml
+```
+
+:::
 
 
 

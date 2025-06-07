@@ -771,7 +771,9 @@ $ kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.
 
 [ingress-nginx GitHub查看与K8S版本兼容性](https://github.com/kubernetes/ingress-nginx)
 
-ingress-nginx官网：https://kubernetes.github.io/ingress-nginx/deploy/
+ingress-nginx官网部署：https://kubernetes.github.io/ingress-nginx/deploy/
+
+ingress-nginx官网用户指南：https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/
 
 ### 5.1 切换目录
 
@@ -1043,7 +1045,6 @@ EOF
 :::code-group
 
 ```bash [创建]
-# 创建
 $ kubectl apply -f ingress-test.yaml
 ```
 
@@ -1089,11 +1090,35 @@ http://api.fsmall.com # 看到 nginx 的 404 页面
 ```
 
 ```bash [删除]
-# 删除资源
 $ kubectl delete -f ingress-test.yaml
 ```
 
 :::
+
+### 5.5 其他
+
+- ingress服务安装后，确保集群中存在名为 `nginx` 的 IngressClass：
+
+```bash
+$ kubectl get ingressclass -n ingress-nginx
+```
+
+- 若`kind: Ingress`创建后，查看`<ingress-pod-name>`是否生成规则
+
+```bash
+# 查看ingress-pod-name，确认 Nginx Ingress Controller 已安装且 Pod 正常运行：
+$ kubectl get po -n ingress-nginx|grep ingress-nginx-controller
+# 查看生成的Nginx配置
+$ kubectl exec -n ingress-nginx -it <ingress-pod-name> -- cat /etc/nginx/nginx.conf
+```
+
+- 若并没有生成规则，检查 Ingress Controller 日志是否有错误：
+
+```bash
+$ kubectl logs -n ingress-nginx <ingress-pod-name>
+```
+
+
 
 ## 6 集群冒烟测试（在master节点执行）
 
