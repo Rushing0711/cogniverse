@@ -504,7 +504,7 @@ $ kubectl get svc
 :::details ingress-domain.yaml配置
 
 ```bash
-$ tee ingress-domain.yaml << EOF
+tee ingress-domain.yaml << EOF
 #deploy
 apiVersion: apps/v1
 kind: Deployment
@@ -707,7 +707,100 @@ $ kubectl delete -f ingress-rewrite.yaml
 
 :::
 
+#### 3.2.3 流量限制
 
+:::details ingress-limit.yaml配置
+
+```js
+tee ingress-limit.yaml << EOF
+#deploy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: limit-deploy
+spec:
+  selector:
+    matchLabels:
+      app: limit-pod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: limit-pod
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25.4
+        ports:
+        - containerPort: 80
+---
+#service
+apiVersion: v1
+kind: Service
+metadata:
+  name: limit-service
+spec:
+  selector:
+    app: limit-pod
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+#ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: limit-ingress
+  annotations: // [!code focus:2] [!code ++]
+    nginx.ingress.kubernetes.io/limit-rps: "1" // [!code ++]
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: nginx.fsmall.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: limit-service
+            port:
+              number: 80
+EOF
+```
+
+> 访问过快，会提示：503 Service Temporarily Unavailable
+
+:::
+
+配置资源生效：
+
+:::code-group
+
+```bash [创建]
+$ kubectl apply -f ingress-limit.yaml
+```
+
+```bash [在集群外通过ing域名访问]
+$ kubectl get ing
+NAME           CLASS   HOSTS              ADDRESS   PORTS   AGE
+ingress-http   nginx   nginx.fsmall.com             80      19s
+
+# 配置本地DNS：访问emon2或emon3的DNS
+$ vim /etc/hosts
+192.168.200.117 nginx.fsmall.com
+
+# 访问
+http://nginx.fsmall.com # 看到正常nginx界面
+```
+
+```bash [删除]
+$ kubectl delete -f ingress-limit.yaml
+```
+
+:::
 
 
 
