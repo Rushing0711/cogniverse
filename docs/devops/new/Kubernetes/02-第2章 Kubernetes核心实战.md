@@ -9,57 +9,9 @@
 - 命令行
 - YAML
 
-## 1 namespace 命名空间
+## 1 工作负载 `N`
 
-用来对集群资源进行隔离划分。默认只隔离资源，不隔离网络。
-
-- 创建命名空间
-
-:::code-group
-
-```bash [命令行]
-$ kubectl create ns hello
-```
-
-```bash [YAML]
-$ cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: hello
-EOF
-```
-
-:::
-
-- 删除命名空间
-
-:::code-group
-
-```bash [命令行]
-$ kubectl delete ns hello
-```
-
-```bash [YAML]
-$ cat <<EOF | kubectl delete -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: hello
-EOF
-```
-
-:::
-
-- 查看命名空间
-
-```bash
-$ kubectl get ns
-```
-
-## 2 工作负载 `N`
-
-### 2.1 pod
+### 1.1 pod
 
 运行中的一组容器，pod是kubernetes中应用的最小单位。
 
@@ -222,7 +174,7 @@ $ curl 127.0.0.1:80
 
 
 
-### 2.2 Deployment
+### 1.2 Deployment
 
 控制Pod，使Pod拥有多副本，自愈，扩缩容等能力。
 
@@ -238,7 +190,7 @@ $ kubectl create deploy mytomcat --image=tomcat:8.5-jre8-slim
 > 1. deployment方式部署，Pod具有自愈能力，被删除Pod后，会重新启动一个新的Pod。
 > 2. 只有通过删除deployment，才能真正删除！
 
-#### 2.2.1 多副本
+#### 1.2.1 多副本
 
 - 创建deployment
 
@@ -328,7 +280,7 @@ EOF
   $ kubectl get pod -l app=my-dep
   ```
 
-#### 2.2.2 扩缩容
+#### 1.2.2 扩缩容
 
 :::code-group
 
@@ -343,12 +295,12 @@ $ kubectl edit deploy my-dep
 
 :::
 
-#### 2.2.3 自愈
+#### 1.2.3 自愈
 
 - 停掉某个pod验证，会发现比较快的重启新的pod
 - 对某个节点关机验证，会发现5m后会停掉不可用pod，重新启动pod
 
-#### 2.2.4 滚动更新
+#### 1.2.4 滚动更新
 
 :::code-group
 
@@ -364,7 +316,7 @@ $ kubectl edit deploy/my-dep
 
 :::
 
-#### 2.2.5 版本回退
+#### 1.2.5 版本回退
 
 - 查看部署历史
 
@@ -392,7 +344,7 @@ $ kubectl rollout undo deploy/my-dep --to-revision=1
 
 
 
-#### 2.2.6 其他工作负载
+#### 1.2.6 其他工作负载
 
 > 更多：
 >
@@ -411,9 +363,9 @@ $ kubectl rollout undo deploy/my-dep --to-revision=1
 
 
 
-## 3 服务 `N`
+## 2 服务 `N`
 
-### 3.1 Service
+### 2.1 Service
 
 > 将一组 Pods 公开为网络服务的抽象方法。
 >
@@ -495,11 +447,11 @@ $ kubectl get endpoints my-dep -n default
 $ kubectl get svc
 ```
 
-### 3.2 Ingress
+### 2.2 Ingress
 
 参考：[安装ingress-nginx](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_5-%E5%AE%89%E8%A3%85ingress-nginx-%E5%9C%A8master%E8%8A%82%E7%82%B9%E6%89%A7%E8%A1%8C)
 
-#### 3.2.1 域名访问
+#### 2.2.1 域名访问
 
 :::details ingress-domain.yaml配置
 
@@ -591,7 +543,7 @@ $ kubectl delete -f ingress-domain.yaml
 
 :::
 
-#### 3.2.2 路径重写
+#### 2.2.2 路径重写
 
 :::details ingress-rewrite.yaml配置
 
@@ -707,7 +659,7 @@ $ kubectl delete -f ingress-rewrite.yaml
 
 :::
 
-#### 3.2.3 流量限制
+#### 2.2.3 流量限制
 
 :::details ingress-limit.yaml配置
 
@@ -801,6 +753,370 @@ $ kubectl delete -f ingress-limit.yaml
 ```
 
 :::
+
+
+
+## 3 配置和存储
+
+参考：[安装NFS存储抽象](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1)
+
+### 3.1 Persisten Persistent Volume Claims 存储卷声明`N`
+
+> PV：持久卷（Persistent Volume），将应用需要持久化的数据保存到指定位置。
+>
+> PVC：持久卷声明（Persistent Volume Claim），申明需要使用的持久卷规格。
+
+#### 3.1.1 创建PV池
+
+参考：[创建PV池](http://localhost:8751/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubernetes%E6%A0%B8%E5%BF%83%E5%AE%9E%E6%88%98.html#%E5%88%9B%E5%BB%BApv%E6%B1%A0)
+
+#### 3.1.2 PVC创建与绑定 `N`
+
+- 创建PVC
+
+```yaml
+tee nfs-pvc.yaml << EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nginx-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+  storageClassName: nfs
+EOF
+```
+
+- 创建Pod绑定PVC
+
+```yaml
+tee nfs-deploy.yaml << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx-deploy-pvc
+  name: nginx-deploy-pvc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-deploy-pvc
+  template:
+    metadata:
+      labels:
+        app: nginx-deploy-pvc
+    spec:
+      containers:
+      - image: nginx:1.25.4
+        name: nginx
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          persistentVolumeClaim:
+            claimName: nginx-pvc
+EOF
+```
+
+- 验证
+
+```bash
+$ kubectl get pv,pvc,po -owide
+NAME                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM               STORAGECLASS   REASON   AGE   VOLUMEMODE
+persistentvolume/pv01-10m   10M        RWX            Retain           Available                       nfs                     37m   Filesystem
+persistentvolume/pv02-1gi   1Gi        RWX            Retain           Bound       default/nginx-pvc   nfs                     37m   Filesystem
+persistentvolume/pv03-3gi   3Gi        RWX            Retain           Available                       nfs                     37m   Filesystem
+
+NAME                              STATUS   VOLUME     CAPACITY   ACCESS MODES   STORAGECLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/nginx-pvc   Bound    pv02-1gi   1Gi        RWX            nfs            17m   Filesystem
+
+NAME                                   READY   STATUS    RESTARTS   AGE    IP               NODE    NOMINATED NODE   READINESS GATES
+pod/nginx-deploy-pvc-58dd6c57f-4976v   1/1     Running   0          5m7s   10.244.161.2     emon3   <none>           <none>
+pod/nginx-deploy-pvc-58dd6c57f-lt8wb   1/1     Running   0          5m7s   10.244.108.117   emon2   <none>           <none>
+
+# ------------------------------------------------------------------------
+$ echo 222222 > /nfs/data/02/index.html
+$ curl 10.244.161.2
+222222
+$ curl 10.244.108.117
+222222
+```
+
+
+
+### 3.2 ConfigMap
+
+> 抽取应用配置，并且可以自动更新。
+
+#### 3.2.1 Redis示例
+
+- 创建cm
+
+```bash
+# 创建配置，redis保存到K8S的etcd；
+$ echo "appendonly yes" > redis.conf
+$ kubectl create cm redis-conf --from-file=redis.conf
+# 查看
+$ kubectl get cm redis-conf -oyaml
+```
+
+```yaml
+apiVersion: v1
+# 配置文件真正的数据，key是文件名，value是内容
+data:
+  redis.conf: |
+    appendonly yes
+kind: ConfigMap
+metadata:
+  name: redis-conf
+  namespace: default
+```
+
+- 创建Pod
+
+```yaml
+tee redis.yaml << EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+spec:
+  containers:
+  - name: redis
+    image: redis:7.0
+    command:
+    - redis-server
+    - "/redis-master/redis.conf" # 指的是redis容器内部的位置
+    ports:
+    - containerPort: 6379
+    volumeMounts:
+    - mountPath: /data
+      name: data
+    - mountPath: /redis-master
+      name: config
+  volumes:
+  - name: data
+    emptyDir: {}
+  - name: config
+    configMap:
+      name: redis-conf
+      items:
+      - key: redis.conf
+        path: redis.conf
+EOF
+```
+
+<img src="./images/image-20250609131241911.png" alt="image-20250609131241911" style="zoom:50%;" />
+
+- 验证
+
+```bash
+$ kubectl exec -it redis -- redis-cli
+127.0.0.1:6379> config get appendonly
+1) "appendonly"
+2) "yes"
+```
+
+- 修改cm
+
+```bash
+$ kubectl edit cm redis-conf
+```
+
+```js
+apiVersion: v1
+data:
+  redis.conf: |
+    appendonly yes
+    requirepass redis123 // [!code ++] [!code focus]
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2025-06-08T14:32:17Z"
+  name: redis-conf
+  namespace: default
+  resourceVersion: "430742"
+  uid: c78cf129-9d62-436f-a1f2-bb1e69f27b35
+```
+
+- 检查cm配置在pod中是否感知到（能感知到刷新，但并未生效，除非重启Pod）
+
+```bash
+$ kubectl exec -it redis -- cat /redis-master/redis.conf
+appendonly yes
+requirepass redis123
+```
+
+
+
+### 3.3 Secrets 密码 `N`
+
+> Secret对象类型用来保存敏感信息，例如密码、OAuth令牌和SSH秘钥。将这些信息放在`secret`中比方在Pod的定义或者容器镜像中来说更加安全和灵活。
+
+- 创建secrets
+
+:::code-group
+
+```bash [命令格式]
+$ kubectl create secret docker-registry regcred \
+--docker-server=<你的镜像仓库服务器> \
+--docker-username=<你的用户名> \
+--docker-password=<你的密码> \
+--docker-email=<你的邮箱地址>
+```
+
+```bash [示例]
+$ kubectl create secret docker-registry rushing-docker \
+--docker-username=rushing \
+--docker-password=rushing123 \
+--docker-email=123@qq.com
+```
+
+:::
+
+> - **`docker-registry`**：指定创建的 Secret 类型为 Docker 镜像仓库认证专用（存储 `~/.docker/config.json` 格式的认证信息）。
+> - **`rushing-docker`**：自定义的 Secret 名称，后续在 Pod 中需通过此名称引用。
+
+
+
+- 创建Pod
+
+```yaml
+tee secret.yaml << EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: private-nginx
+spec:
+  containers:
+  - name: private-nginx
+    image: rushing/zkui-arm64:latest
+  imagePullSecrets:
+  - name: rushing-docker
+EOF
+```
+
+## 集群
+
+### Namespace 命名空间
+
+用来对集群资源进行隔离划分。默认只隔离资源，不隔离网络。
+
+- 创建命名空间
+
+:::code-group
+
+```bash [命令行]
+$ kubectl create ns hello
+```
+
+```bash [YAML]
+$ cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hello
+EOF
+```
+
+:::
+
+- 删除命名空间
+
+:::code-group
+
+```bash [命令行]
+$ kubectl delete ns hello
+```
+
+```bash [YAML]
+$ cat <<EOF | kubectl delete -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hello
+EOF
+```
+
+:::
+
+- 查看命名空间
+
+```bash
+$ kubectl get ns
+```
+
+### Persistent Volumes 存储卷
+
+#### 创建PV池
+
+- 静态供应
+
+```bash
+# nfs主节点
+$ mkdir -p /nfs/data/{01,02,03}
+```
+
+- 创建PV
+
+:::details 创建PV
+
+```yaml
+tee nfs-pv.yaml << EOF
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv01-10m
+spec:
+  capacity:
+    storage: 10M
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs
+  nfs:
+    path: /nfs/data/01
+    server: 192.168.200.116
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv02-1gi
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs
+  nfs:
+    path: /nfs/data/02
+    server: 192.168.200.116
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv03-3gi
+spec:
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: nfs
+  nfs:
+    path: /nfs/data/03
+    server: 192.168.200.116
+EOF
+```
+
+:::
+
+
+
+
 
 
 

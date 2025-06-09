@@ -6,15 +6,19 @@ https://kubernetes.io/zh-cn/docs/reference/kubectl/introduction/
 
 ### 1.1 资源类型
 
-| 资源        | 简写       | 是否需指定命名空间 |
-| ----------- | ---------- | ------------------ |
-| namespaces  | ns         | false              |
-| nodes       | node/no    | false              |
-| service     | svc        | false              |
-| pods        | pod/po     | true               |
-| deployments | deploy     | true               |
-| replicaset  | replicaset | true               |
-| ingress     | ing        | false              |
+| 资源                  | 简写    | 是否需指定命名空间 |
+| --------------------- | ------- | ------------------ |
+| namespaces            | ns      | false              |
+| nodes                 | node/no | false              |
+| service               | svc     | false              |
+| pods                  | pod/po  | true               |
+| deployments           | deploy  | true               |
+| replicaset            | rs      | true               |
+| ingress               | ing     | false              |
+| persistentvolume      | pv      | false              |
+| persistentVolumeClaim | pvc     | true               |
+| ConfigMap             | cm      | true               |
+| secret                | secret  |                    |
 
 ## 1.2 版本
 
