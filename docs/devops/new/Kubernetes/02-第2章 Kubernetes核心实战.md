@@ -4,6 +4,8 @@
 
 <span style="color:red;font-weight:bold;font-size:28px">标题后面的 (N) 表示与命名空间有关</span>
 
+![image-20250610230129659](images/image-20250610230129659.png)
+
 ## 0 资源创建方式
 
 - 命令行

@@ -10,6 +10,8 @@
 
 另外，还有[自动生成侧边栏](https://www.bilibili.com/opus/862274410491412512?spm_id_from=333.1387.0.0)
 
+参考：  https://docs.zhengxinonly.com/
+
 ## 0 前置准备
 
 - Node.js 18 及以上版本。

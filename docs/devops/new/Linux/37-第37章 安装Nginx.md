@@ -33,7 +33,7 @@
 
 ```bash
 [emon@wenqiu ~]$ cd /usr/local/Nginx/nginx-1.22.0/
-[emon@wenqiu nginx-1.22.0]$ ./configure --prefix=/usr/local/Nginx/nginx1.22.0 --with-http_ssl_module --with-stream --with-stream_ssl_module
+[emon@wenqiu nginx-1.22.0]$ ./configure --prefix=/usr/local/Nginx/nginx1.22.0 --with-http_ssl_module --with-stream --with-stream_ssl_module --with-http_v2_module
 ```
 
 命令解释： `--with-http_ssl_module`指定编译时支持ssl，为Nginx代理时https准备。
@@ -87,7 +87,7 @@ nginx version: nginx/1.22.0
 built by gcc 4.8.5 20150623 (Red Hat 4.8.5-44) (GCC) 
 built with OpenSSL 1.0.2k-fips  26 Jan 2017
 TLS SNI support enabled
-configure arguments: --prefix=/usr/local/Nginx/nginx1.22.0 --with-http_ssl_modul
+configure arguments: --prefix=/usr/local/Nginx/nginx1.22.0 --with-http_ssl_modul --with-http_v2_module
 [emon@wenqiu ~]$ nginx -v
 nginx version: nginx/1.22.0
 ```

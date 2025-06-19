@@ -5,25 +5,25 @@
 下载地址获取页面： https://maven.apache.org/download.cgi
 
 ```bash
-[emon@wenqiu ~]$ wget -cP /usr/local/src/ https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+$ wget -cP /usr/local/src/ https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
 ```
 
 2. 创建安装目录
 
 ```bash
-[emon@wenqiu ~]$ mkdir /usr/local/Maven
+$ mkdir /usr/local/Maven
 ```
 
 3. 解压安装
 
 ```bash
-[emon@wenqiu ~]$ tar -zxvf /usr/local/src/apache-maven-3.8.6-bin.tar.gz -C /usr/local/Maven/
+$ tar -zxvf /usr/local/src/apache-maven-3.8.8-bin.tar.gz -C /usr/local/Maven/
 ```
 
 4. 创建软连接
 
 ```bash
-[emon@wenqiu ~]$ ln -s /usr/local/Maven/apache-maven-3.8.6/ /usr/local/maven
+$ ln -s /usr/local/Maven/apache-maven-3.8.8/ /usr/local/maven
 ```
 
 5. 配置环境变量
@@ -31,7 +31,7 @@
 在`/etc/profile.d`目录创建`mvn.sh`文件：
 
 ```bash
-[emon@wenqiu ~]$ sudo vim /etc/profile.d/mvn.sh
+$ sudo vim /etc/profile.d/mvn.sh
 export MAVEN_HOME=/usr/local/maven
 export PATH=$MAVEN_HOME/bin:$PATH
 ```
@@ -39,13 +39,13 @@ export PATH=$MAVEN_HOME/bin:$PATH
 使之生效：
 
 ```bash
-[emon@wenqiu ~]$ source /etc/profile
+$ source /etc/profile
 ```
 
 6. 校验
 
 ```bash
-[emon@wenqiu ~]$ mvn -v
+$ mvn -v
 ```
 
 7. 配置
@@ -53,13 +53,13 @@ export PATH=$MAVEN_HOME/bin:$PATH
 - 创建repo存放目录
 
 ```bash
-[emon@wenqiu ~]$ mkdir /usr/local/maven/repository
+$ mkdir /usr/local/maven/repository
 ```
 
 - 配置存放repo
 
   ```bash
-  [emon@wenqiu ~]$ vim /usr/local/maven/conf/settings.xml 
+  $ vim /usr/local/maven/conf/settings.xml 
   ```
 
     - 配置`localRepository`【多用户访问不建议配置】
@@ -68,7 +68,7 @@ export PATH=$MAVEN_HOME/bin:$PATH
     <!-- localRepository
      | The path to the local repository maven will use to store artifacts.
      |
-     | Default: ${user.home}/.m2/repository
+     | Default: $ {user.home}/.m2/repository
     <localRepository>/path/to/local/repo</localRepository>
     -->
     <localRepository>/usr/local/maven/repository</localRepository>
@@ -76,7 +76,7 @@ export PATH=$MAVEN_HOME/bin:$PATH
 
   **说明：**需要修改`/usr/local/maven/repository`为`jenkins`用户权限。
 
-  > [emon@wenqiu ~]$ sudo chown jenkins.jenkins /usr/local/maven/repository
+  > $ sudo chown jenkins.jenkins /usr/local/maven/repository
 
     - 配置`mirror`
 
