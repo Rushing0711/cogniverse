@@ -60,6 +60,7 @@ export default defineConfig({
                         text: '云原生', items: [
                             {text: 'Docker', link: '/devops/new/Docker/00-引言'},
                             {text: 'Kubernetes', link: '/devops/new/Kubernetes/00-引言'},
+                            {text: 'Helm', link: '/devops/new/Helm/00-引言'},
                             {text: 'KubeSphere', link: '/devops/new/KubeSphere/00-引言'},
                         ]
                     },
@@ -94,6 +95,7 @@ export default defineConfig({
             '/devops/new/Nginx': autoGenSidebar('/devops/new/Nginx'),
             '/devops/new/Docker': autoGenSidebar('/devops/new/Docker'),
             '/devops/new/Kubernetes': autoGenSidebar('/devops/new/Kubernetes'),
+            '/devops/new/Helm': autoGenSidebar('/devops/new/Helm'),
             '/devops/new/KubeSphere': autoGenSidebar('/devops/new/KubeSphere'),
             '/devops/new/Git': autoGenSidebar('/devops/new/Git'),
         },
@@ -181,7 +183,7 @@ export default defineConfig({
                     '信息',
                 detailsLabel:
                     '详细信息'
-            }
+            },
     },
 
     vite: {
@@ -193,6 +195,5 @@ export default defineConfig({
         // '/optional-ignored-path/',     // 忽略特定内部路径
         // '#暂时未实现的锚点'            // 忽略锚点
         /^http:\/\/localhost:/
-    ]
-
+    ],
 })
