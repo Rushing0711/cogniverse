@@ -1,5 +1,6 @@
 import {defineConfig} from 'vitepress'
 import {autoGenSidebar} from './auto-gen-sidebar.js'
+import {MermaidMarkdown, MermaidPlugin} from "vitepress-plugin-mermaid";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -71,13 +72,7 @@ export default defineConfig({
         ],
 
         sidebar: {
-            '/readme': {
-                text: '首页',
-                items: [
-                    {text: '笔记构建指南', link: '/readme/cogniverse『typora+vitepress』'},
-                    {text: '自动生成侧边栏', link: '/readme/auto-sidebar'}
-                ]
-            },
+            '/guide': autoGenSidebar('guide'),
             '/frontend/old': autoGenSidebar('frontend/old'),
             '/backend/old': autoGenSidebar('backend/old'),
             '/design/old': autoGenSidebar('design/old'),
@@ -184,10 +179,20 @@ export default defineConfig({
                 detailsLabel:
                     '详细信息'
             },
+        config(md) {
+            md.use(MermaidMarkdown)
+        }
     },
 
     vite: {
         assetsInclude: ['**/*.image'], // 解决 [plugin vite:build-import-analysis] docs/frontend/Vue/Vue2And3/images/OptionsAPI2.image 报错
+        plugins: [MermaidPlugin()],
+        optimizeDeps: {
+            include: ['mermaid'],
+        },
+        ssr: {
+            noExternal: ['mermaid'],
+        },
     },
 
     ignoreDeadLinks: [

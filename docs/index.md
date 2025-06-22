@@ -12,10 +12,10 @@ hero:
   actions:
     - theme: brand
       text: "网站构建指南"
-      link: /readme/cogniverse『typora+vitepress』
+      link: /guide/01-第1章 网站构建指南
     - theme: alt
       text: "自动生成侧边栏"
-      link: /readme/auto-sidebar
+      link: /guide/02-第2章 自动生成侧边栏
 
 features:
   - title: 热爱而不是强迫
