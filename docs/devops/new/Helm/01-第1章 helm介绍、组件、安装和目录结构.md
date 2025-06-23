@@ -11,7 +11,7 @@
 拉取代码
 
 ```mermaid
-graph TD
+graph LR
   Start[开始] ==> A
 	A[拉取代码] ==> B[打包编译]
 	B ==> C[构建镜像]
@@ -19,6 +19,39 @@ graph TD
 	D ==> E[kubectl apply部署到K8S集群]
 	E ==> End[结束]
 ```
+
+### 0.3 传统方式部署引发的问题
+
+- 随着引用的增多，需要维护大量的yaml文件
+- 不能根据一套yaml文件来创建多个环境，需要手动进行修改
+
+例如：一般环境都分为dev、预生产、生产环境，部署完了dev这套环境，后面再部署预生产和生产环境，还需要复制出两套，并手动修改才行。
+
+### 0.4 什么是helm
+
+Helm是Kubernetes的包管理工具，可以方便地发现、共享和构建Kubernetes应用。
+
+Helm是K8S的包管理器，相当于CentOS系统中的yum工具，可以将一个服务相关的所有资源信息整合到一个chart包中，并且可以使用一套资源发布到多个环境中，可以将应用程序的所有资源和部署信息组合到单个部署包中。
+
+就像Linux下的rpm包管理器，如yum/apt等，可以很方便的将之前打包好的yaml文件部署到kubernetes上。
+
+### 0.5 helm的组件
+
+- Chart：就是helm的一个整合后的chart包，包含一个应用所有的kubernetes声明模板，类似于yum的rpm包或者apt的dpkg文件。
+
+理解：helm将打包的应用程序部署到K8S，并将他们构建成Chart。这些Chart将所有预配置的应用程序资源一级所有版本都包含在一个易于管理的包中。
+
+helm把kubernetes资源（如：deployments、services或ingress等）打包到一个chart中，chart被保存到chart仓库。通过chart仓库可用来存储和分享chart。
+
+- Helm客户端：heml的客户端组件，负责和K8S的apiserver通信。
+- Repository：用于发布和存储chart包的仓库，类似yum仓库或docker仓库。
+- Release：用chart包部署的一个实例。通过chart在K8S中部署的应用都会产生一个唯一的Release。同一chart部署多次就会产生多个Release。
+
+理解：将这些yaml部署完成后，他也会记录部署时候的一个版本，维护了一个release版本状态，通过Release这个实例，他会具体帮我们创建pod、deployment等资源。
+
+### 0.6 helm3和helm2的区别
+
+
 
 
 

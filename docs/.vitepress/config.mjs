@@ -68,19 +68,23 @@ export default defineConfig({
                     {items: [{text: 'Git', link: '/devops/new/Git/00-引言'}]},
                 ]
             },
-            {text: '杂项', link: '/misc'},
+            {
+                text: '杂项', items: [
+                    {text: '杂项', link: '/misc'},
+                ]
+            },
         ],
 
         sidebar: {
-            '/guide': autoGenSidebar('guide'),
-            '/frontend/old': autoGenSidebar('frontend/old'),
-            '/backend/old': autoGenSidebar('backend/old'),
-            '/design/old': autoGenSidebar('design/old'),
-            '/database/old': autoGenSidebar('database/old'),
-            '/bigdata/old': autoGenSidebar('bigdata/old'),
-            '/ai': autoGenSidebar('ai'),
-            '/devops/old': autoGenSidebar('devops/old'),
-            '/misc': autoGenSidebar('misc'),
+            '/guide': autoGenSidebar('/guide'),
+            '/frontend/old': autoGenSidebar('/frontend/old'),
+            '/backend/old': autoGenSidebar('/backend/old'),
+            '/design/old': autoGenSidebar('/design/old'),
+            '/database/old': autoGenSidebar('/database/old'),
+            '/bigdata/old': autoGenSidebar('/bigdata/old'),
+            '/ai': autoGenSidebar('/ai'),
+            '/devops/old': autoGenSidebar('/devops/old'),
+            '/misc': autoGenSidebar('/misc'),
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
             '/frontend/new/CSS/': autoGenSidebar('/frontend/new/CSS'),
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
