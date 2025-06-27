@@ -83,7 +83,7 @@ $ helm pull chart-name
 $ helm install ./mychart --generate-name
 ```
 
-## 1 安装helm
+## 1 安装Helm
 
 [Helm与K8S版本兼容性](https://helm.sh/zh/docs/topics/version_skew/) 发现Helm 3.11.x 与 K8S 1.23.17版本兼容。
 
@@ -169,7 +169,67 @@ $ helm install bitnami/mysql --generate-name \
 
 :::
 
-## 2 Helm常用命令
+## 2 Chart的目录结构
+
+```bash
+$ helm create mychart
+$ tree mychart/
+mychart/ # chart包的名称
+├── charts # 存放子chart的目录，目录里存放这个chart依赖的所有子chart
+├── Chart.yaml # 保存chart的基本信息，包括名字、描述信息及版本等，这个变量文件都可以被templates目录下文件所引用
+├── templates # 模板文件目录，目录里面存放所有yaml模板文件，包含了所有部署应用的yaml文件
+│   ├── deployment.yaml # 创建deployment对象的模板文件
+│   ├── _helpers.tpl # 放置模板助手的文件，可以在整个chart中重复使用，是放一些templates目录下这些yaml都有可能会用的一些模板
+│   ├── hpa.yaml
+│   ├── ingress.yaml
+│   ├── NOTES.txt # 存放提示信息的文件，介绍chart帮助信息，helm install部署后展示给用户，如何使用chart等，是部署chart后给用户的提示信息
+│   ├── serviceaccount.yaml
+│   ├── service.yaml
+│   └── tests # 用于测试的文件，测试完部署完chart后，如web，做一个链接，看看你是否部署正常
+│       └── test-connection.yaml
+└── values.yaml # 用于渲染模板的文件（变量文件，定义变量的值）定义templates目录下的yaml文件可能引用到的变量； values.yaml用于存储templaets目录中模板文件中用到变量的值，这些变量定义都是为了让templates目录下yaml引用
+
+3 directories, 10 files
+```
+
+```bash
+$ cat mychart/Chart.yaml 
+```
+
+:::details Chart.yaml详情
+
+```yaml
+apiVersion: v2
+name: mychart
+description: A Helm chart for Kubernetes
+
+# A chart can be either an 'application' or a 'library' chart.
+#
+# Application charts are a collection of templates that can be packaged into versioned archives
+# to be deployed.
+#
+# Library charts provide useful utilities or functions for the chart developer. They're included as
+# a dependency of application charts to inject those utilities and functions into the rendering
+# pipeline. Library charts do not define any templates and therefore cannot be deployed.
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+```
+
+:::
+
+
+
+## 3 Helm常用命令
 
 | 命令       | 描述                                                         |
 | ---------- | ------------------------------------------------------------ |
@@ -191,7 +251,7 @@ $ helm install bitnami/mysql --generate-name \
 | upgrade    | 更新一个release                                              |
 | version    | 查看helm客户端版本                                           |
 
-## 3 配置国内Chart仓库
+## 4 配置国内Chart仓库
 
 - 微软仓库
 
@@ -214,7 +274,7 @@ $ helm search repo azure/mysql
 $ helm install azure/mysql --generate-name
 ```
 
-## 4 Helm基本使用
+## 5 Helm基本使用
 
 主要介绍三个命令：
 
@@ -222,7 +282,7 @@ $ helm install azure/mysql --generate-name
 - chart upgrade
 - chart rollback
 
-### 4.1 使用chart部署一个应用
+### 5.1 使用chart部署一个应用
 
 查找chart：
 
