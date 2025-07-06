@@ -18,7 +18,8 @@ https://kubernetes.io/zh-cn/docs/reference/kubectl/introduction/
 | persistentvolume      | pv      | false              |
 | persistentVolumeClaim | pvc     | true               |
 | ConfigMap             | cm      | true               |
-| secret                | secret  |                    |
+| secret                | secret  | false              |
+| endpoints             | ep      | true               |
 
 ## 1.2 版本
 

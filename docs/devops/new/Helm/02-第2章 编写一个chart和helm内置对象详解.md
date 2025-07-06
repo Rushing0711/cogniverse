@@ -209,10 +209,10 @@ $ helm install db http://url.../mysql-1.6.9.tgz
 
 描述的是value.yaml文件（定义变量的文件）中的内容，默认为空。使用Value对象可以获取到value.yaml文件中已定义的任何变量数值。
 
-| Value键值对               | 获取方式           |
-| ------------------------- | ------------------ |
-| name1: test1              | .Values.name1      |
-| info:<br />  name2: test2 | .Values.info.name2 |
+| Value键值对                   | 获取方式           |
+| ----------------------------- | ------------------ |
+| name1: test1                  | .Values.name1      |
+| info:<br />&nbsp;&nbsp;name2: test2 | .Values.info.name2 |
 
 #### 2.2.3 Chart对象
 
@@ -243,4 +243,139 @@ $ helm install db http://url.../mysql-1.6.9.tgz
 | ------------------ | ------------------------------------------------------------ |
 | .Template.Name     | 用于获取当前模板的名称和路径（例如：mychart/templates/mytemplate.yaml） |
 | .Template.BasePath | 用于获取当前模板的路径（例如：mychart/templates）            |
+
+## 3 编写一个使用内置对象的chart
+
+编写自己需要的yaml文件，调用上面各自内置对象获取相关变量的值。
+
+### 3.1 调用Release对象
+
+```bash
+$ helm create mychart
+$ cd ~/mychart/templates
+$ rm -rf *
+# 编写一个自己需要的模板文件
+$ tee ~/mychart/templates/configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  value1: {{ .Release.IsUpgrade }}
+  value2: {{ .Release.IsInstall }}
+  value3: {{ .Release.Revision }}
+  value4: {{ .Release.Service }}  
+EOF
+
+# 不真正执行，只是试运行看是否能运行
+$ helm install myconfigmap ~/mychart --debug --dry-run
+```
+
+### 3.2 调用Values对象
+
+```bash
+# 清空里面的初始化信息，设置成我们需要的（变量名和赋值）（里面默认的信息都是初始化信息，仅供参考）
+$ tee ~/mychart/values.yaml << EOF
+name1: test1 
+info:
+  name2: test2
+EOF
+
+# 编写一个自己需要的模板文件
+$ tee ~/mychart/templates/configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  value1: {{ .Values.name1 }}
+  value2: {{ .Values.info.name2 }}
+EOF
+
+# 不真正执行，只是试运行看是否能运行
+$ helm install myconfigmap ~/mychart --debug --dry-run
+```
+
+### 3.3 调用Chart对象
+
+```bash
+# 先查看下CHart.yaml文件中内容中定义的变量
+$ cat /root/mychart/Chart.yaml|grep -vE "#|^$"
+apiVersion: v2
+name: mychart
+description: A Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+
+# 编写一个自己需要的模板文件
+$ tee ~/mychart/templates/configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  value1: {{ .Chart.Name }}
+  value2: {{ .Chart.Version }}
+EOF
+
+# 不真正执行，只是试运行看是否能运行
+$ helm install myconfigmap ~/mychart --debug --dry-run
+```
+
+### 3.4 调用Capabilities对象
+
+```bash
+# 编写一个自己需要的模板文件
+$ tee ~/mychart/templates/configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  value1: "{{ .Capabilities.APIVersions }}" # 返回kubernetes集群 API版本信息集合
+  value2: '{{ .Capabilities.APIVersions.Has "apps/v1/Deployment" }}' # 用于检测指定的版本或资源在K8S集群中是否可用
+  value3: "{{ .Capabilities.KubeVersion.Version }}" # 用于获取kubernetes的版本号
+  value4: "{{ .Capabilities.KubeVersion.Major }}" # 获取Kubernetes的主版本号
+  value5: "{{ .Capabilities.KubeVersion.Minor }}" # 获取kubernetes的小版本号
+EOF
+
+# 不真正执行，只是试运行看是否能运行
+$ helm install myconfigmap ~/mychart --debug --dry-run
+```
+
+### 3.5 调用Template对象
+
+```bash
+# 编写一个自己需要的模板文件
+$ tee ~/mychart/templates/configmap.yaml << EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+  namespace: {{ .Release.Namespace }}
+data:
+  value1: {{ .Template.Name }}
+  value2: {{ .Template.BasePath }}
+EOF
+
+# 不真正执行，只是试运行看是否能运行
+$ helm install myconfigmap ~/mychart --debug --dry-run
+```
+
+
+
+
+
+
+
+
+
+
+
+
 

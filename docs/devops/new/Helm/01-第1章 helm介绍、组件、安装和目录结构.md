@@ -229,51 +229,6 @@ appVersion: "1.16.0"
 
 
 
-## 3 Helm常用命令
-
-| 命令       | 描述                                                         |
-| ---------- | ------------------------------------------------------------ |
-| create     | 创建一个chart并指定名称                                      |
-| dependency | 管理chart依赖                                                |
-| get        | 下载一个release。可用子命令：all/hooks/manifest/notes/values |
-| history    | 获取release历史                                              |
-| install    | 安装一个chart                                                |
-| list       | 列出release                                                  |
-| package    | 将chart目录打包到chart存档文件中                             |
-| pull       | 从远程仓库中下载chart并解压到本地 `$ helm pull azure/mysql –untar` |
-| repo       | 添加，列出，移除，更新和索引chart仓库。可用子命令：add/index/list/remove/update |
-| rollback   | 从之前版本回滚                                               |
-| search     | 根据关键字搜索chart。可用子命令：hub/repo                    |
-| show       | 查看chart详细信息。可用子命令：all/chart/readme/values       |
-| status     | 显示已命名版本的状态                                         |
-| template   | 本地呈现模板                                                 |
-| uninstall  | 卸载一个release                                              |
-| upgrade    | 更新一个release                                              |
-| version    | 查看helm客户端版本                                           |
-
-## 4 配置国内Chart仓库
-
-- 微软仓库
-
-http://mirror.azure.cn/kubernetes/charts/
-
-这个仓库强烈推荐，基本上官网有的chart这里都有
-
-```bash
-# 添加 azure 仓库【推荐】
-$ helm repo add azure http://mirror.azure.cn/kubernetes/charts/
-# 添加 aliyun 仓库【不稳定】
-$ helm repo add aliyun https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
-# 查看一添加的仓库
-$ helm repo list
-# 更新本地仓库缓存
-$ helm repo update
-# 搜索 MySQL
-$ helm search repo azure/mysql
-# 安装
-$ helm install azure/mysql --generate-name
-```
-
 ## 5 Helm基本使用
 
 主要介绍三个命令：
