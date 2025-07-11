@@ -162,7 +162,7 @@ $ kubectl logs -f myapp -c tomcat
 
 :::code-group
 
-```bash [单Pod多容器]
+```bash [单Pod单容器]
 $ kubectl exec -it mynginx -- /bin/bash
 ```
 
@@ -423,10 +423,10 @@ $ kubectl expose deploy my-dep --port=8000 --target-port=80 --type=NodePort
 >
 > ```bash
 > $ kubectl exec -it mytomcat-769875c4c-wpxkq -- /bin/bash -c ' \
->   start=$(date +%s); \
->   time nslookup my-dep.default.svc; \
->   end=$(date +%s); \
->   echo "Duration: $((end - start)) seconds" \
+> start=$(date +%s); \
+> time nslookup my-dep.default.svc; \
+> end=$(date +%s); \
+> echo "Duration: $((end - start)) seconds" \
 > '
 > ```
 
@@ -1003,6 +1003,217 @@ spec:
 EOF
 ```
 
+### 3.4 Storage Classes
+
+#### 3.4.1 pv&pvc&sc的关系
+
+##### <span style="color:blue;font-weight:bold;">核心关系总结</span>
+
+1. **用户通过 PVC 申请存储资源**
+2. **PV 提供实际的存储资源**
+3. **StorageClass 实现 PV 的动态创建**
+4. **PVC 与 PV 通过匹配条件绑定**
+
+##### <span style="color:blue;font-weight:bold;">详细解析三者的关系</span>
+
+1. PersistentVolume (PV) - **存储资源的抽象**
+
+- **是什么**：集群中的一块**实际存储**（如 NFS 卷、云磁盘等）
+- **谁创建**：管理员手动创建 **或** StorageClass 动态创建
+- **特点**：
+  - 独立于 Pod 生命周期（Pod 删除后数据保留）
+  - 包含存储细节（容量、访问模式、存储类型等）
+
+2. PersistentVolumeClaim (PVC) - **用户存储需求的声明**
+
+- **是什么**：用户对存储的**请求声明**（指定容量、访问模式等）
+- **谁创建**：应用开发者（在 Deployment/StatefulSet 中定义）
+- **核心作用**：
+  - 描述应用需要的存储特性
+  - 寻找匹配的 PV 并与之绑定
+  - 被 Pod 挂载后作为卷使用
+
+3. StorageClass (SC) - **动态供给的模板**
+
+- **是什么**：定义**如何动态创建 PV 的模板**
+- **谁创建**：管理员（配置供应商参数）
+- **核心能力**：
+  - 按 PVC 请求自动创建匹配的 PV
+  - 关联存储供应商（如 AWS EBS, GCE PD, Ceph RBD）
+  - 支持参数化配置（磁盘类型、IOPS 等）
+
+##### <span style="color:blue;font-weight:bold;">三者的关键关联点</span>
+
+| 组件         | 绑定依据                            | 生命周期管理               |
+| :----------- | :---------------------------------- | :------------------------- |
+| **PV & PVC** | 容量、AccessModes、storageClassName | PVC 删除后 PV 可保留或回收 |
+| **PVC & SC** | PVC 中指定的 storageClassName       | SC 删除不影响已创建的 PV   |
+| **SC & PV**  | SC 的 provisioner 决定 PV 创建方式  | SC 控制 PV 的动态生成      |
+
+#### 3.4.2 pvc使用pv的两种方式
+
+- 静态供给 (Static Provisioning)
+
+```mermaid
+graph LR
+A[管理员] -->|手动创建| B[PV]
+C[用户PVC] -->|匹配绑定| B
+D[Pod] -->|挂载| C
+```
+
+1. 管理员预创建多个 PV
+2. PVC 根据容量/访问模式匹配 PV
+3. 绑定后 Pod 使用 PVC
+
+- 动态供给 (Dynamic Provisioning) - **主流方式**
+
+```mermaid
+graph LR
+A[StorageClass] -->|定义| B[存储后端]
+C[用户PVC] -->|指定SC| A
+A -->|自动创建| D[PV]
+C -->|自动绑定| D
+E[Pod] -->|挂载| C
+```
+
+1. PVC 中指定 `storageClassName`
+2. SC 监听到 PVC 请求，调用存储插件创建 PV
+3. 自动将 PVC 与新 PV 绑定
+4. Pod 挂载 PVC 使用存储
+
+#### 3.4.3 如何动态使用pv？通过默认sc！
+
+##### 1 创建默认sc需要哪些组件？
+
+千万不要以为，创建默认sc很简单，其实需要：
+
+- 创建 Service Account 和 RBAC 权限
+
+  - ServiceAccount
+
+  - ClusterRole
+
+  - ClusterRoleBinding
+- 部署 NFS Provisioner
+- 创建默认 StorageClass
+
+##### 2 为什么需要这么多组件配合？
+
+- 为什么需要这么多组件？架构解析
+
+```mermaid
+graph TD
+    A[StorageClass] -->|定义供给规则| B[NFS Provisioner]
+    B -->|使用| C[Service Account]
+    C -->|通过| D[RBAC权限]
+    B -->|连接| E[NFS Server]
+    F[PVC] -->|请求存储| A
+    B -->|自动创建| G[PV]
+    G -->|绑定| F
+```
+
+1. **Service Account (服务账户) - 身份认证**
+
+- **为什么需要**：Kubernetes 采用 RBAC 安全模型，所有 Pod 操作 API 都需要身份认证
+- **作用**：为 Provisioner Pod 创建专用身份 `nfs-provisioner`
+- **类比**：就像给一个工作人员办理工作证，没有工作证无法进入办公区操作设备
+
+2. **RBAC (基于角色的访问控制) - 权限管理**
+
+- **为什么需要**：Provisioner 需要特定权限来管理 PV/PVC 等资源
+
+- **核心权限**：
+
+  - `persistentvolumes`：创建/删除 PV
+  - `persistentvolumeclaims`：更新 PVC 状态
+  - `storageclasses`：读取存储类配置
+  - `events`：记录操作事件
+
+- **关键配置**：
+
+  ```yaml
+  rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  ```
+
+- **类比**：给持有工作证的工作人员分配具体工作权限（如操作存储设备的权限）
+
+3. **NFS Provisioner (供给器) - 动态创建引擎**
+
+- **为什么需要**：Kubernetes 本身没有内置 NFS 动态供给能力
+
+- **核心功能**：
+
+  - 监听 PVC 创建事件
+  - 根据 StorageClass 规则在 NFS 服务器创建目录
+  - 自动生成 PV 并绑定到 PVC
+
+- **关键组件**：
+
+  ```yaml
+  env:
+  - name: PROVISIONER_NAME
+    value: k8s-sigs.io/nfs-subdir-external-provisioner
+  - name: NFS_SERVER
+    value: 192.168.1.100
+  ```
+
+- **类比**：自动化工厂机器人，接到订单（PVC）后自动生产产品（PV）
+
+4. **StorageClass (存储类) - 供给规则模板**
+
+- **为什么需要**：定义动态供给的行为规则
+
+- **关键配置**：
+
+  ```yaml
+  provisioner: k8s-sigs.io/nfs-subdir-external-provisioner
+  parameters:
+    archiveOnDelete: "false"
+  mountOptions:
+    - nfsvers=4.1
+  ```
+
+- **设为默认的重要性**：
+
+  - 使未指定 `storageClassName` 的 PVC 能自动使用
+  - 解决你遇到的 `no storage class is set` 错误
+
+##### 3 完整工作流程解析
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant PVC
+    participant SC
+    participant Provisioner
+    participant NFS
+    participant K8s API
+
+    User->>PVC: 创建PVC(未指定storageClass)
+    PVC->>SC: 查找默认StorageClass
+    SC->>Provisioner: 触发动态供给
+    Provisioner->>NFS: 创建目录(如namespace/pvc-name)
+    Provisioner->>K8s API: 创建PV对象
+    K8s API->>PV: 持久化存储配置
+    Provisioner->>PVC: 更新状态(Bound)
+    PVC->>User: 存储就绪
+```
+
+##### 4 各组件关系总结表
+
+| 组件            | 必须性 | 作用         | 是否可复用                |
+| :-------------- | :----- | :----------- | :------------------------ |
+| Service Account | 必需   | 提供身份认证 | 是 (可多SC共享)           |
+| RBAC            | 必需   | 授予操作权限 | 是                        |
+| NFS Provisioner | 必需   | 执行动态创建 | 是 (可服务多SC)           |
+| StorageClass    | 必需   | 定义供给规则 | 否 (每个存储类型需独立SC) |
+| NFS Server      | 必需   | 实际存储后端 | 是                        |
+
+> ⚠️ **生产环境警告**：虽然静态供给简单，但长期管理成本高。当有多个 PVC 时，动态方案能减少 90% 的管理工作。
+
 ## 集群
 
 ### Namespace 命名空间
@@ -1115,6 +1326,19 @@ EOF
 ```
 
 :::
+
+# 集群中控制节点的污点查询
+
+```bash
+$ kubectl describe node emon | grep Taints
+Taints:             node-role.kubernetes.io/master:NoSchedule
+# 若是高版本K8S得到：
+Taints:             node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+
+
+
 
 
 

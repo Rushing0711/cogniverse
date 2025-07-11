@@ -18,6 +18,12 @@ v3.4.1安装文档：
 
 [KubeSphere 开源社区](https://ask.kubesphere.io/forum/)
 
+v4.1.3安装文档：
+
+[在 Kubernetes 上快速安装 KubeSphere](https://kubesphere.io/zh/docs/v4.1/02-quickstart/01-install-kubesphere/)
+
+[在 Linux 上安装 Kubernetes 和 KubeSphere](https://kubesphere.io/zh/docs/v4.1/03-installation-and-upgrade/02-install-kubesphere/02-install-kubernetes-and-kubesphere/)
+
 ## 0 先决条件？
 
 ### 0.1 Kubesphere是什么？
@@ -33,7 +39,7 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 
 | 机器名 | 系统类型 | IP地址          | CPU  | 内存  | 部署内容 |
 | ------ | -------- | --------------- | ---- | ----- | -------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 4核  | >=8G  | master   |
+| emon   | Rocky9.5 | 192.168.200.116 | 4核  | >=16G | master   |
 | emon2  | Rocky9.5 | 192.168.200.117 | 4核  | >=16G | worker   |
 | emon3  | Rocky9.5 | 192.168.200.118 | 4核  | >=16G | worker   |
 
@@ -49,324 +55,24 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 
 参考：[kubeadm创建K8S集群](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-kubeadm%E5%88%9B%E5%BB%BA%E9%9B%86%E7%BE%A4-%E4%BB%85master%E8%8A%82%E7%82%B9)
 
+### 0.6 **集成 NFS 持久化存储**
 
+<span style="color:red;font-weight:bold;">安装之前，请确保集群中存在了[默认存储类](http://localhost:8751/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubernetes%E6%A0%B8%E5%BF%83%E5%AE%9E%E6%88%98.html#_3-4-3-%E5%A6%82%E4%BD%95%E5%8A%A8%E6%80%81%E4%BD%BF%E7%94%A8pv-%E9%80%9A%E8%BF%87%E9%BB%98%E8%AE%A4sc)</span>
 
-## 1 【过时】在Linux上以All-in-One模式安装（v3.4.1版本）
 
-https://kubesphere.io/zh/docs/v3.4/quick-start/all-in-one-on-linux/
 
-### 准备
+## 快速入门
 
-- 服务器规划
+### 1 在 Kubernetes 上快速安装 KubeSphere（v4.1.x版本）
 
-| 机器名 | 系统类型 | IP地址          | CPU  | 内存  | 部署内容   |
-| ------ | -------- | --------------- | ---- | ----- | ---------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 8核  | >=16G | All-in-One |
-
-> 此配置可以开启全部组件
-
-- 容器运行时
-
-| 支持的容器运行时              | 版本     |
-| :---------------------------- | :------- |
-| Docker                        | 19.3.8 + |
-| containerd                    | 最新版   |
-| CRI-O（试验版，未经充分测试） | 最新版   |
-| iSula（试验版，未经充分测试） | 最新版   |
-
-- 检测依赖项要求
-
-```bash
-$ yum install -y socat conntrack-tools ebtables ipset
-```
-
-KubeKey 可以将 Kubernetes 和 KubeSphere 一同安装。针对不同的 Kubernetes 版本，需要安装的依赖项可能有所不同。您可以参考以下列表，查看是否需要提前在节点上安装相关的依赖项。
-
-| 依赖项      | Kubernetes 版本 ≥ 1.18 | Kubernetes 版本 < 1.18 |
-| :---------- | :--------------------- | :--------------------- |
-| `socat`     | 必须                   | 可选但建议             |
-| `conntrack` | 必须                   | 可选但建议             |
-| `ebtables`  | 可选但建议             | 可选但建议             |
-| `ipset`     | 可选但建议             | 可选但建议             |
-
-- 下载 KubeKey
-
-先执行以下命令以确保您从正确的区域下载 KubeKey。
-
-```
-$ export KKZONE=cn
-```
-
-```bash
-$ curl -sfL https://get-kk.kubesphere.io | VERSION=v3.0.13 sh -
-```
-
-- 开始安装
-
-```bash
-$ ./kk create cluster --with-kubernetes v1.23.17 --with-kubesphere v3.4.1
-```
-
-```bash
-#####################################################
-###              Welcome to KubeSphere!           ###
-#####################################################
-
-Console: http://192.168.200.116:30880
-Account: admin
-Password: P@88w0rd
-NOTES：
-  1. After you log into the console, please check the
-     monitoring status of service components in
-     "Cluster Management". If any service is not
-     ready, please wait patiently until all components 
-     are up and running.
-  2. Please change the default password after login.
-
-#####################################################
-https://kubesphere.io             2024-06-26 16:46:46
-#####################################################
-16:46:48 CST success: [emon]
-16:46:48 CST Pipeline[CreateClusterPipeline] execute successfully
-Installation is complete.
-
-Please check the result using the command:
-
-	kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
-```
-
-- 查看kubesphere安装日志，验证安装结果
-
-```bash
-$ kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
-```
-
-```bash
-PLAY RECAP *********************************************************************
-localhost                  : ok=30   changed=22   unreachable=0    failed=0    skipped=17   rescued=0    ignored=0   
-Start installing monitoring
-Start installing multicluster
-Start installing openpitrix
-Start installing network
-**************************************************
-Waiting for all tasks to be completed ...
-task network status is successful  (1/4)
-task openpitrix status is successful  (2/4)
-task multicluster status is successful  (3/4)
-task monitoring status is successful  (4/4)
-**************************************************
-Collecting installation results ...
-#####################################################
-###              Welcome to KubeSphere!           ###
-#####################################################
-
-Console: http://192.168.200.116:30880
-Account: admin
-Password: P@88w0rd
-NOTES：
-  1. After you log into the console, please check the
-     monitoring status of service components in
-     "Cluster Management". If any service is not
-     ready, please wait patiently until all components 
-     are up and running.
-  2. Please change the default password after login.
-
-#####################################################
-https://kubesphere.io             2024-06-26 16:46:46
-#####################################################
-```
-
-- 登录
-
-http://192.168.200.116:30880
-
-修改密码为： admin/Ks@12345
-
-- 安装后资源概况
-
-![image-20240701091015180](images/image-20240701091015180.png)
-
-- 虚拟机挂起并恢复后k8s网络问题
-
-    - 查看设备状态
-
-  ```bash
-  $ nmcli device status
-  ```
-
-    - 永久unmanaged
-
-  ```bash
-  $ vim /etc/NetworkManager/conf.d/99-unmanaged-devices.conf
-  ```
-
-  ```bash
-  [keyfile]
-  unmanaged-devices=interface-name:docker*;interface-name:veth*;interface-name:br-*;interface-name:vmnet*;interface-name:vboxnet*;interface-name:cni0;interface-name:cali*;interface-name:flannel*;interface-name:tun*
-  ```
-
-    - 重启NetworkManager
-
-  ```bash
-  $ systemctl restart NetworkManager
-  ```
-
-## 2 【过时】在Kubernetes上最小化安装KubeSphere（v3.4.1版本）
-
-### 准备
-
-- 服务器规划
-
-| 机器名 | 系统类型 | IP地址          | CPU  | 内存 | 部署内容 |
-| ------ | -------- | --------------- | ---- | ---- | -------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 2核  | >=8G | master   |
-| emon2  | Rocky9.5 | 192.168.200.117 | 4核  | >=8G | worker   |
-| emon3  | Rocky9.5 | 192.168.200.118 | 4核  | >=8G | worker   |
-
-> 此配置可以开启全部组件
-
-- 您的 Kubernetes 版本必须为：v1.20.x、v1.21.x、v1.22.x、v1.23.x、* v1.24.x、* v1.25.x 和 * v1.26.x。带星号的版本可能出现边缘节点部分功能不可用的情况。因此，如需使用边缘节点，推荐安装 v1.23.x。
-
-- 确保您的机器满足最低硬件要求：CPU > 1 核，内存 > 2 GB。CPU 必须为 x86_64，暂时不支持 Arm 架构的 CPU。
-- 在安装之前，需要配置 Kubernetes 集群中的**默认**存储类型。【重要】
-
-<span style="color:green;font-weight:bold;">3台3G的服务器，安装后emon剩余1.2G/emon2剩余1.8G/emon3剩余1.8G。</span>
-
-若直接按照官网安装，会报错：“Default StorageClass was not found”，原因是K8S没有默认的存储，需要安装storageclass和persistentVolumeClaim。
-
-- 检查集群中是否有**默认** StorageClass（准备默认 StorageClass 是安装 KubeSphere 的前提条件）
-
-<span style="color:red;font-weight:bold;">这里，也可以使用：[安装NFS存储抽象](http://localhost:8751/devops/new/Kubernetes/01-第1章 Kubeadmin安装K8S V1.23.html#_7-存储抽象)替换</span>
-
-```bash
-$ kubectl get sc
-```
-
-- 创建文件 default-storage-class.yaml
-
-```yaml
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: local
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
-```
-
-- 创建文件 persistentVolumeClaim.yaml
-
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: local-pve
-  namespace: kubesphere-monitoring-system
-spec:
-  accessModes:
-     - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
-  storageClassName: local
-```
-
-- 剔除master节点的污点Taint，避免prometheus-k8s-0无法安装
-
-```bash
-# 确认master节点是否有Taint
-$ kubectl describe node emon|grep Taint
-Taints:             node-role.kubernetes.io/master:NoSchedule
-# 去掉master节点的Taint
-$ kubectl taint node emon node-role.kubernetes.io/master:NoSchedule-
-node/emon untainted
-```
-
-### 下载kubersphere安装文件
-
-```bash
-$ wget https://github.com/kubesphere/ks-installer/releases/download/v3.4.1/kubesphere-installer.yaml
-$ wget https://github.com/kubesphere/ks-installer/releases/download/v3.4.1/cluster-configuration.yaml
-```
-
-### 执行安装
-
-- 安装存储
-
-```bash
-$ kubectl apply -f default-storage-class.yaml
-$ kubectl apply -f persistentVolumeClaim.yaml
-```
-
-- 安装kubesphere
-
-```bash
-$ kubectl apply -f kubesphere-installer.yaml   
-$ kubectl apply -f cluster-configuration.yaml
-```
-
-### 查看安装日志，确认安装成功
-
-```bash
-$ kubectl logs -n kubesphere-system $(kubectl get po -n kubesphere-system|grep 'ks-installer'|awk '{print $1}') -f
-# 或者
-$ kubectl logs -n kubesphere-system $(kubectl get pod -n kubesphere-system -l 'app in (ks-install, ks-installer)' -o jsonpath='{.items[0].metadata.name}') -f
-```
-
-```bash
-PLAY RECAP *********************************************************************
-localhost                  : ok=30   changed=22   unreachable=0    failed=0    skipped=17   rescued=0    ignored=0   
-Start installing monitoring
-Start installing multicluster
-Start installing openpitrix
-Start installing network
-**************************************************
-Waiting for all tasks to be completed ...
-task network status is successful  (1/4)
-task openpitrix status is successful  (2/4)
-task multicluster status is successful  (3/4)
-task monitoring status is successful  (4/4)
-**************************************************
-Collecting installation results ...
-#####################################################
-###              Welcome to KubeSphere!           ###
-#####################################################
-
-Console: http://192.168.200.116:30880
-Account: admin
-Password: P@88w0rd
-NOTES：
-  1. After you log into the console, please check the
-     monitoring status of service components in
-     "Cluster Management". If any service is not
-     ready, please wait patiently until all components 
-     are up and running.
-  2. Please change the default password after login.
-
-#####################################################
-https://kubesphere.io             2024-06-25 23:10:14
-#####################################################
-```
-
-### 登录
-
-http://192.168.200.116:30880
-
-- 安装后资源概况
-
-![image-20240701091015180](images/image-20240701091015180.png)
-
-## 3 在 Kubernetes 上快速安装 KubeSphere（v4.1.x版本）
-
-### 准备
+#### 1.1 准备
 
 - 准备一台 Linux 主机，并确保其满足最低硬件要求：CPU > 2 核，内存 > 4 GB， 磁盘空间 > 40 GB。
 - 您需要提前[安装 Helm](https://helm.sh/zh/docs/intro/install/)。
 
-### 操作步骤
+#### 1.2 操作步骤
 
-#### 1 （可选）安装Kubernets集群
+##### 1.2.1 （可选）安装Kubernets集群
 
 如果你没有可用的Kubernetes集群，执行以下命令快速创建一个Kubernetes集群。
 
@@ -396,7 +102,7 @@ d、执行以下命令快速创建一个Kubernetes集群。
 $ ./kk create cluster --with-local-storage  --with-kubernetes v1.23.17 --container-manager containerd  -y
 ```
 
-#### 2 安装KubeSphere
+##### 1.2.2 安装KubeSphere
 
 如果你已经拥有可用的Kubernetes集群，执行以下命令通过`helm`安装KubeSphere的核心组件KubeSphere Core。
 
@@ -417,7 +123,7 @@ $ helm upgrade --install -n kubesphere-system --create-namespace ks-core https:/
 > --set extension.imageRegistry=swr.cn-southwest-2.myhuaweicloud.com/ks
 > ```
 
-#### 3 安装完成
+##### 1.2.3 安装完成
 
 安装完成后，输出信息会显示KubeSphere Web控制台的IP地址和端口号，默认的NodePort是30880.
 
@@ -467,6 +173,423 @@ http://192.168.200.116:30880
 | 用户名 | 原密码   | 新密码   |
 | ------ | -------- | -------- |
 | admin  | P@88w0rd | P@88word |
+
+### 2 通过域名访问 KubeSphere 控制台
+
+#### 2.1 前提条件
+
+- 已安装 Kubernetes 集群。
+- [已安装 Helm](https://helm.sh/zh/docs/intro/install/)（用于安装 cert-manager 和 ingress-nginx）。
+- 已安装 KubeSphere 或准备安装 KubeSphere。
+
+#### 2.2 步骤 1：安装 NGINX Ingress Controller
+
+如果您尚未安装 [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)，请按照以下步骤安装。
+
+```bash
+# 添加 ingress-nginx 仓库
+$ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+
+# 更新仓库
+$ helm repo update
+
+# 安装 ingress-nginx
+$ helm install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --version 4.2.5
+
+# 验证安装结果
+$ kubectl -n ingress-nginx get svc ingress-nginx-controller
+
+# 检查 IngressClass
+$ kubectl get ingressclass
+```
+
+#### 2.3 步骤 2：安装 cert-manager
+
+[cert-manager](https://cert-manager.io/docs/) 是一个 Kubernetes 原生的证书管理控制器，可以帮助您自动化 TLS 证书的管理和签发。
+
+```bash
+# 添加 cert-manager 仓库
+$ helm repo add jetstack https://charts.jetstack.io
+
+# 更新仓库
+$ helm repo update
+
+# 安装 cert-manager
+$ helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.12.0 \
+  --set installCRDs=true
+
+# 验证安装结果
+$ kubectl get pods -n cert-manager
+```
+
+#### 2.4 步骤 3：为 KubeSphere 配置 TLS
+
+##### 方法 1：安装 KubeSphere 时，配置 TLS
+
+如果您尚未安装 KubeSphere，可以在安装时配置 TLS。以下命令采用 cert-manager 生成自签证书。
+
+```bash
+$ helm upgrade --install -n kubesphere-system --create-namespace ks-core https://charts.kubesphere.io/main/ks-core-1.1.4.tgz \
+--set portal.hostname=k8s.flyin.com \   # 将 kubesphere.my.org 替换为您的自定义域名
+--set portal.https.port=30880 \
+--set ingress.enabled=true \
+--set ingress.tls.source=generation \
+--set ingress.ingressClassName=nginx
+```
+
+> 说明：以上参数的更多信息，请参阅 [KubeSphere Core 高级配置](https://kubesphere.io/zh/docs/v4.1/03-installation-and-upgrade/02-install-kubesphere/05-appendix/)。
+
+##### 方法 2：安装 KubeSphere 后，手动配置自签名TLS
+
+如果已安装 KubeSphere，需手动配置 TLS。
+
+- 创建 Issuer
+
+```bash
+$ cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: self-signed
+  namespace: kubesphere-system
+spec:
+  selfSigned: {}
+EOF
+```
+
+- 创建 Certificate
+
+```bash
+$ cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubesphere-tls-certs
+  namespace: kubesphere-system
+spec:
+  duration: 2160h # 90天
+  # 设置在证书到期前15天开始更新
+  renewBefore: 360h # 15天 (15 * 24小时)
+  dnsNames:
+  - kubesphere.my.org # 替换为您的自定义域名
+  issuerRef:
+    group: cert-manager.io
+    kind: Issuer
+    name: self-signed
+  secretName: kubesphere-tls-certs
+  usages:
+  - digital signature
+  - key encipherment
+EOF
+```
+
+- 创建 Ingress
+
+```bash
+$ cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: self-signed
+    cert-manager.io/issuer-kind: Issuer
+  name: ks-console
+  namespace: kubesphere-system
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: k8s.flyin.com # 替换为您的自定义域名
+    http:
+      paths:
+      - backend:
+          service:
+            name: ks-console
+            port:
+              number: 80
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - k8s.flyin.com # 替换为您的自定义域名
+    secretName: kubesphere-tls-certs
+EOF
+```
+
+##### 验证配置结果
+
+验证证书签发状态：
+
+```bash
+$ kubectl describe certificate kubesphere-tls-certs -n kubesphere-system
+```
+
+查看证书签发过程：
+
+```bsah
+$ kubectl get challenges,orders,certificaterequests -n kubesphere-system
+```
+
+#### 2.5 步骤 4：验证 TLS 配置
+
+- 检查证书是否成功签发。
+
+```bash
+$ kubectl get certificate -n kubesphere-system
+```
+
+输出示例如下：
+
+```bash
+NAME                   READY   SECRET                 AGE
+kubesphere-tls-certs   True    kubesphere-tls-certs   7m51s
+```
+
+- 检查 Ingress 配置。
+
+```bash
+$ kubectl get ingress -n kubesphere-system
+```
+
+输出示例如下：
+
+```bash
+NAME         CLASS   HOSTS           ADDRESS   PORTS     AGE
+ks-console   nginx   k8s.flyin.com             80, 443   6m49s
+```
+
+- 使用 curl 测试 HTTPS 访问。
+
+```bash
+$ INGRESS_IP=$(kubectl -n ingress-nginx get svc ingress-nginx-controller -o jsonpath={.spec.clusterIP})
+$ curl --resolve k8s.flyin.com:443:$INGRESS_IP https://k8s.flyin.com -k
+```
+
+输出示例如下：
+
+```bash
+Redirecting to <a href="/login">/login</a>.
+```
+
+#### 2.6 步骤 5：访问 KubeSphere Web 控制台
+
+在使用自定义 DNS 的情况下，如果要在其他机器使用域名访问 KubeSphere Web 控制台，还需要执行以下步骤。
+
+- 设置 Service 使用 NodePort 模式。
+
+```bash
+$ kubectl -n ingress-nginx patch svc ingress-nginx-controller -p '{"spec": {"type": "NodePort"}}'
+```
+
+- 查询 Service 信息。
+
+```bash
+$ kubectl -n ingress-nginx get svc ingress-nginx-controller
+```
+
+- 获取 https 访问地址。
+
+```bash
+$ echo https://k8s.flyin.com:$(kubectl -n ingress-nginx get svc ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.port==443)].nodePort}')
+```
+
+输出示例如下（您的访问地址可能不同）：
+
+```bash
+https://k8s.flyin.com:31869
+```
+
+- 获取节点 IP。
+
+```bash
+$ kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'
+```
+
+- 在访问 KubeSphere 控制台的机器上添加节点 IP 的 DNS，以配置域名解析规则。
+
+```bash
+vim /etc/hosts
+```
+
+添加节点 IP 和域名。
+
+```bash
+<Node IP> k8s.flyin.com
+```
+
+- 如果一切配置正确，您将能够通过第 3 步获取的 https 访问地址，如 [https://k8s.flyin.com:31655](https://kubesphere.my.org:31655/) 访问 KubeSphere Web 控制台。
+
+### 3 安装并使用扩展组件
+
+1. 以具有 **platform-admin** 角色的用户登录 KubeSphere Web 控制台。
+2. 点击**扩展中心**，搜索您要安装的扩展组件。
+3. 点击扩展组件名称，然后点击**安装**，进入组件安装页面。
+4. 在组件安装对话框的**版本选择**页签，选择扩展组件的版本号，并安装好所有必装组件（若有），点击**下一步**。
+
+:::info
+
+安装检测时，会识别扩展组件是否有依赖组件。依赖组件分为必装组件和选装组件。若必装组件的状态为**未就绪**，您需要先行安装正确版本的必装组件，以确保扩展组件的正常使用。而选装组件不会影响扩展组件的安装
+
+:::
+
+5. 在**扩展组件安装**页签，修改扩展组件的配置后（可选），点击**开始安装**，开始安装扩展组件。
+
+![install extensions](images/install-extensions.png)
+
+6. 待安装完成后，点击**下一步**，配置集群 Agent。
+
+7. 在**集群选择**页签，根据名称、标识选择集群（可选择多个集群），以便在目标集群中开启扩展组件。
+
+8. 在**差异化配置**页签，分别编辑选中集群的 YAML 配置，也可不修改，使用初始默认配置。点击**确定**，开始安装集群 Agent，等待完成即可。
+
+安装完成后，默认启用扩展组件。
+
+:::info
+部分扩展组件不需要安装集群 Agent（即没有**集群选择**和**差异化配置**页签），请以实际页面为准。
+
+:::
+
+#### 3.1 安装opensearch引发的日志问题
+
+- 问题
+
+```
+ERROR: [1] bootstrap checks failed
+[1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+ERROR: OpenSearch did not exit normally - check the logs at /usr/share/opensearch/logs/opensearch-cluster.log
+```
+
+- 永久修改内核参数
+
+```bash
+# 修改配置文件
+$ echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+
+# 立即生效（无需重启）
+$ sudo sysctl -p
+
+# 验证
+$ sysctl vm.max_map_count  # 应显示 262144
+```
+
+- **重启 OpenSearch Pod**
+
+```bash
+$ kubectl delete pod <opensearch-pod-name>
+```
+
+
+
+#### 3.2 安装Grafana Loki for WhizardTelemetry的错误
+
+- 问题
+
+```bash
+$ kubectl logs helm-install-loki-agent-jsbqvg-kkd8w -n loki
+......
+Error: client rate limiter Wait returned an error: rate: Wait(n=1) would exceed context deadline
+helm.go:84: [debug] client rate limiter Wait returned an error: rate: Wait(n=1) would exceed context deadline
+```
+
+- 调整 Kubernetes API 速率限制（需要集群管理员权限）
+
+```bash
+# 修改 kube-apiserver 配置（所有控制平面节点）
+$ vim /etc/kubernetes/manifests/kube-apiserver.yaml
+```
+
+```js
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    - --max-requests-inflight=2000    # 默认值 400 // [!code ++]
+    - --max-mutating-requests-inflight=1000  # 默认值 200 // [!code ++]
+```
+
+#### 3.4 loki安装失败
+
+- 问题
+
+```bash
+$ kubectl logs loki-agent-gateway-68fc65fbc9-jh72v -n loki
+/docker-entrypoint.sh: No files found in /docker-entrypoint.d/, skipping configuration
+2025/07/10 05:09:59 [emerg] 1#1: host not found in resolver "coredns.kube-system.svc.cluster.local." in /etc/nginx/nginx.conf:38
+nginx: [emerg] host not found in resolver "coredns.kube-system.svc.cluster.local." in /etc/nginx/nginx.conf:38
+```
+
+- 执行以下命令，确认集群 DNS 服务的真实名称：
+
+  ```basH
+    $ kubectl get svc -n kube-system -l k8s-app=kube-dns
+    NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+    kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   23d
+  ```
+
+  - 如果输出显示 Service 名称为 `kube-dns`（常见情况），则需修改 Nginx 配置。
+
+  - 如果名称为 `coredns`，检查其是否正常运行。
+
+- 调整“扩展组件配置”
+
+```js
+loki:
+  global:
+    dnsService: coredns // [!code --][!code focus:2]
+    dnsService: kube-dns // [!code ++]
+```
+
+#### 3.5 devops安装失败
+
+ quay.io 镜像仓库里没有这个镜像 arm 版本的；可以手动编辑下 Deployment devops-agent-argocd-applicationset-controller，更新下 image 为 kubespheredev/argocd-applicationset-arm64:v0.4.1
+
+#### 3.9 安装完成后资源使用情况
+
+![image-20250710172405899](images/image-20250710172405899.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 安装指南
+
+### 1 在 Linux 上安装 Kubernetes 和 KubeSphere
+
+#### 1.1 准备
 
 
 

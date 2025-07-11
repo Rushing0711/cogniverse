@@ -20,6 +20,9 @@ https://kubernetes.io/zh-cn/docs/reference/kubectl/introduction/
 | ConfigMap             | cm      | true               |
 | secret                | secret  | false              |
 | endpoints             | ep      | true               |
+| serviceaccount        | sa      | true               |
+| clusterrole           |         | true               |
+| clusterrolebinding    |         | true               |
 
 ## 1.2 版本
 
@@ -80,6 +83,34 @@ $ kubectl apply -f <xxx.yaml>
 ```bash
 $ kubectl delete -f <xxx.yaml>
 ```
+
+### 1.5 查看节点架构
+
+```bash
+$ kubectl describe node emon3 | grep "Architecture"
+```
+
+### 1.6 查看镜像支持的架构
+
+```bash
+$ docker manifest inspect quay.io/argoproj/argocd-applicationset:v0.4.1 | grep "architecture"
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
