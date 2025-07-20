@@ -477,5 +477,16 @@ $ sudo dnf autoremove             # 删除不再需要的依赖
 $ dnf 使用现代依赖解析算法，处理复杂依赖关系更高效。
 ```
 
+- 安装软件包组
+
+安装**预定义的软件包集合**（称为 *Environment Group* 或 *Package Group*）适用于搭建完整的工作环境
+
+```bash
+$ sudo dnf group install "Development Tools"      # 安装开发工具全集
+$ sudo dnf group install "Server with GUI"        # 安装带图形界面的服务器环境
+```
+
+
+
 
 

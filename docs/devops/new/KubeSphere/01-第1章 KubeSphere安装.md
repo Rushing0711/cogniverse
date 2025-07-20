@@ -92,8 +92,8 @@ $ ln -snf /data/containerd /var/lib/containerd
 - 下载最新版（v3.1.10）
 
 ```bash
-$ mkdir /srv/kubekey
-$ cd /srv/kubekey/
+$ mkdir /k8s_soft/kubekey
+$ cd /k8s_soft/kubekey/
 
 # 选择中文区下载(访问 GitHub 受限时使用)
 $ export KKZONE=cn
@@ -168,7 +168,7 @@ spec:
     - emon3
   controlPlaneEndpoint:
     ## Internal loadbalancer for apiservers 
-    internalLoadbalancer: haproxy
+    internalLoadbalancer: haproxy # 如需部署⾼可⽤集群，且⽆负载均衡器可⽤，可开启该参数，做集群内部负载均衡
     domain: lb.kubesphere.local
     address: ""
     port: 6443
@@ -176,13 +176,13 @@ spec:
     version: v1.30.6
     clusterName: cluster.local
     autoRenewCerts: true
-    containerManager: containerd
+    containerManager: containerd # 部署 kubernetes v1.24+ 版本，建议将 containerManager 设置为 containerd
   etcd:
     type: kubekey
   network:
     plugin: calico
-    kubePodsCIDR: 10.233.64.0/18
-    kubeServiceCIDR: 10.233.0.0/18
+    kubePodsCIDR: 10.233.0.0/17
+    kubeServiceCIDR: 10.96.0.0/16
     ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
     multusCNI:
       enabled: false
@@ -190,7 +190,7 @@ spec:
     openebs:
       basePath: /data/openebs/local # 默认没有的新增配置，base path of the local PV 
   registry:
-    privateRegistry: "registry.cn-beijing.aliyuncs.com" #使用 KubeSphere 在阿里云的镜像仓库
+    privateRegistry: "registry.cn-beijing.aliyuncs.com" # 使用 KubeSphere 在阿里云的镜像仓库
     namespaceOverride: "kubesphereio"
     registryMirrors: []
     insecureRegistries: []
@@ -274,6 +274,10 @@ Please check the result using the command:
 
         kubectl get pod -A
 ```
+
+### 1.4 虚拟机挂起并恢复后k8s网络问题（所有节点）
+
+[虚拟机挂起并恢复后k8s网络问题（所有节点）](http://localhost:5173/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-4-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8C%82%E8%B5%B7%E5%B9%B6%E6%81%A2%E5%A4%8D%E5%90%8Ek8s%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98-%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9)
 
 ## 2 验证 K8s 集群状态
 
@@ -361,218 +365,9 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/provisioner-localpv       3.3.0   
 
 ## 3 对接 NFS 存储
 
-为了扩展 K8s 集群的存储能力，我们将快速对接 NFS 作为 OpenEBS 之外的另一种持久化存储。
+[部署NFS](http://localhost:5173/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-1-%E9%83%A8%E7%BD%B2nfs)
 
-本文只介绍 K8s 集群上的操作，NFS 服务器的部署和更多细节请参阅[探索 Kubernetes 持久化存储之 NFS 终极实战指南](https://mp.weixin.qq.com/s/FRZppup6W_AS2O-_CR1KFg) 。
-
-### 3.1 安装 NFS
-
-#### 3.1.1 安装 NFS 客户端
-
-**所有节点**执行以下命令，安装 NFS 客户端软件包（**一定要安装，否则无法识别 NFS 类型的存储**）。
-
-```bash
-$ dnf install -y nfs-utils
-```
-
-#### 3.1.2 创建共享数据根目录（在**控制节点1**执行）
-
-```bash
-$ mkdir -pv /data/nfs/local
-$ chown nobody:nobody /data/nfs/local
-```
-
-#### 3.1.3 编辑服务配置文件（在**控制节点1**执行）
-
-配置 NFS 服务器数据导出目录及访问 NFS 服务器的客户端机器权限。
-
-编辑配置文件 `vim /etc/exports`，添加如下内容：
-
-```bash
-# nfs服务端
-$ echo "/data/nfs/local 192.168.200.0/24(rw,sync,all_squash,anonuid=65534,anongid=65534,no_subtree_check)" > /etc/exports
-```
-
-- /data/nfs/local：NFS 导出的共享数据目录
-- 192.168.200.0/24：可以访问 NFS 存储的客户端 IP 地址
-- rw：读写操作，客户端机器拥有对卷的读写权限。
-- sync：内存数据实时写入磁盘，性能会有所限制
-- all_squash：NFS 客户端上的所有用户在使用共享目录时都会被转换为一个普通用户的权限
-- anonuid：转换后的用户权限 ID，对应的操作系统的 nobody 用户
-- anongid：转换后的组权限 ID，对应的操作系统的 nobody 组
-- no_subtree_check：不检查客户端请求的子目录是否在共享目录的子树范围内，也就是说即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样可以提高效率。
-
-#### 3.1.4 启动服务并设置开机自启（在**控制节点1**执行）
-
-```bash
-$ systemctl enable --now rpcbind && systemctl enable --now nfs-server
-# 重新加载 NFS 共享配置（无需重启服务）
-$ exportfs -r
-# 查看共享目录导出情况
-$ exportfs -v
-/data/nfs/local       192.168.200.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,all_squash)
-# 验证
-$ exportfs
-/data/nfs/local       192.168.200.0/24n nbnm
-```
-
-> **分解说明**：
->
-> | 命令部分   | 功能                              |
-> | :--------- | :-------------------------------- |
-> | `exportfs` | NFS 共享管理工具                  |
-> | `-r`       | 重新导出所有共享（re-export all） |
-
-#### 3.1.5 配置NFS从节点（仅控制节点2和3节点）
-
-- 查看可以挂载的目录
-
-```bash
-$ showmount -e 192.168.200.116
-```
-
-```bash
-Export list for 192.168.200.116:
-/data/nfs/local *
-```
-
-- 执行以下命令挂载nfs服务器上的共享目录到本机路径 /data/nfs/local
-
-```bash
-$ mkdir -p /data/nfs/local && mount -t nfs 192.168.200.116:/data/nfs/local /data/nfs/local
-```
-
-- 写入一个测试文件（在NFS服务端）
-
-```bash
-# 执行完成后，查看NFS从节点同步目录，已经生成了 test.txt 文件
-$ echo "hello nfs server" > /data/nfs/local/test.txt
-```
-
-### 3.2  安装Kubernetes NFS Subdir External Provisioner
-
-#### 3.2.1 获取 NFS Subdir External Provisioner 部署文件
-
-后续的所有操作，在K8s集群的 **控制节点1** 上完成 。
-
-- 下载最新版 `nfs-subdir-external-provisioner-4.0.18` Releases 文件，并解压。
-
-```bash
-$ cd /srv
-$ wget https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/archive/refs/tags/nfs-subdir-external-provisioner-4.0.18.zip
-$ unzip nfs-subdir-external-provisioner-4.0.18.zip
-$ cd nfs-subdir-external-provisioner-nfs-subdir-external-provisioner-4.0.18/
-```
-
-#### 3.2.2 创建 NameSpace
-
-**可选配置，默认的 NameSpace 为 default**，为了便于资源区分管理，可以创建一个新的命名空间。
-
-- 创建 NameSpace
-
-```bash
-$ kubectl create ns nfs-system
-```
-
-- 替换资源清单中的命名空间名称
-
-```bash
-$ sed -i'' "s/namespace:.*/namespace: nfs-system/g" ./deploy/rbac.yaml ./deploy/deployment.yaml
-```
-
-#### 3.2.3 配置 RBAC authorization
-
-- 创建 RBAC 资源
-
-```bash
-$ kubectl create -f deploy/rbac.yaml
-```
-
-#### 3.2.4 配置 NFS subdir external provisioner
-
-请使用 `vi` 编辑器，编辑文件 `deploy/deployment.yaml`，请用实际 NFS 服务端配置修改以下内容：
-
-- **image:** 默认使用 registry.k8s.io 镜像仓库的镜像 `nfs-subdir-external-provisioner:v4.0.2`，网络受限时需要想办法下载并上传到自己的镜像仓库
-- **192.168.200.116：** NFS 服务器的主机名或是 IP 地址
-- **/data/nfs/local:** NFS 服务器导出的共享数据目录的路径（exportfs）
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nfs-client-provisioner
-  labels:
-    app: nfs-client-provisioner
-  # replace with namespace where provisioner is deployed
-  namespace: default
-spec:
-  replicas: 1
-  strategy:
-    type: Recreate
-  selector:
-    matchLabels:
-      app: nfs-client-provisioner
-  template:
-    metadata:
-      labels:
-        app: nfs-client-provisioner
-    spec:
-      serviceAccountName: nfs-client-provisioner
-      containers:
-        - name: nfs-client-provisioner
-          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
-          volumeMounts:
-            - name: nfs-client-root
-              mountPath: /persistentvolumes
-          env:
-            - name: PROVISIONER_NAME
-              value: k8s-sigs.io/nfs-subdir-external-provisioner
-            - name: NFS_SERVER
-              value: 192.168.200.116
-            - name: NFS_PATH
-              value: /data/nfs/local
-      volumes:
-        - name: nfs-client-root
-          nfs:
-            server: 192.168.200.116
-            path: /data/nfs/local
-```
-
-#### 3.2.5 部署 NFS Subdir External Provisioner
-
-- 执行部署命令
-
-```bash
-$  kubectl apply -f deploy/deployment.yaml
-```
-
-- 查看 deployment、pod 部署结果
-
-```bash
-$ kubectl get deployment,pods -n nfs-system
-NAME                                     READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/nfs-client-provisioner   1/1     1            1           5h35m
-
-NAME                                          READY   STATUS    RESTARTS   AGE
-pod/nfs-client-provisioner-77d8c67d45-sqk4s   1/1     Running   3          3h59m
-```
-
-#### 3.2.6 部署 Storage Class
-
-- 执行部署命令，部署 Storage Class。
-
-```bash
-$ kubectl apply -f deploy/class.yaml
-```
-
-- 查看 Storage Class。
-
-```bash
-$ kubectl get sc
-NAME              PROVISIONER                                   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-local (default)   openebs.io/local                              Delete          WaitForFirstConsumer   false                  84m
-nfs-client        k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Immediate              false                  114m
-```
+[安装Kubernetes NFS Subdir External Provisioner](http://localhost:5173/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-2-%E5%AE%89%E8%A3%85kubernetes-nfs-subdir-external-provisioner)
 
 ## 4 部署 KubeSphere
 
@@ -588,7 +383,7 @@ KubeSphere Core (ks-core) 是 KubeSphere 的核心组件，为扩展组件提供
 
 ```bash
 # 如果无法访问 charts.kubesphere.io, 可将 charts.kubesphere.io 替换为 charts.kubesphere.com.cn
-$ helm upgrade --install -n kubesphere-system --create-namespace ks-core https://charts.kubesphere.io/main/ks-core-1.1.4.tgz --debug --wait \
+$ helm upgrade --install -n kubesphere-system --create-namespace ks-core https://charts.kubesphere.com.cn/main/ks-core-1.1.4.tgz --debug --wait \
 --set multicluster.hostClusterName=kspxlab-main
 ```
 
@@ -604,7 +399,7 @@ $ helm upgrade --install -n kubesphere-system --create-namespace ks-core https:/
 > --set extension.imageRegistry=swr.cn-southwest-2.myhuaweicloud.com/ks
 > ```
 >
-> - hostClusterName： 修改主集群的名字，默认为 host
+> - multicluster.hostClusterName： 修改主集群的名字，默认为 host
 
 部署过程需要大约 1-2分钟，具体看网速和机器配置，如果镜像提前下载到本地，基本上能实现 KubeSphere Core 的**秒级**部署。
 
@@ -1211,202 +1006,880 @@ vim /etc/hosts
 
 - 如果一切配置正确，您将能够通过第 3 步获取的 https 访问地址，如 [https://k8s.flyin.com:31655](https://kubesphere.my.org:31655/) 访问 KubeSphere Web 控制台。
 
+## 8 安装OpenELB负载均衡器
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 【旧版】安装指南
-
-## 3、启用可插拔组件
-
-### 3.1、DevOps组件
-
-- 安装后资源概况
-
-![image-20240701110557073](images/image-20240701110557073.png)
-
-### 3.2、应用商店组件
-
-- 安装后资源概况
-
-![image-20240702093849655](images/image-20240702093849655.png)
-
-### 3.3、安装OpenELB负载均衡器
+OpenELB 是一个开源的云原生负载均衡器实现，可以在基于裸金属服务器、边缘以及虚拟化的 Kubernetes 环境中使用 LoadBalancer 类型的 Service 对外暴露服务。
 
 OpenELB安装：https://github.com/openelb/openelb/blob/master/README_zh.md
 
-[openelb0.5版官网文档](https://openelb-05x-openelb.vercel.app/docs/getting-started/)
-
 [openelb最新版官网文档](https://openelb.io/docs/getting-started/)
 
-#### 3.3.1、通过应用商店OpenELB(vip模式)
+### 8.0 为什么选择 OpenELB
 
-备注：安装的是0.5.0版本。
+在云服务环境中的 Kubernetes 集群里，通常可以用云服务提供商提供的负载均衡服务来暴露 Service，但是在本地没办法这样操作。而 OpenELB 可以让用户在裸金属服务器、边缘以及虚拟化环境中创建 LoadBalancer 类型的 Service 来暴露服务，并且可以做到和云环境中的用户体验是一致的。
 
-##### 1、准备企业空间与项目
+- 核心功能
 
-- 创建企业空间
+  - BGP 模式和二层网络模式下的负载均衡
 
-<span style="color:green;font-weight:bold;">登录 admin 创建企业空间</span>
+  - ECMP 路由和负载均衡
 
-企业空间： openelb 邀请管理员 admin
+  - IP 池管理
 
-- 创建项目
+  - 基于 CRD 来管理 BGP 配置
 
-<span style="color:green;font-weight:bold;">登录 admin 在企业空间创建项目</span>
+  - 支持 Helm Chart 方式安装
 
-企业空间：openelb 创建项目 openelb
+- 网络协议支持
 
-##### 2、安装
+  | 协议类型   | 适用场景                 | 工作原理                      |                                                          |
+  | :--------- | :----------------------- | :---------------------------- | -------------------------------------------------------- |
+  | **Layer2** | 同子网环境               | 通过 ARP(IPv4)/NDP(IPv6) 响应 | 简单易用，适合小型环境，<br />但有单点瓶颈（10节点以下） |
+  | **BGP**    | 跨路由器环境             | 通过 BGP 协议广播路由         | 专业级解决方案，适合生产环境，<br />需要网络设备支持     |
+  | **VIP**    | 需要虚拟 IP 的高可用场景 | 配合 Keepalived 实现          |                                                          |
 
-在项目中，点击【应用负载】=>【应用】=>【创建】=>【从应用商店】=>搜索“OpenELB”并安装。
 
-- 查看安装结果
+- 核心工作流程
+
+
+```mermaid
+graph LR
+A[创建 Eip 资源] --> B[定义 IP 池]
+C[部署 LoadBalancer Service] --> D{OpenELB 控制器}
+D -->|申请 IP| E[从 Eip 池分配]
+D -->|配置协议| F[Layer2/BGP 广播]
+G[外部客户端] -->|访问分配 IP| H[Service 流量]
+```
+
+- 绑定方式对比
+
+  [官网OpenELP IP 地址分配](https://openelb.io/docs/getting-started/usage/openelb-ip-address-assignment/#there-is-a-default-eip-in-the-cluster)
+
+  | 特性            | 自动分配          | 指定 Eip 池     | 静态 IP 绑定         |
+  | :-------------- | :---------------- | :-------------- | :------------------- |
+  | **IP 确定性**   | 随机分配          | 池内随机        | 固定 IP              |
+  | **配置复杂度**  | 最简单（1个注解） | 中等（2个注解） | 最复杂（显式声明IP） |
+  | **跨命名空间**  | 需 Eip 授权       | 需 Eip 授权     | 需 Eip 授权          |
+  | **IP 冲突风险** | 低（自动管理）    | 低（自动管理）  | 高（需人工保障）     |
+  | **适用场景**    | 测试环境          | 多团队生产环境  | 关键基础设施         |
+
+  - 指定Eip池分配
+
+  为服务添加注解，指定 OpenELB 作为负载均衡插件，并确保指定的 EIP 存在，无需检查是否分配给了命名空间。
+
+  ```yaml
+  apiVersion: network.kubesphere.io/v1alpha2
+  kind: Eip
+  metadata:
+    name: layer2-eip # 定义elp资源
+  spec:
+    address: 172.31.73.130-172.31.73.132
+    namespaces: 
+    - project
+    interface: eth0
+    protocol: layer2
+  
+  ---
+  kind: Service
+  apiVersion: v1
+  metadata:
+    name: nginx
+    namespace: project-test
+    annotations:
+      lb.kubesphere.io/v1alpha1: openelb # 指定 OpenELB 作为负载均衡插件
+      eip.openelb.kubesphere.io/v1alpha2: layer2-eip # 指定elp资源
+  spec:
+    selector:
+      app: nginx
+    type: LoadBalancer
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+    externalTrafficPolicy: Cluster
+  ```
+
+  - 指定静态IP分配
+
+  为服务添加注解，指定 OpenELB 作为负载均衡插件，并确保指定的 IP 在现有 EIP 的 CIDR 范围内，无需检查 EIP 是否分配给了命名空间。
+
+  如果指定的 IP 已经分配，将会共享。
+
+  ```yaml
+  apiVersion: network.kubesphere.io/v1alpha2
+  kind: Eip
+  metadata:
+    name: layer2-eip
+  spec:
+    address: 172.31.73.130-172.31.73.132 # 定义elp资源的ip范围
+    namespaces: 
+    - project
+    interface: eth0
+    protocol: layer2
+  
+  ---
+  kind: Service
+  apiVersion: v1
+  metadata:
+    name: nginx
+    namespace: project-test
+    annotations:
+      lb.kubesphere.io/v1alpha1: openelb # 指定 OpenELB 作为负载均衡插件
+      eip.openelb.kubesphere.io/v1alpha1: "192.168.1.10" # 指定一个在elp资源ip范围内的一个ip
+  spec:
+    selector:
+      app: nginx
+    type: LoadBalancer
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+    externalTrafficPolicy: Cluster
+  
+  
+  # You can also set spec.loadBalancerIP to the specified ip. This method is recommended.
+  ---
+  kind: Service
+  apiVersion: v1
+  metadata:
+    name: nginx1
+    namespace: project-test
+    annotations:
+      lb.kubesphere.io/v1alpha1: openelb
+  spec:
+    loadBalancerIP: 192.168.1.10
+    selector:
+      app: nginx
+    type: LoadBalancer
+    ports:
+      - name: http
+        port: 80
+        targetPort: 80
+    externalTrafficPolicy: Cluster
+  ```
+
+  - 自动分配
+
+    - 自动分配（没有默认elp）
+
+    当您仅在注解中配置 `openelb` 而未指定 `eip` 和 `ip` 时，将进入自动分配。OpenELB 首先会找到一个合适的 eip，然后选择一个合适的 ip 完成分配。
+
+    向 Service 添加注解，指定 OpenELB 作为负载均衡插件，并<span style="color:red;font-weight:bold;">确保命名空间分配给可用的 Eips</span>。
+
+    ```yaml
+    apiVersion: network.kubesphere.io/v1alpha2
+    kind: Eip
+    metadata:
+      name: layer2-eip
+    spec:
+      address: 172.31.73.130-172.31.73.132
+      namespaces: 
+      - project
+      interface: eth0
+      protocol: layer2
+    
+    ---
+    kind: Service
+    apiVersion: v1
+    metadata:
+      name: nginx
+      namespace: project
+      annotations:
+        lb.kubesphere.io/v1alpha1: openelb
+    spec:
+      selector:
+        app: nginx
+      type: LoadBalancer
+      ports:
+        - name: http
+          port: 80
+          targetPort: 80
+      externalTrafficPolicy: Cluster
+    ```
+
+    :::info
+  
+    自动分配期间的 eip 选择策略：
+  
+    - 根据 `eip.namespace` 和 `eip.namespaceSelector` 预选可用的 Eips。
+    - 按优先级对预选的 Eips 进行排序，并选择优先级最高的 Eip。
+    - 如果没有预选 Eips，则使用默认 Eip。
+    - 如果没有可用的 Eips，则分配失败并等待合适的 Eip。
+    - 分配失败并等待 IP 释放，如果所有可用的 Eips 都已完全分配。
+  
+    :::
+  
+    - 自动分配（集群中有一个默认的 EIP）
+  
+      这里有一个如图所示的示例：
+  
+      - 使用注解 `"eip.openelb.kubesphere.io/is-default-eip": "true"` 将 `default-eip` 设置为默认的 EIP。
+      - 命名空间 `namespace-1` 和 `namespace-2` 具有标签 `label: test` ，该标签被 `eip-selector` 的 `namespaceSelector` 用于匹配和选择。
+      - `eip-ns` 的 Eip 有一个 namespaces 字段，它指定了 `namespace-1` 。这使得 `eip-ns` 能够匹配并被分配给 `namespace-1` 。
+      - `eip` 弹性公网 IP 没有任何特殊配置。它只能用于指定分配，不能自动分配。
+  
+    ```yaml
+    ```
+  
+    ![ipam-bind-to-namespace-1](images/ipam-bind-to-namespace-1.svg)
+  
+    | Namespace 命名空间 | Available Eip Count 可用 Eip 数量 |
+    | ------------------ | --------------------------------- |
+    | `namespace-1`      | 3                                 |
+    | `namespace-2`      | 2                                 |
+    | `namespace-3`      | 1                                 |
+  
+    :::info
+  
+    当可用 Eip 数量大于 1 时，将根据优先级选择最终的 Eip。
+  
+    - 命名空间绑定的 Eip 优先级高于默认 Eip。
+    - 对于多个命名空间绑定的 Eip，将根据优先级字段确定优先级。优先级值越低，优先级越高。
+  
+    :::
+
+### 8.1 使用kubectl安装和卸载OpenELB（v0.6.0）
+
+#### 0 前置条件
+
+你需要准备一个 Kubernetes 集群，并确保 Kubernetes 版本为 1.15 或更高版本。OpenELB 需要 CustomResourceDefinition (CRD) v1，而 Kubernetes 1.15 或更高版本才支持 CRD v1。
+
+#### 1 下载并安装
 
 ```bash
-$ kubectl get po -n openelb
+$ cd /k8s_soft
+$ wget https://raw.githubusercontent.com/openelb/openelb/release-0.6/deploy/openelb.yaml
+$ kubectl apply -f openelb.yaml
 ```
 
-##### 3、创建默认Eip对象
-
-```bash
-$ vim vip-eip.yaml
-```
-
-```yaml
-apiVersion: network.kubesphere.io/v1alpha2
-kind: Eip
-metadata:
-  name: vip-eip
-  annotations:
-	# 指定是默认EIP
-    eip.openelb.kubesphere.io/is-default-eip: "true"
-spec:
-  # 一个或多个ip地址，需要与k8s集群节点属于同一个网段
-  address: 192.168.32.91-192.168.32.100
-  interface: ens33
-  protocol: vip
-```
-
-```bash
-$ kubectl apply -f vip-eip.yaml
-# 查看eip
-$ kubectl get eip
-```
-
-> 备注：若不创建一个默认的eip，则创建的service需要配置注解：
->
-> ```yaml
->    lb.kubesphere.io/v1alpha1: openelb
->    protocol.openelb.kubesphere.io/v1alpha1: vip
->    eip.openelb.kubesphere.io/v1alpha2: vip-eip
-> ```
-
-#### 3.3.2、命令行安装OpenELB(layer2模式)
-
-备注：安装的是0.5.0版本。
-
-##### 1、下载并安装
-
-```bash
-$ wget https://raw.githubusercontent.com/openelb/openelb/release-0.5/deploy/openelb.yaml
-kubectl apply -f openelb.yaml
-```
-
-##### 2、查看安装结果
+#### 2 查看安装结果
 
 ```bash
 $ kubectl get po -n openelb-system
 ```
 
-##### 3、为kube-proxy启用strictARP
+#### 3 卸载
 
-- 编辑kube-proxy配置
+```bash
+$ kubectl delete -f openelb.yaml
+```
+
+### 8.2 使用helm安装
+
+#### 1 配置helm仓库并安装
+
+```bash
+$ helm repo add openelb https://openelb.github.io/openelb
+$ helm repo update
+$ helm install openelb openelb/openelb -n openelb-system --create-namespace
+```
+
+> 若网络不通，设置代理：
+>
+> ```bash
+> $ export https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 all_proxy=socks5://192.168.200.1:7890 no_proxy="xxx"
+> ```
+
+#### 2 查看安装结果
+
+```bash
+$ kubectl get po -n openelb-system
+```
+
+#### 3 卸载
+
+```bash
+$ helm delete openelb -n openelb-system
+```
+
+### 8.3 在 Layer 2 模式下使用 OpenELB
+
+#### 8.3.0 前置条件
+
+- 您需要准备一个已安装 OpenELB 的 Kubernetes 集群。所有 Kubernetes 集群节点必须在同一个 Layer 2 网络（同一路由器下）。
+- 您需要准备一台客户端机器，用于验证 OpenELB 在 Layer 2 模式下的功能是否正常。客户端机器需要与 Kubernetes 集群节点位于同一网络。
+- Layer 2 模式需要您的基础设施环境允许匿名 ARP/NDP 数据包。如果 OpenELB 在基于云的 Kubernetes 集群中进行测试安装，您需要向您的云供应商确认是否允许匿名 ARP/NDP 数据包。如果不允许，则无法使用 Layer 2 模式。
+
+- <span style="color:red;font-weight:bold;">为OpenELB指定NIC网络接口卡（Network Interface Card）</span>
+
+  如果OpenELB的安装节点有多个网卡（比如：eth0,eth1等），需要指定OpenELB在Layer 2模式下使用哪一个网卡。如果节点只有1个网卡，就不需要指定了。
+
+  - **按需给节点添加注解**
+
+  ```bash
+  # 只给有多接口的节点添加注解："当此节点被选为 EIP 的 ARP 响应节点时，请使用 `192.168.200.116` 对应的接口"
+  $ kubectl annotate nodes emon layer2.openelb.kubesphere.io/v1alpha1="192.168.200.116"
+  ```
+
+  > 查看是否存在多个网络适配器：
+  >
+  > ```bash
+  > $ ip -o link show | awk '{print $2}' | cut -d':' -f1 | grep -Ev "lo|cali"
+  > ```
+
+  - **验证注解添加情况**
+
+  ```bash
+  $ kubectl describe node emon | grep openelb.kubesphere.io
+  ```
+
+  - **删除无用注解**（如果需要）：
+
+  ```bash
+  $ kubectl annotate node emon layer2.openelb.kubesphere.io/v1alpha1-
+  ```
+
+  - **影响选举行为**：
+
+  ```mermaid
+  graph TD
+      A[EIP 192.168.200.91] --> B{选举 ARP 响应节点}
+      B --> C[已注解节点]
+      B --> D[未注解节点]
+      C -->|优先选择| E[使用指定 IP 的接口]
+      D -->|自动选择| F[同子网的第一个接口]
+  ```
+
+  
+
+#### 8.3.1 第一步：确保已启用 Layer 2 模式
+
+Layer 2 模式可以通过命令行参数启用或禁用。在使用 Layer 2 模式时，请确保 Layer 2 发言人已正确启用。
+
+运行以下命令以编辑 openelb-speaker DaemonSet
+
+```bash
+$ kubectl edit ds -n openelb-system openelb-speaker
+```
+
+将 `enable-layer2` 设置为 `true` 并保存更改。openelb-speaker 将自动重启。
+
+```yaml
+    spec:
+      containers:
+      - args:
+        - --api-hosts=:50051
+        - --enable-keepalived-vip=false
+        - --enable-layer2=true
+        command:
+        - openelb-speaker
+```
+
+#### 8.3.2 第二步：为 kube-proxy 启用 strictARP
+
+在 Layer 2 模式下，您需要为 kube-proxy 启用 strictARP，以便 Kubernetes 集群中的所有网络接口卡停止应答来自其他网络接口卡的 ARP 请求，并由 OpenELB 处理 ARP 请求。
+
+1. 登录到 Kubernetes 集群并运行以下命令编辑 kube-proxy ConfigMap：
 
 ```bash
 $ kubectl edit configmap kube-proxy -n kube-system
 ```
 
-- 设置`data.config.conf.ipvs.strictARP`为true
+2. 在 kube-proxy ConfigMap 的 YAML 配置中，将 `data.config.conf.ipvs.strictARP` 设置为 `true` 。
 
-```bash
-    ipvs:
-      strictARP: true
+```yaml
+ipvs:
+  strictARP: true
 ```
 
-- 重启kube-proxy
+3. 运行以下命令重启 kube-proxy：
 
 ```bash
 $ kubectl rollout restart daemonset kube-proxy -n kube-system
 ```
 
-##### 4、为OpenELB指定NIC网络适配器
+#### 8.3.3 第三步：创建 Eip 对象
 
-如果OpenELB的安装节点有多个网络适配器，需要指定OpenELB在Layer 2模式下使用哪一个。如果节点只有1个网络适配器，就不需要指定了。
+Eip 对象作为 OpenELB 的 IP 地址池使用。
 
-```bash
-$ kubectl annotate nodes emon layer2.openelb.kubesphere.io/v1alpha1="192.168.200.116"
-```
-
-##### 5、创建默认Eip对象
+1. 运行以下命令创建 Eip 对象的 YAML 文件：
 
 ```bash
 $ vim layer2-eip.yaml
 ```
+
+2. 将以下信息添加到 YAML 文件中：
 
 ```yaml
 apiVersion: network.kubesphere.io/v1alpha2
 kind: Eip
 metadata:
   name: layer2-eip
-  annotations:
-	# 指定是默认EIP
-    eip.openelb.kubesphere.io/is-default-eip: "true"
 spec:
-  # 一个或多个ip地址，需要与k8s集群节点属于同一个网段；注意：请为网卡配置如下地址段的ip，不然外部无法访问！！！
-  address: 192.168.32.91-192.168.32.100
-  interface: ens33
+  address: 192.168.200.91-192.168.200.100
+  interface: ens160
   protocol: layer2
 ```
 
+:::info
+
+`spec:address` 中指定的 IP 地址必须与 Kubernetes 集群节点位于同一网络段。
+
+有关 Eip YAML 配置中字段的详细信息，请参阅[使用 Eip 配置 IP 地址池](https://openelb.io/docs/getting-started/configuration/configure-ip-address-pools-using-eip/)。
+
+:::
+
+3. 运行以下命令创建 Eip 对象：
+
 ```bash
 $ kubectl apply -f layer2-eip.yaml
-# 查看eip
-$ kubectl get eip
 ```
 
-> 备注：若不创建一个默认的eip，则创建的service需要配置注解：
->
-> ```yaml
->    lb.kubesphere.io/v1alpha1: openelb
->    protocol.openelb.kubesphere.io/v1alpha1: layer2
->    eip.openelb.kubesphere.io/v1alpha2: layer2-eip
-> ```
+#### 8.3.4 第四步：创建部署
 
-### 3.4、配置集群网关设置
+以下使用 nginx 镜像创建一个包含两个 Pod 的 Deployment。每个 Pod 都会将其自己的 Pod 名称返回给外部请求。
+
+1. 运行以下命令创建 Deployment 的 YAML 文件：
+
+```bash
+$ vim layer2-openelb.yaml
+```
+
+2. 将以下信息添加到 YAML 文件中：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: layer2-openelb
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: layer2-openelb
+  template:
+    metadata:
+      labels:
+        app: layer2-openelb
+    spec:
+      containers:
+        - image: nginx:1.25.4
+          name: nginx
+          ports:
+            - containerPort: 80
+```
+
+3. 运行以下命令创建 Deployment：
+
+```bash
+$ kubectl apply -f layer2-openelb.yaml
+```
+
+#### 8.3.5 第五步：创建服务
+
+1. 运行以下命令为服务创建一个 YAML 文件：
+
+```bash
+$ vim layer2-svc.yaml
+```
+
+2. 将以下信息添加到 YAML 文件中：
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: layer2-svc
+  annotations:
+    lb.kubesphere.io/v1alpha1: openelb
+    # For versions below 0.6.0, you also need to specify the protocol
+    # protocol.openelb.kubesphere.io/v1alpha1: layer2
+    eip.openelb.kubesphere.io/v1alpha2: layer2-eip
+spec:
+  selector:
+    app: layer2-openelb
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  externalTrafficPolicy: Cluster
+```
+
+:::warning
+
+- 你必须将 `spec:type` 设置为 `LoadBalancer` 。
+- `lb.kubesphere.io/v1alpha1: openelb` 注释指定该服务使用 OpenELB。
+- `protocol.openelb.kubesphere.io/v1alpha1: layer2` 注释指定 OpenELB 使用 Layer 2 模式。自 0.6.0 版本起已弃用。
+- `eip.openelb.kubesphere.io/v1alpha2: layer2-eip` 注释指定 OpenELB 使用的 Eip 对象。如果未配置此注释，OpenELB 会自动选择一个可用的 Eip 对象。或者，您可以移除此注释并使用 `spec:loadBalancerIP` 字段（例如， `spec:loadBalancerIP: 192.168.200.91` ）或添加注释 `eip.openelb.kubesphere.io/v1alpha1: 192.168.200.91` 为服务分配特定的 IP 地址。当您将多个服务的 `spec:loadBalancerIP` 设置为相同的值以进行 IP 地址共享（这些服务通过不同的服务端口区分）时，在这种情况下，您必须将 `spec:ports:port` 设置为不同的值并将 `spec:externalTrafficPolicy` 设置为 `Cluster` 。有关 IPAM 的更多详细信息，请参阅 openelb ip address assignment。
+- 如果 `spec:externalTrafficPolicy` 设置为 `Cluster` （默认值），OpenELB 会从所有 Kubernetes 集群节点中随机选择一个节点来处理 Service 请求。<span style="color:#9400D3;font-weight:bold;">其他节点上的 Pod 也可以通过 kube-proxy 访问</span>。
+- 如果 `spec:externalTrafficPolicy` 设置为 `Local` ，OpenELB 会随机选择 Kubernetes 集群中包含 Pod 的节点来处理 Service 请求。<span style="color:#9400D3;font-weight:bold;">只有选中节点上的 Pod 才能被访问</span>。
+
+:::
+
+3. 运行以下命令创建服务：
+
+```bash
+$ kubectl apply -f layer2-svc.yaml
+```
+
+#### 8.3.6 第六步：验证 OpenELB 在 Layer 2 模式下的功能
+
+以下验证 OpenELB 是否正常运行。
+
+1. 在 Kubernetes 集群中，运行以下命令以确认容器组、部署都已成功，并获取服务的外部 IP 地址：
+
+```bash
+$ kubectl get deploy,po,svc
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/layer2-openelb   2/2     2            2           168m
+
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/layer2-openelb-c689cf6cd-8vkhl   1/1     Running   0          7m46s
+pod/layer2-openelb-c689cf6cd-gqw6n   1/1     Running   0          7m35s
+
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE
+service/kubernetes   ClusterIP      10.233.0.1     <none>           443/TCP        6d
+service/layer2-svc   LoadBalancer   10.233.18.27   192.168.200.91   80:30996/TCP   147m
+```
+
+2. 在 Kubernetes 集群中，运行以下命令以获取集群节点的 IP 地址：
+
+```bash
+$ kubectl get nodes -o wide
+```
+
+3. 在 Kubernetes 集群中，运行以下命令以检查 Pod 的节点：
+
+```bash
+$ kubectl get pod -o wide
+```
+
+> 在这个示例中，Pods 会自动分配到不同的节点。你可以手动将 Pods 分配到不同的节点。
+
+4. 在客户端机器（<span style="color:blue;font-weight:bold;">同一网段机器，非集群节点</span>）上，运行以下命令来 ping 服务 IP 地址并检查 IP 邻居：
+
+- 通过 <span style="color:blue;font-weight:bold;">查看邻居</span> 命令查看IP绑定到哪一个集群节点了
+
+```bash
+# 无法ping通
+$ ping 192.168.200.91 -c 4
+# 查看邻居：在Linux机器上使用 `ip neigh`；在Mac机器上使用`arp -a`
+$ arp -a
+```
+
+```bash
+? (192.168.3.1) at f8:20:a9:5e:6d:7b on en0 ifscope [ethernet]
+? (192.168.3.4) at 82:2d:64:e0:81:25 on en0 ifscope [ethernet]
+? (192.168.3.49) at 40:f9:46:43:dd:42 on en0 ifscope [ethernet]
+? (192.168.3.255) at ff:ff:ff:ff:ff:ff on en0 ifscope [ethernet]
+? (192.168.32.255) at ff:ff:ff:ff:ff:ff on bridge101 ifscope [bridge]
+? (192.168.186.255) at ff:ff:ff:ff:ff:ff on bridge100 ifscope [bridge]
+? (192.168.200.91) at 0:c:29:3b:fe:91 on bridge102 ifscope [bridge]
+? (192.168.200.92) at 0:c:29:30:af:3f on bridge102 ifscope [bridge]
+emon (192.168.200.116) at 0:c:29:30:af:3f on bridge102 ifscope [bridge]
+emon2 (192.168.200.117) at 0:c:29:49:3b:3e on bridge102 ifscope [bridge]
+emon3 (192.168.200.118) at 0:c:29:3b:fe:91 on bridge102 ifscope [bridge]
+? (192.168.200.255) at ff:ff:ff:ff:ff:ff on bridge102 ifscope [bridge]
+mdns.mcast.net (224.0.0.251) at 1:0:5e:0:0:fb on en0 ifscope permanent [ethernet]
+```
+
+> 在 <span style="color:red;font-weight:bold;">查看邻居</span> 命令的输出中，服务 IP 地址 <span style="color:blue;font-weight:bold;">192.168.200.91</span> 的 MAC 地址与 <span style="color:blue;font-weight:bold;">emon3 (192.168.200.118)</span> 的 MAC 地址相同。因此，OpenELB 已将服务 IP 地址映射到 <span style="color:blue;font-weight:bold;">emon3</span> 的 MAC 地址。
+
+- 通过容器组日志查看IP绑定到哪一个集群节点了
+
+```bash
+$ kubectl get pods -n openelb-system -l component=speaker -o name|xargs -I {} kubectl logs -n openelb-system {} | grep -A5 "192.168.200.91"
+```
+
+![image-20250719142427128](images/image-20250719142427128.png)
+
+> 如图所示，服务 IP 地址 <span style="color:blue;font-weight:bold;">192.168.200.91</span> 绑定到了集群节点 <span style="color:blue;font-weight:bold;">emon3 (192.168.200.118)</span>  上的 <span style="color:blue;font-weight:bold;">ens160</span> 网卡上
+
+5. 在客户端机器（<span style="color:blue;font-weight:bold;">同一网段机器，非集群节点</span>）上，运行 `curl` 命令以访问服务：
+
+```bash
+$ curl 192.168.200.91
+```
+
+### 8.4 在 VIP 模式下使用 OpenELB
+
+#### 8.4.0 前置条件
+
+- 您需要准备一个已安装 OpenELB 的 Kubernetes 集群。所有 Kubernetes 集群节点必须在同一个 Layer 2 网络（同一路由器下）。
+
+- <span style="color:#9400D3;font-weight:bold;">所有 Kubernetes 集群节点必须只有一个网卡。当前 VIP 模式不支持具有多个网卡的 Kubernetes 集群节点</span>。
+- 您需要准备一台客户端机器，用于验证 OpenELB 在 Layer 2 模式下的功能是否正常。客户端机器需要与 Kubernetes 集群节点位于同一网络。
+
+- <span style="color:red;font-weight:bold;">为OpenELB指定NIC网络接口卡（Network Interface Card）</span>
+
+  如果OpenELB的安装节点有多个网卡（比如：eth0,eth1等），需要指定OpenELB在Layer 2模式下使用哪一个网卡。如果节点只有1个网卡，就不需要指定了。
+
+  - **按需给节点添加注解**
+
+  ```bash
+  # 只给有多接口的节点添加注解："当此节点被选为 EIP 的 ARP 响应节点时，请使用 `192.168.200.116` 对应的接口"
+  $ kubectl annotate nodes emon layer2.openelb.kubesphere.io/v1alpha1="192.168.200.116"
+  ```
+
+  > 查看是否存在多个网络适配器：
+  >
+  > ```bash
+  > $ ip -o link show | awk '{print $2}' | cut -d':' -f1 | grep -Ev "lo|cali"
+  > ```
+
+  - **验证注解添加情况**
+
+  ```bash
+  $ kubectl describe node emon | grep openelb.kubesphere.io
+  ```
+
+  - **删除无用注解**（如果需要）：
+
+  ```bash
+  $ kubectl annotate node emon layer2.openelb.kubesphere.io/v1alpha1-
+  ```
+
+  - **影响选举行为**：
+
+  ```mermaid
+  graph TD
+      A[EIP 192.168.200.91] --> B{选举 ARP 响应节点}
+      B --> C[已注解节点]
+      B --> D[未注解节点]
+      C -->|优先选择| E[使用指定 IP 的接口]
+      D -->|自动选择| F[同子网的第一个接口]
+  ```
+
+#### 8.4.1 第一步：确保已启用 VIP 模式
+
+VIP 模式可以通过命令行参数启用或禁用。使用 VIP 模式时，请确保 VIP 发言人已正确启用。
+
+运行以下命令以编辑 openelb-speaker DaemonSet：
+
+```bash
+$ kubectl edit ds -n openelb-system openelb-speaker
+```
+
+将 `enable-keepalived-vip` 设置为 `true` 并保存更改。openelb-speaker 将自动重启。
+
+```yaml
+    spec:
+      containers:
+      - args:
+        - --api-hosts=:50051
+        - --enable-keepalived-vip=true
+        - --enable-layer2=false
+        command:
+        - openelb-speaker
+```
+
+#### 8.4.2 第二步：创建 Eip 对象
+
+Eip 对象作为 OpenELB 的 IP 地址池使用。
+
+1. 运行以下命令创建 Eip 对象的 YAML 文件：
+
+```bash
+$ vim vip-eip.yaml
+```
+
+2. 将以下信息添加到 YAML 文件中：
+
+```yaml
+apiVersion: network.kubesphere.io/v1alpha2
+kind: Eip
+metadata:
+  name: vip-eip
+spec:
+  address: 192.168.200.91-192.168.200.100
+  interface: ens160
+  protocol: vip
+```
+
+:::info
+
+- `spec:address` 中指定的 IP 地址必须与 Kubernetes 集群节点位于同一网络段。
+- 有关 Eip YAML 配置中字段的详细信息，请参阅[使用 Eip 配置 IP 地址池](https://openelb.io/docs/getting-started/configuration/configure-ip-address-pools-using-eip/)。
+
+:::
+
+3. 运行以下命令创建 Eip 对象：
+
+```bash
+$ kubectl apply -f vip-eip.yaml
+```
+
+#### 8.4.3 第三步：创建部署
+
+以下使用 nginx 镜像创建一个包含两个 Pod 的 Deployment。每个 Pod 都会将其自己的 Pod 名称返回给外部请求。
+
+1. 运行以下命令创建 Deployment 的 YAML 文件：
+
+```bash
+$ vim vip-openelb.yaml
+```
+
+2. 将以下信息添加到 YAML 文件中：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vip-openelb
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vip-openelb
+  template:
+    metadata:
+      labels:
+        app: vip-openelb
+    spec:
+      containers:
+        - image: nginx:1.25.4
+          name: nginx
+          ports:
+            - containerPort: 80
+```
+
+3. 运行以下命令创建 Deployment：
+
+```bash
+$ kubectl apply -f vip-openelb.yaml
+```
+
+#### 8.4.4 第三步：创建服务[ ](https://openelb.io/docs/getting-started/usage/use-openelb-in-vip-mode/#step-4-create-a-service)
+
+1. 运行以下命令为服务创建一个 YAML 文件：
+
+```bash
+$ vim vip-svc.yaml
+```
+
+2. 将以下信息添加到 YAML 文件中：
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: vip-svc
+  annotations:
+    lb.kubesphere.io/v1alpha1: openelb
+    # For versions below 0.6.0, you also need to specify the protocol
+    # protocol.openelb.kubesphere.io/v1alpha1: vip
+    eip.openelb.kubesphere.io/v1alpha2: vip-eip
+spec:
+  selector:
+    app: vip-openelb
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  externalTrafficPolicy: Cluster
+```
+
+:::warning
+
+- 你必须将 `spec:type` 设置为 `LoadBalancer` 。
+- `lb.kubesphere.io/v1alpha1: openelb` 注释指定该服务使用 OpenELB。
+- `protocol.openelb.kubesphere.io/v1alpha1: vip` 注释指定 OpenELB 以 VIP 模式使用。自 0.6.0 版本起已弃用。
+- `eip.openelb.kubesphere.io/v1alpha2: vip-eip` 注释指定 OpenELB 使用的 Eip 对象。如果未配置此注释，OpenELB 会自动选择一个可用的 Eip 对象。或者，您可以移除此注释并使用 `spec:loadBalancerIP` 字段（例如， `spec:loadBalancerIP: 192.168.200.91` ）或添加注释 `eip.openelb.kubesphere.io/v1alpha1: 192.168.200.91` 为服务分配特定的 IP 地址。当您将多个服务的 `spec:loadBalancerIP` 设置为相同的值以进行 IP 地址共享（这些服务通过不同的服务端口区分）时，在这种情况下，您必须将 `spec:ports:port` 设置为不同的值并将 `spec:externalTrafficPolicy` 设置为 `Cluster` 。有关 IPAM 的更多详细信息，请参阅 openelb ip address assignment。
+- 如果 `spec:externalTrafficPolicy` 设置为 `Cluster` （默认值），OpenELB 会从所有 Kubernetes 集群节点中随机选择一个节点来处理 Service 请求。<span style="color:#9400D3;font-weight:bold;">其他节点上的 Pod 也可以通过 kube-proxy 访问</span>。
+- 如果 `spec:externalTrafficPolicy` 设置为 `Local` ，OpenELB 会随机选择 Kubernetes 集群中包含 Pod 的节点来处理 Service 请求。<span style="color:#9400D3;font-weight:bold;">只有选中节点上的 Pod 才能被访问</span>。
+
+:::
+
+3. 运行以下命令创建服务：
+
+```bash
+$ kubectl apply -f vip-svc.yaml
+```
+
+#### 8.4.5 第五步：验证 VIP 模式下的 OpenELB
+
+以下验证 OpenELB 是否正常运行。
+
+1. 在 Kubernetes 集群中，运行以下命令以获取服务的外部 IP 地址：
+
+```bash
+$ kubectl get deploy,po,svc
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/vip-openelb   2/2     2            2           38s
+
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/vip-openelb-64fcb9fb58-d55tm   1/1     Running   0          38s
+pod/vip-openelb-64fcb9fb58-jmhn6   1/1     Running   0          38s
+
+NAME                 TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE
+service/kubernetes   ClusterIP      10.233.0.1     <none>           443/TCP        6d10h
+service/vip-svc      LoadBalancer   10.233.41.54   192.168.200.91   80:31293/TCP   7s
+```
+
+2. 在 Kubernetes 集群中，运行以下命令以获取集群节点的 IP 地址：
+
+```bash
+$ kubectl get nodes -o wide
+```
+
+3. 在 Kubernetes 集群中，运行以下命令以检查 Pod 的节点：
+
+```bash
+$ kubectl get pod -o wide
+```
+
+>  在这个示例中，Pods 会自动分配到不同的节点。你可以手动将 Pods 分配到不同的节点。
+
+4. 在客户端机器（<span style="color:blue;font-weight:bold;">同一网段机器，非集群节点</span>）上，运行以下命令来 ping 服务 IP 地址并检查 IP 邻居：
+
+- 通过 <span style="color:blue;font-weight:bold;">查看邻居</span> 命令查看IP绑定到哪一个集群节点了
+
+```bash
+$ ping 192.168.200.91 -c 4
+PING 192.168.200.91 (192.168.200.91): 56 data bytes
+64 bytes from 192.168.200.91: icmp_seq=0 ttl=64 time=0.256 ms
+64 bytes from 192.168.200.91: icmp_seq=1 ttl=64 time=0.258 ms
+64 bytes from 192.168.200.91: icmp_seq=2 ttl=64 time=0.509 ms
+64 bytes from 192.168.200.91: icmp_seq=3 ttl=64 time=0.427 ms
+
+--- 192.168.200.91 ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 0.256/0.363/0.509/0.109 ms
+```
+
+```bash
+# 查看邻居：在Linux机器上使用 `ip neigh`；在Mac机器上使用`arp -a`
+$ arp -a
+? (192.168.3.1) at f8:20:a9:5e:6d:7b on en0 ifscope [ethernet]
+? (192.168.3.45) at 96:61:e1:c9:b0:67 on en0 ifscope [ethernet]
+? (192.168.3.49) at 40:f9:46:43:dd:42 on en0 ifscope [ethernet]
+? (192.168.3.255) at ff:ff:ff:ff:ff:ff on en0 ifscope [ethernet]
+? (192.168.32.255) at ff:ff:ff:ff:ff:ff on bridge101 ifscope [bridge]
+? (192.168.186.255) at ff:ff:ff:ff:ff:ff on bridge100 ifscope [bridge]
+? (192.168.200.91) at 0:c:29:3b:fe:91 on bridge102 ifscope [bridge]
+emon (192.168.200.116) at 0:c:29:30:af:3f on bridge102 ifscope [bridge]
+emon2 (192.168.200.117) at 0:c:29:49:3b:3e on bridge102 ifscope [bridge]
+emon3 (192.168.200.118) at 0:c:29:3b:fe:91 on bridge102 ifscope [bridge]
+? (192.168.200.255) at ff:ff:ff:ff:ff:ff on bridge102 ifscope [bridge]
+mdns.mcast.net (224.0.0.251) at 1:0:5e:0:0:fb on en0 ifscope permanent [ethernet]
+```
+
+> 在 <span style="color:red;font-weight:bold;">查看邻居</span> 命令的输出中，服务 IP 地址 <span style="color:blue;font-weight:bold;">192.168.200.91</span> 的 MAC 地址与 <span style="color:blue;font-weight:bold;">emon3 (192.168.200.118)</span> 的 MAC 地址相同。因此，OpenELB 已将服务 IP 地址映射到 <span style="color:blue;font-weight:bold;">emon3</span> 的 MAC 地址。
+
+5. 在客户端机器（<span style="color:blue;font-weight:bold;">同一网段机器，非集群节点</span>）上，运行 `curl` 命令以访问服务：
+
+```bash
+$ curl 192.168.200.91
+```
+
+### 8.5 配置集群网关设置
 
 admin 账户操作
 
-- 群设置=>网关设置=>启用网关
+- 集群设置=>网关设置=>启用网关
 
     - LoadBalancer
         - 负载均衡器提供商：默认 QingCloud Kubernets Engine，这里选择 OpenELB（选择哪一个都没关系，使用的是默认EIP）
-        - 注解：默认
+        - 注解：添加下面注解
 
+        | 注解key                                 | 注解value | 备注                                      |
+        | --------------------------------------- | --------- | ----------------------------------------- |
+        | lb.kubesphere.io/v1alpha1               | openelb   |                                           |
+        | protocol.openelb.kubesphere.io/v1alpha1 | vip       | v0.6.0之前必须配置，自 0.6.0 版本起已弃用 |
+        | eip.openelb.kubesphere.io/v1alpha2      | vip-eip   |                                           |
+    
     - 点击确定
 
 > 由于上面创建了默认eip，这里可以不用配置注解
@@ -1414,13 +1887,13 @@ admin 账户操作
 - 查看是否启用成功
 
 ```bash
-# 查看 EXTERNAL-IP 字段是否已经分配了eip地址，比如：192.168.32.91
+# 查看 EXTERNAL-IP 字段是否已经分配了eip地址，比如：192.168.200.91
 $ kubectl -n kubesphere-controls-system get svc
 ```
 
-<span style="color:green;font-weight:bold;">注意：192.168.32.91可以通过网络适配器ens33添加新ip的方式达到宿主机本地DNS访问</span>
+<span style="color:green;font-weight:bold;">注意：192.168.200.91可以通过网络适配器ens160添加新ip的方式达到宿主机本地DNS访问</span>
 
-## 4、用户-企业空间-项目
+## 9、用户-企业空间-项目
 
 - 登录 admin 创建如下用户
 
@@ -1464,15 +1937,15 @@ $ kubectl -n kubesphere-controls-system get svc
 
 ![image-20240628180327978](images/cicd-tools-fullsize.jpeg)
 
-## 5、DevOps项目部署
+## 10、DevOps项目部署
 
-### 5.1、准备工作
+### 10.1、准备工作
 
 您需要[启用 KubeSphere DevOps 系统](https://www.kubesphere.io/zh/docs/v3.3/pluggable-components/devops/)。
 
 注意：若内存不是很大，建议开启 devops 时内存可以限制为2G。
 
-### 5.2、[将 SonarQube 集成到流水线](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-integrate/sonarqube/)
+### 10.2、[将 SonarQube 集成到流水线](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-integrate/sonarqube/)
 
 要将 SonarQube 集成到您的流水线，必须先安装 SonarQube 服务器。
 
@@ -1488,7 +1961,7 @@ http://192.168.200.116:30712
 
 ![image-20240630105708229](images/image-20240630105708229.png)
 
-### 5.3、将 Harbor 集成到流水线
+### 10.3、将 Harbor 集成到流水线
 
 在应用商店安装Harbor
 
@@ -1625,7 +2098,7 @@ $ systemctl daemon-reload && systemctl restart docker
 
   保存该 Jenkinsfile，KubeSphere 会自动在图形编辑面板上创建所有阶段和步骤。点击**运行**来运行该流水线。如果一切运行正常，Jenkins 将推送镜像至您的 Harbor 仓库。
 
-### 5.4、[使用 Jenkinsfile 创建流水线涉及的凭证](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-use/pipelines/create-a-pipeline-using-jenkinsfile/)
+### 10.4、[使用 Jenkinsfile 创建流水线涉及的凭证](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-use/pipelines/create-a-pipeline-using-jenkinsfile/)
 
 | 凭证ID          | 类型                                     |
 | --------------- | ---------------------------------------- |
@@ -1642,7 +2115,7 @@ $ systemctl daemon-reload && systemctl restart docker
 
 ![image-20240702175016014](images/image-20240702175016014.png)
 
-### 5.5、为 KubeSphere 中的 Jenkins 安装插件（可选）
+### 10.5、为 KubeSphere 中的 Jenkins 安装插件（可选）
 
 - 获取Jenkins地址
 
@@ -1676,7 +2149,7 @@ http://192.168.200.116:30180
 
 6. 在**可更新**选项卡，先勾选插件左侧的复选框，再点击**下载待重启后安装**，即可安装更新的插件。您也可以点击**立即获取**按钮检查更新。
 
-## 9、FAQ
+## 99、FAQ
 
 ### FAQ1：如何重置用户密码
 

@@ -1,629 +1,10 @@
-# kvd第1章 Kubeadmin安装K8S V1.23
+# 第5章 Kubernetes扩展安装
 
-单点版本：https://blog.csdn.net/Josh_scott/article/details/121961369?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0.pc_relevant_default&spm=1001.2101.3001.4242.1&utm_relevant_index=3
-
-高可用版本：https://blog.csdn.net/qq_16538827/article/details/120175489
-
-Kubeadm是一个K8s部署工具，提供kubeadm init和kubeadm join，用于快速部署Kubernetes集群。
-
-## 0 先决条件
-
-- 一台兼容的Linux主机。Kubernetes项目为基于Debian和Red Hat的Linux发行版一级一些不提供包管理器的发行版提供通用的指令。
-- 每台机器 2GB 或更多的 RAM（如果少于这个数字将会影响你应用的运行内存）。
-- 2CPU核心或更多
-- 集群中的所有机器的网络彼此均能相互连接（公网和内网都可以）
-  - **设置防火墙放行规则**
-- 节点之中不可以有重复的主机名、MAC地址或product_uuid。请参考[这里](https://v1-29.docs.kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/)了解更多详细信息。
-  - **设置不同hostname**
-- 开启机器上的某些端口。请参考[这里](https://v1-29.docs.kubernetes.io/zh-cn/docs/setup/production-environment/container-runtimes/)了解更多详细信息。
-  - **内网互信**
-- 禁用交换分区。为了保证 kubelet 正常工作，你**必须**禁用交换分区。
-  - **永久关闭**
-- <span style="color:red;font-weight:bold;font-size:20px;">若无特殊说明，下面都是使用root用户执行命令</span>
-
-## 1 基础环境准备
-
-### 1.1 服务器规划
-
-| 机器名 | 系统类型 | IP地址          | CPU  | 内存 | 部署内容 |
-| ------ | -------- | --------------- | ---- | ---- | -------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 2核  | >=2G | master   |
-| emon2  | Rocky9.5 | 192.168.200.117 | 2核  | >=2G | worker   |
-| emon3  | Rocky9.5 | 192.168.200.118 | 2核  | >=2G | worker   |
-
-### 1.2 系统安装（所有节点）
-
-[系统安装](http://localhost:8751/devops/new/Linux/01-%E7%AC%AC1%E7%AB%A0%20%E7%B3%BB%E7%BB%9F%E5%AE%89%E8%A3%85.html)
-
-### 1.3 系统设置（所有节点）
-
-#### 1.3.1 主机名
-
-主机名必须每个节点都不一样（建议命名规范：数字+字母+中划线组合，不要包含其他特殊字符）。
-
-```bash
-# 查看主机名
-$ hostname
-# 设置主机名：注意修改为具体的主机名
-$ hostnamectl set-hostname emon
-```
-
-#### 1.3.2 本地DNS
-
-配置host，使得所有节点之间可以通过hostname互相访问。
-
-```bash
-$ sudo cat <<-'EOF' | sudo tee -a /etc/hosts
-192.168.200.116	emon
-192.168.200.117 emon2
-192.168.200.118 emon3
-EOF
-```
-
-#### 1.3.3 安装依赖包
-
-```bash
-# 更新yum
-$ dnf update -y
-# 安装依赖包
-$ dnf install -y socat conntrack ipvsadm ipset jq sysstat curl iptables libseccomp yum-utils
-```
-
-#### 1.3.4 关闭防火墙、重置iptables、关闭swap、关闭selinux和dnsmasq
-
-```bash
-# 关闭防火墙
-$ systemctl stop firewalld && systemctl disable firewalld
-
-# 设置iptables规则
-$ iptables -F && iptables -X && iptables -F -t nat && iptables -X -t nat && iptables -P FORWARD ACCEPT
-
-# 关闭swap
-$ swapoff -a
-# 去掉swap开机启动
-$ sed -i '/swap/s/^\(.*\)$/#\1/g' /etc/fstab
-
-# 关闭selinux
-$ setenforce 0
-# 防止重启恢复
-$ sed -i 's/^SELINUX=enforcing$/SELINUX=disabled/' /etc/selinux/config
-
-# 关闭dnsmasq（否则可能导致docker容器无法解析域名）：如果没有该启动单元，可以忽略！
-$ systemctl stop dnsmasq && systemctl disable dnsmasq
-```
-
-#### 1.3.5 系统参数设置
-
-```bash
-# 将桥接的IPv4流量传递到 iptables 的链：
-$ cat > /etc/sysctl.d/kubernetes.conf <<EOF
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_nonlocal_bind = 1
-net.ipv4.ip_forward = 1
-vm.swappiness = 0
-vm.overcommit_memory = 1
-EOF
-
-# 生效文件
-$ sysctl -p /etc/sysctl.d/kubernetes.conf
-```
-
-> 如果执行sysctl -p报错：
->
-> > sysctl: cannot stat /proc/sys/net/bridge/bridge-nf-call-ip6tables: 没有那个文件或目录
-> >
-> > sysctl: cannot stat /proc/sys/net/bridge/bridge-nf-call-iptables: 没有那个文件或目录
->
-> 可能的原因分析：
->
-> 1. **内核模块未加载**：
->    - `bridge` 和 `br_netfilter` 内核模块未激活
->    - 这些模块提供网络桥接和防火墙过滤功能
-> 2. **系统配置问题**：
->    - 内核参数未正确设置
->    - 常见于新安装的系统或云服务器
-> 3. **容器平台依赖**：
->    - Docker/Kubernetes 需要这些模块实现容器网络
->
-> - 步骤一：确保模块持久化（重启后有效）
->
-> ```bash
-> # 创建模块加载配置文件
-> $ cat <<EOF | sudo tee /etc/modules-load.d/br_netfilter.conf
-> bridge
-> br_netfilter
-> EOF
-> 
-> # 验证配置
-> $ sudo systemctl restart systemd-modules-load.service
-> ```
->
-> - 步骤二：配置后，再重新执行“生效文件”的命令
->
-> ```bash
-> # 生效文件
-> $ sysctl -p /etc/sysctl.d/kubernetes.conf
-> ```
->
-> - 步骤三：验证
->
-> ```bash
-> # 检查参数是否生效
-> sysctl net.bridge.bridge-nf-call-iptables
-> sysctl net.bridge.bridge-nf-call-ip6tables
-> 
-> # 应返回：
-> # net.bridge.bridge-nf-call-iptables = 1
-> # net.bridge.bridge-nf-call-ip6tables = 1
-> ```
-
-#### 1.3.6 配置SSH免密登录（仅中转节点）
-
-为了方便文件的copy我们选择一个中转节点（随便一个节点，可以是集群中的也可以是非集群中的），配置好跟其他所有节点的免密登录。这里选择emon节点：
-
-```bash
-# 看看是否已经存在rsa公钥
-$ cat ~/.ssh/id_rsa.pub
-
-# 如果不存在就创建一个新的
-$ ssh-keygen -t rsa
-
-# 把id_rsa.pub文件内容copy到其他机器的授权文件中
-$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon
-$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon2
-$ ssh-copy-id -i ~/.ssh/id_rsa.pub emon3
-```
-
-#### 1.3.7 移除docker相关软件包（可选）
-
-```bash
-$ dnf remove -y docker* container-selinux
-$ rm -f /etc/docker/daemon.json
-$ rm -rf /var/lib/docker/
-```
-
-如果yum报告说以上安装包未安装，未匹配，未删除任何安装包，表示环境干净，没有历史遗留旧版安装。
-
-
-
-## 2 安装基础工具（所有节点）
-
-### 2.1 安装Docker
-
-参考：[Docker的安装与配置.md](http://localhost:8751/devops/new/Docker/01-%E7%AC%AC1%E7%AB%A0%20Docker%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html)
-
-
-### 2.2 安装kubeadm/kubelet/kubectl
-
-K8S依赖的Docker最佳版本： 20.10
-
-https://github.com/kubernetes/kubernetes/blob/release-1.23/build/dependencies.yaml
-
-1. 设置k8s源
-
-参考：https://mirrors.aliyun.com/kubernetes/yum/repos/
-
-:::code-group
-
-```bash [CentOS7.5]
-$ cat > /etc/yum.repos.d/kubernetes.repo << EOF
-[kubernetes] 
-name=Kubernetes
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64 
-enabled=1 
-gpgcheck=0 
-repo_gpgcheck=0 
-gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg 
-EOF
-
-# 可以更新/缓存，也可以忽略
-$ yum clean all && yum makecache
-```
-
-```bash [Rocky9.5]
-# 此操作会覆盖 /etc/yum.repos.d/kubernetes.repo 中现存的所有配置
-$ cat > /etc/yum.repos.d/kubernetes.repo << EOF
-[kubernetes] 
-name=Kubernetes ARM
-baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-aarch64 
-enabled=1 
-gpgcheck=0 
-repo_gpgcheck=0 
-gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg 
-EOF
-
-# 可以更新/缓存，也可以忽略
-$ dnf clean all && dnf makecache
-```
-
-:::
-
-2. 可以查看所有仓库中所有k8s版本，并选择安装特定的版本
-
-```bash
-$ dnf list kubelet --showduplicates |sort -r
-```
-
-3. 安装kubeadm/kubelet/kubectl
-
-```bash
-# 某些 Linux 发行版（如 RHEL/CentOS/Rocky）的 YUM/DNF 配置中默认排除了 Kubernetes 相关包，这里临时禁用针对 Kubernetes 的排除规则，允许安装 kube* 开头的包
-$ dnf install -y kubelet-1.23.17 kubeadm-1.23.17 kubectl-1.23.17 --disableexcludes=kubernetes
-# kubeadm init 和 kubeadm join 都会触发启动 kubelet，但会给警告；但若直接启动 kubelet 则每隔几秒就会重启，因为它陷入了一个等待 kubeadm 指令的死循环。（master和worker节点），这里选择仅加入开机启动，并不直接启动。
-$ systemctl enable kubelet
-```
-
-## 3 kubeadm创建集群（仅master节点）
-
-### 3.0 预下载镜像（开启Docker代理可忽略）
-
-- 查看依赖镜像
-
-```bash
-$ kubeadm config images list
-```
-
-- 配置并执行脚本
-
-```bash
-$ vim master_images.sh
-```
-
-```bash
-#!/bin/bash
-
-images=(
-	kube-apiserver:v1.23.17
-	kube-controller-manager:v1.23.17
-	kube-scheduler:v1.23.17
-	kube-proxy:v1.23.17
-	pause:3.6
-	etcd:3.5.6-0
-	coredns/coredns:v1.8.6
-)
-
-for imageName in ${images[@]} ; do
-    docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName
-#   docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/$imageName  k8s.gcr.io/$imageName
-done
-# 若不希望制定kubeadm init的镜像--image-repository，这里可以放开docker tag到k8s.gcr.io
-```
-
-```bash
-$ chmod +x master_images.sh
-```
-
-- 执行
-
-```bash
-$ sh master_images.sh
-```
-
-### 3.1 kubeadm init
-
-- 初始化
-
-```bash
-# 在Master上执行，由于默认拉取镜像地址 k8s.gcr.io 国内无法访问，这里指定阿里云镜像仓库地址。
-# 执行该步骤之前，也可以执行 kubeadm config images pull 预下载镜像
-# 查看镜像 kubeadm config images list 查看默认配置 kubeadm config print init-defaults
-# Classless Inter-Domain Routing (CIDR)，中文译为无类别域间路由，是互联网中用于更有效分配和路由 IP 地址（主要是 IPv4）的一种方法。
-# --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers 指定镜像地址，默认是 k8s.gcr.io
-# 镜像地址也可以是 registry.aliyuncs.com/google_containers 请注意：没有开启Docker代理服务器时必须指定
-# --control-plane-endpoint 是部署 Kubernetes HA 控制平面的关键步骤，单master节点时可以不配置，多master节点时必须指定，而且要有负载均衡器来解析该配置项到具体master节点。
-$ kubeadm init \
---apiserver-advertise-address=192.168.200.116 \
---control-plane-endpoint=emon \
---kubernetes-version v1.23.17 \
---service-cidr=10.96.0.0/16 \
---pod-network-cidr=10.244.0.0/16
-
-# 使用 kubectl 工具（Master&&Node节点）
-$ mkdir -p $HOME/.kube 
-$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config 
-$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-# 【二选一】如果是root用户，可以使用如下配置替换上面：（与上面二选一）
-export KUBECONFIG=/etc/kubernetes/admin.conf
-
-# 【临时】无需执行，仅做记录参考
-# ==============================初始化部分日志==============================
-Your Kubernetes control-plane has initialized successfully!
-
-To start using your cluster, you need to run the following as a regular user:
-
-  mkdir -p $HOME/.kube
-  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-  sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-Alternatively, if you are the root user, you can run:
-
-  export KUBECONFIG=/etc/kubernetes/admin.conf
-
-You should now deploy a pod network to the cluster.
-Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
-  https://kubernetes.io/docs/concepts/cluster-administration/addons/
-
-You can now join any number of control-plane nodes by copying certificate authorities
-and service account keys on each node and then running the following as root:
-
-  kubeadm join emon:6443 --token ldsakh.zkzpetkutui6ypmp \
-        --discovery-token-ca-cert-hash sha256:7268baf811b3f1f2ca1e657fe90db99b8d3ed3f9efb8be03811b809d8efa5c5e \
-        --control-plane 
-
-Then you can join any number of worker nodes by running the following on each as root:
-
-kubeadm join emon:6443 --token ldsakh.zkzpetkutui6ypmp \
-        --discovery-token-ca-cert-hash sha256:7268baf811b3f1f2ca1e657fe90db99b8d3ed3f9efb8be03811b809d8efa5c5e
-```
-
-> 带有`–control-plane`的命令，是添加一个主节点；
->
-> 不带有`–control-plane`的命令，是添加一个工作点；
-
-- 等待一小会后，查看当前pods
-
-```bash
-$ kubectl get pods -n kube-system
-NAME                           READY   STATUS    RESTARTS   AGE
-coredns-bd6b6df9f-llqtt        0/1     Pending   0          10m
-coredns-bd6b6df9f-lsj6h        0/1     Pending   0          10m
-etcd-emon                      1/1     Running   0          10m
-kube-apiserver-emon            1/1     Running   0          10m
-kube-controller-manager-emon   1/1     Running   0          10m
-kube-proxy-r2jpz               1/1     Running   0          10m
-kube-scheduler-emon            1/1     Running   0          10m
-
-$ kubectl get pods -n kube-system -o wide
-NAME                           READY   STATUS    RESTARTS   AGE   IP                NODE     NOMINATED NODE   READINESS GATES
-coredns-bd6b6df9f-llqtt        0/1     Pending   0          11m   <none>            <none>   <none>           <none>
-coredns-bd6b6df9f-lsj6h        0/1     Pending   0          11m   <none>            <none>   <none>           <none>
-etcd-emon                      1/1     Running   0          11m   192.168.200.116   emon     <none>           <none>
-kube-apiserver-emon            1/1     Running   0          11m   192.168.200.116   emon     <none>           <none>
-kube-controller-manager-emon   1/1     Running   0          11m   192.168.200.116   emon     <none>           <none>
-kube-proxy-r2jpz               1/1     Running   0          11m   192.168.200.116   emon     <none>           <none>
-kube-scheduler-emon            1/1     Running   0          11m   192.168.200.116   emon     <none>           <none>
-
-$ kubectl get all
-NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
-service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   12m
-
-$ kubectl get nodes
-NAME   STATUS     ROLES                  AGE   VERSION
-emon   NotReady   control-plane,master   13m   v1.23.17
-```
-
-分析：coredns是Pending状态，表示缺少网络插件，下面开始安装网络插件！
-
-网络插件列表： https://kubernetes.io/zh-cn/docs/concepts/cluster-administration/addons/
-
-### 3.2 网络插件多选1-[Calico](https://www.tigera.io/project-calico/)（仅master节点）
-
-GitHub： https://github.com/projectcalico/calico
-
-官网：https://docs.tigera.io/archive
-
-系统需求： https://docs.tigera.io/calico/latest/getting-started/kubernetes/requirements
-
-#### 3.2.1 切换目录
-
-```bash
-$ cd
-$ mkdir -pv /root/k8s_soft/k8s_v1.23.17 && cd /root/k8s_soft/k8s_v1.23.17
-```
-
-这部分我们部署kubernetes的网络查件 CNI。
-
-文档地址：https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises
-
-#### 3.2.2 下载文件与配置调整
-
-文档中有两个配置，50以下节点和50以上节点，它们的主要区别在于这个：typha。
-当节点数比较多的情况下，Calico 的 Felix组件可通过 Typha 直接和 Etcd 进行数据交互，不通过 kube-apiserver，降低kube-apiserver的压力。大家根据自己的实际情况选择下载。
-下载后的文件是一个all-in-one的yaml文件，我们只需要在此基础上做少许修改即可。
-
-```bash
-# 下载calico.yaml文件
-# $ curl https://projectcalico.docs.tigera.io/manifests/calico.yaml -O 会加载最新版本，对K8S版本V1.23.17不再适合。
-# 兼容k8s v1.23.17版本，支持多架构的网络插件版本是 v3.24.5，可以如下执行；但若需要修改一些配置，可以先下载
-# kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.5/manifests/calico.yaml
-$ curl https://docs.tigera.io/archive/v3.24/manifests/calico.yaml -O
-```
-
-修改IP自动发现：
-
-> 当kubelet的启动参数中存在--node-ip的时候，以host-network模式启动的pod的status.hostIP字段就会自动填入kubelet中指定的ip地址。
-
-```js
-- name: IP
-  value: "autodetect" // [!code --]
-  valueFrom: // [!code ++]
-    fieldRef: // [!code ++]
-      fieldPath: status.hostIP // [!code ++]
-```
-
-修改CIDR：修改成你自己的pod-network-cidr网段的value，我这里是10.244.0.0/16
-
-```js
-# - name: CALICO_IPV4POOL_CIDR // [!code --]
-#   value: "192.168.0.0/16" // [!code --]
-- name: CALICO_IPV4POOL_CIDR // [!code ++]
-  value: "10.244.0.0/16" // [!code ++]
-```
-
-#### 3.2.3 执行安装
-
-```bash
-# 生效之前查看
-$ kubectl get nodes
-NAME   STATUS     ROLES                  AGE     VERSION
-emon   NotReady   control-plane,master   5m31s   v1.23.17
-# 使之生效
-$ kubectl apply -f calico.yaml
-# 查看pod
-$ kubectl get po -n kube-system
-NAME                                       READY   STATUS    RESTARTS   AGE
-calico-kube-controllers-577f77cb5c-g78c7   1/1     Running   0          13h
-calico-node-hxvx8                          1/1     Running   0          13h
-coredns-7f89b7bc75-8ks6f                   1/1     Running   0          14h
-coredns-7f89b7bc75-kfdbm                   1/1     Running   0          14h
-etcd-emon                                  1/1     Running   0          14h
-kube-apiserver-emon                        1/1     Running   0          14h
-kube-controller-manager-emon               1/1     Running   0          14h
-kube-proxy-f2r8l                           1/1     Running   0          14h
-kube-scheduler-emon                        1/1     Running   0          14h
-# 查看node
-$ kubectl get nodes
-NAME    STATUS     ROLES                  AGE    VERSION
-emon    Ready      control-plane,master   7m2s   v1.23.17
-```
-
-### 3.2 网络插件多选2-[Flannel](https://github.com/flannel-io/flannel#deploying-flannel-manually)（仅master节点）
-
-#### 3.2.1 切换目录
-
-```bash
-$ cd
-$ mkdir -pv /root/k8s_soft/k8s_v1.23.17 && cd /root/k8s_soft/k8s_v1.23.17
-```
-
-#### 3.2.2 下载文件
-
-Flannel是配置为Kubernetes设计的第3层网络结构的一种简单易行的方法。
-
-For Kubernetes v1.17+
-
-```bash
-$ wget https://github.com/flannel-io/flannel/releases/download/v0.25.4/kube-flannel.yml
-```
-
-#### 3.2.3 执行安装
-
-```bash
-# 查看nodes
-$ kubectl get nodes
-NAME   STATUS     ROLES                  AGE   VERSION
-emon   NotReady   control-plane,master   16m   v1.23.17
-# 安装
-$ kubectl apply -f kube-flannel.yml
-# 查看pods
-$ kubectl get po -n kube-system -o wide
-NAME                           READY   STATUS    RESTARTS   AGE     IP               NODE   NOMINATED NODE   READINESS GATES
-coredns-bd6b6df9f-72cb6        1/1     Running   0          3m3s    10.244.0.3       emon   <none>           <none>
-coredns-bd6b6df9f-nqfn5        1/1     Running   0          3m3s    10.244.0.2       emon   <none>           <none>
-etcd-emon                      1/1     Running   0          3m17s   192.168.32.116   emon   <none>           <none>
-kube-apiserver-emon            1/1     Running   0          3m18s   192.168.32.116   emon   <none>           <none>
-kube-controller-manager-emon   1/1     Running   0          3m15s   192.168.32.116   emon   <none>           <none>
-kube-proxy-cbb2x               1/1     Running   0          3m3s    192.168.32.116   emon   <none>           <none>
-kube-scheduler-emon            1/1     Running   0          3m17s   192.168.32.116   emon   <none>           <none>
-$ kubectl get nodes
-NAME   STATUS   ROLES                  AGE     VERSION
-emon   Ready    control-plane,master   4m29s   v1.23.17
-```
-
-### 3.3 加入节点到集群（仅worker节点）
-
-- 加入集群
-
-```bash
-# kubeadm init的执行结果中有如下命令，在各个worker节点执行加入即可
-$ kubeadm join emon:6443 --token ldsakh.zkzpetkutui6ypmp \
-        --discovery-token-ca-cert-hash sha256:7268baf811b3f1f2ca1e657fe90db99b8d3ed3f9efb8be03811b809d8efa5c5e
-```
-
-- 查看节点
-
-```bash
-# 等节点加入成功，过一会查看得到
-$ kubectl get nodes
-NAME    STATUS   ROLES                  AGE   VERSION
-emon    Ready    control-plane,master   19m   v1.23.17
-emon2   Ready    <none>                 82s   v1.23.17
-emon3   Ready    <none>                 45s   v1.23.17
-# 此时，worker节点上的容器实例如下：
-$ docker images
-REPOSITORY                   TAG        IMAGE ID       CREATED        SIZE
-hello-world                  latest     f1f77a0f96b7   4 months ago   5.2kB # docker测试产生的
-registry.k8s.io/kube-proxy   v1.23.17   d3c3d806adc6   2 years ago    107MB
-calico/cni                   v3.24.5    efd8ebfc4b4f   2 years ago    190MB
-registry.k8s.io/pause        3.6        7d46a07936af   3 years ago    484kB
-```
-
-### 3.4 虚拟机挂起并恢复后k8s网络问题（所有节点）
-
-问题描述：虚拟机挂起并恢复后，各个节点通信会出问题，设置“未托管”后解决。
-
-<span style="color:red;font-weight:bold;">解决前查看网络如下效果：</span>
-
-```bash
-# 主节点网络
-$ nmcli device status
-DEVICE           TYPE      STATE         CONNECTION 
-ens160           ethernet  已连接        ens160     
-docker0          bridge    连接（外部）  docker0    
-lo               loopback  连接（外部）  lo         
-tunl0            iptunnel  已断开        --         
-cali4969f0a9f96  ethernet  未托管        --         
-cali67f6c4be37a  ethernet  未托管        --         
-cali6cd2b22a701  ethernet  未托管        --   
-# 子节点网络
-$ nmcli device status
-DEVICE   TYPE      STATE         CONNECTION 
-ens160   ethernet  已连接        ens160     
-docker0  bridge    连接（外部）  docker0    
-lo       loopback  连接（外部）  lo         
-tunl0    iptunnel  已断开        --  
-```
-
-<span style="color:#32CD32;font-weight:bold;">解决后查看网络如下效果：</span>
-
-```bash
-# 主节点网络
-$ nmcli device status
-DEVICE           TYPE      STATE         CONNECTION 
-ens160           ethernet  已连接        ens160     
-lo               loopback  连接（外部）  lo         
-docker0          bridge    未托管        --         
-cali4969f0a9f96  ethernet  未托管        --         
-cali67f6c4be37a  ethernet  未托管        --         
-cali6cd2b22a701  ethernet  未托管        --         
-tunl0            iptunnel  未托管        -- 
-# 子节点网络
-$ nmcli device status
-DEVICE   TYPE      STATE         CONNECTION 
-ens160   ethernet  已连接        ens160     
-lo       loopback  连接（外部）  lo         
-docker0  bridge    未托管        --         
-tunl0    iptunnel  未托管        --  
-```
-
-- 查看设备状态
-
-```bash
-$ nmcli device status
-```
-
-- 永久unmanaged
-
-```bash
-$ tee /etc/NetworkManager/conf.d/99-unmanaged-devices.conf << EOF
-[keyfile]
-unmanaged-devices=interface-name:docker*;interface-name:veth*;interface-name:br-*;interface-name:vmnet*;interface-name:vboxnet*;interface-name:cni0;interface-name:cali*;interface-name:flannel*;interface-name:tun*
-EOF
-```
-
-- 重启NetworkManager
-
-```bash
-$ systemctl restart NetworkManager
-```
-
-## 4 部署dashboard（在master节点执行）
+## 1 部署dashboard（在master节点执行）
 
 [kubernetes官方提供的可视化界面](https://github.com/kubernetes/dashboard)
 
-### 4.1 部署
+### 1.1 部署
 
 版本兼容性：https://github.com/kubernetes/dashboard/releases 
 
@@ -784,7 +165,7 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6InAxYVVVQWpYTFBZbzVianl5c1VKOUt1MGFtT25GNjFxTDlMOV9m
 
 ![image-20250602200414223](images/image-20250602200414223.png)
 
-### 4.2 卸载
+### 1.2 卸载
 
 - 删除管理员 `ServiceAccount` 和 `ClusterRoleBinding` 
 
@@ -799,7 +180,7 @@ $ kubectl -n kubernetes-dashboard delete clusterrolebinding admin-user
 $ kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.1/aio/deploy/recommended.yaml
 ```
 
-### 4.3 同类型软件核心对比表
+### 1.3 同类型软件核心对比表
 
 | **特性**          | **Kubernetes Dashboard** | **KubeSphere**                            | **Rancher**                     |
 | :---------------- | :----------------------- | :---------------------------------------- | :------------------------------ |
@@ -828,7 +209,7 @@ $ kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.
 
 > 💡 **组合策略**：大型企业可同时使用 Rancher（多集群治理） + KubeSphere（集群内应用平台），通过 Rancher 纳管部署了 KubeSphere 的集群。
 
-## 5 安装ingress-nginx（在master节点执行）
+## 2 安装ingress-nginx（在master节点执行）
 
 [ingress-nginx GitHub查看与K8S版本兼容性](https://github.com/kubernetes/ingress-nginx)
 
@@ -836,14 +217,14 @@ ingress-nginx官网部署：https://kubernetes.github.io/ingress-nginx/deploy/
 
 ingress-nginx官网用户指南：https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/
 
-### 5.1 切换目录
+### 2.1 切换目录
 
 ```bash
 $ cd
 $ mkdir -pv /root/k8s_soft/k8s_v1.23.17 && cd /root/k8s_soft/k8s_v1.23.17
 ```
 
-### 5.2 下载文件与配置调整
+### 2.2 下载文件与配置调整
 
 ```bash
 # 下载 https://github.com/kubernetes/ingress-nginx/blob/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml 到 ingress-nginx.yaml
@@ -851,7 +232,7 @@ $ mkdir -pv /root/k8s_soft/k8s_v1.23.17 && cd /root/k8s_soft/k8s_v1.23.17
 $ curl https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.6.4/deploy/static/provider/cloud/deploy.yaml -o ingress-nginx.yaml
 ```
 
-#### 5.2.1 调整镜像
+#### 2.2.1 调整镜像
 
 若不调整，下载后可能是这样的镜像：
 
@@ -868,7 +249,7 @@ $ sed -i.bak 's/image: registry.k8s.io\/ingress-nginx\/controller:v1.6.3@sha256:
 
 > 说明：源文件备份到 ingress-nginx.yaml.bak
 
-#### 5.2.2 调整Service
+#### 2.2.2 调整Service
 
 - 调整Service的type为 NodePort 并固定 nodePort 为80和443
 
@@ -940,7 +321,7 @@ $ vim /etc/kubernetes/manifests/kube-apiserver.yaml
 $ systemctl daemon-reload && systemctl restart kubelet
 ```
 
-#### 5.2.3 调整Deployment
+#### 2.2.3 调整Deployment
 
 修改kind模式 Deployment ==> DaemonSet
 
@@ -958,7 +339,7 @@ metadata:
   name: ingress-nginx-controller
 ```
 
-### 5.3 安装ingress-nginx
+### 2.3 安装ingress-nginx
 
 - 安装插件（master节点）
 
@@ -985,9 +366,9 @@ job.batch/ingress-nginx-admission-create   1/1           4s         71s   create
 job.batch/ingress-nginx-admission-patch    1/1           2s         70s   patch        registry.k8s.io/ingress-nginx/kube-webhook-certgen:v20220916-gd32f8c343   controller-uid=144e3f71-16fe-4837-bf3a-e17a759e655e
 ```
 
-### 5.4 测试服务
+### 2.4 测试服务
 
-#### 5.5.1 ingress-test.yaml配置
+#### 2.5.1 ingress-test.yaml配置
 
 :::details ingress-test.yaml配置
 
@@ -1156,7 +537,7 @@ $ kubectl delete -f ingress-test.yaml
 
 :::
 
-### 5.5 其他
+### 2.5 其他
 
 - ingress服务安装后，确保集群中存在名为 `nginx` 的 IngressClass：
 
@@ -1181,9 +562,9 @@ $ kubectl logs -n ingress-nginx <ingress-pod-name>
 
 
 
-## 6 集群冒烟测试（在master节点执行）
+## 3 集群冒烟测试（在master节点执行）
 
-### 6.1 创建nginx-ds
+### 3.1 创建nginx-ds
 
 :::details nginx-ds.yaml配置
 
@@ -1233,7 +614,7 @@ EOF
 $ kubectl apply -f nginx-ds.yaml
 ```
 
-### 6.2 检查各种ip连通性
+### 3.2 检查各种ip连通性
 
 ```bash
 # 检查各 Node 上的 Pod IP 连通性
@@ -1253,7 +634,7 @@ $ curl <service-ip>:<port>
 $ curl <node-ip>:<port>
 ```
 
-### 6.3 检查dns可用性
+### 3.3 检查dns可用性
 
 :::code-group
 
@@ -1290,7 +671,7 @@ $ kubectl delete -f nginx-pod.yaml
 
 :::
 
-### 6.4 日志功能
+### 3.4 日志功能
 
 测试使用kubectl查看pod的容器日志
 
@@ -1306,7 +687,7 @@ nginx-ds-rx6mj   1/1     Running   0          2m54s
 $ kubectl logs <pod-name>
 ```
 
-### 6.5 Exec功能
+### 3.5 Exec功能
 
 测试kubectl的exec功能
 
@@ -1316,32 +697,36 @@ $ kubectl get pods -l app=nginx-ds
 $ kubectl exec -it <nginx-pod-name> -- nginx -v
 ```
 
-### 6.6 删除nginx-ds
+### 3.6 删除nginx-ds
 
 ```bash
 $ kubectl delete -f nginx-ds.yaml
 ```
 
-## 7 存储方案
+## 4 存储方案
 
 <span style="color:red;font-weight:bold;">在docker中，以前是将docker内部目录挂载到机器上，但是在k8s中如果将目录挂载到机器上，如果某个节点的容器挂了，比如MySQL，k8s的自愈机制会在其它节点再拉起一份，那就会导致原来的数据丢失了，所以在k8s中需要应用到存储层：比如NFS、OpenEBS，k8s会将这些容器的数据全部存在存储层，而这个存储层会在所有节点都有一份。</span>
 
-### 7.1 部署NFS
+为了扩展 K8s 集群的存储能力，我们将快速对接 NFS 作为 OpenEBS 之外的另一种持久化存储。
 
-#### 7.1.1 安装 NFS 服务端软件包（所有节点）
+本文只介绍 K8s 集群上的操作，NFS 服务器的部署和更多细节请参阅[探索 Kubernetes 持久化存储之 NFS 终极实战指南](https://mp.weixin.qq.com/s/FRZppup6W_AS2O-_CR1KFg) 。
+
+### 4.1 部署NFS
+
+#### 4.1.1 安装 NFS 服务端软件包（所有节点）
 
 ```bash
 $ dnf install -y nfs-utils
 ```
 
-#### 7.1.2 创建共享数据根目录（在master节点执行）
+#### 4.1.2 创建共享数据根目录（在master节点执行）
 
 ```bash
 $ mkdir -pv /data/nfs/local
 $ chown nobody:nobody /data/nfs/local
 ```
 
-#### 7.1.3 编辑服务配置文件（在master节点执行）
+#### 4.1.3 编辑服务配置文件（在master节点执行）
 
 配置 NFS 服务器数据导出目录及访问 NFS 服务器的客户端机器权限。
 
@@ -1361,7 +746,7 @@ $ echo "/data/nfs/local 192.168.200.0/24(rw,sync,all_squash,anonuid=65534,anongi
 - anongid：转换后的组权限 ID，对应的操作系统的 nobody 组
 - no_subtree_check：不检查客户端请求的子目录是否在共享目录的子树范围内，也就是说即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样可以提高效率。
 
-#### 7.1.4 启动服务并设置开机自启（在master节点执行）
+#### 4.1.4 启动服务并设置开机自启（在master节点执行）
 
 ```bash
 $ systemctl enable --now rpcbind && systemctl enable --now nfs-server
@@ -1382,7 +767,7 @@ $ exportfs
 > | `exportfs` | NFS 共享管理工具                  |
 > | `-r`       | 重新导出所有共享（re-export all） |
 
-#### 7.1.5 配置NFS从节点（仅worker节点）
+#### 4.1.5 配置NFS从节点（仅worker节点）
 
 - 查看可以挂载的目录
 
@@ -1408,9 +793,9 @@ $ mkdir -p /data/nfs/local && mount -t nfs 192.168.200.116:/data/nfs/local /data
 $ echo "hello nfs server" > /data/nfs/local/test.txt
 ```
 
-#### 7.1.6 原生方式数据挂载
+#### 4.1.6 原生方式数据挂载
 
-##### 7.1.6.1 一个静态配置测试
+##### 4.1.6.1 一个静态配置测试
 
 静态配置是指直接指定nfs；动态配置是指通过StorageClass自动创建pvc，绑定到pod。
 
@@ -1464,7 +849,7 @@ $ curl <nfs-nginx-pv-pod-ip>:<pod-nginx-port>
 $ kubectl delete -f nfs-test.yaml
 ```
 
-##### 7.1.6.2 原生方式数据挂载的问题
+##### 4.1.6.2 原生方式数据挂载的问题
 
 - 被挂载的nfs目录，要先创建。
 - 删除部署后，并不会自动清理被挂载的目录及其下的文件。
@@ -1472,11 +857,11 @@ $ kubectl delete -f nfs-test.yaml
 
 
 
-### 7.2 安装Kubernetes NFS Subdir External Provisioner
+### 4.2 安装Kubernetes NFS Subdir External Provisioner
 
 https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
 
-#### 7.2.1 获取 NFS Subdir External Provisioner 部署文件（在master节点执行）
+#### 4.2.1 获取 NFS Subdir External Provisioner 部署文件（在master节点执行）
 
 - 下载
 
@@ -1486,7 +871,7 @@ $ tar -zxvf nfs-subdir-external-provisioner-4.0.18.tar.gz
 $ cd nfs-subdir-external-provisioner-nfs-subdir-external-provisioner-4.0.18/
 ```
 
-#### 7.2.2 创建 NameSpace
+#### 4.2.2 创建 NameSpace
 
 **默认的 NameSpace 为 default**，为了便于资源区分管理，可以创建一个新的命名空间。
 
@@ -1502,7 +887,7 @@ $ kubectl create ns nfs-system
 $ sed -i'' "s/namespace:.*/namespace: nfs-system/g" ./deploy/rbac.yaml ./deploy/deployment.yaml
 ```
 
-#### 7.2.3 配置并部署 RBAC authorization
+#### 4.2.3 配置并部署 RBAC authorization
 
 - 创建RBAC资源
 
@@ -1510,7 +895,7 @@ $ sed -i'' "s/namespace:.*/namespace: nfs-system/g" ./deploy/rbac.yaml ./deploy/
 $ kubectl create -f deploy/rbac.yaml
 ```
 
-#### 7.2.4 配置并部署 NFS subdir external provisioner
+#### 4.2.4 配置并部署 NFS subdir external provisioner
 
 请使用 `vi` 编辑器，编辑文件 `deploy/deployment.yaml`，请用实际 NFS 服务端配置修改以下内容：
 
@@ -1581,7 +966,7 @@ NAME                                          READY   STATUS        RESTARTS   A
 pod/nfs-client-provisioner-5cd44d94b5-ftqr7   1/1     Running       0          3m53s
 ```
 
-#### 7.2.5 部署 Storage Class
+#### 4.2.5 部署 Storage Class
 
 **Step 1:** 编辑 NFS subdir external provisioner 定义 Kubernetes Storage Class 的配置文件  `deploy/class.yaml`，重点修改以下内容：
 
@@ -1625,7 +1010,7 @@ nfs-storage   k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Imme
 $ kubectl logs -n nfs-system deploy/nfs-client-provisioner
 ```
 
-### 7.3 部署OpenEBS（推荐）
+### 4.3 部署OpenEBS（推荐）
 
 https://openebs.io/
 
@@ -1690,9 +1075,9 @@ openebs-hostpath (default)   openebs.io/local                              Delet
 | 开发/测试环境         | `openebs-hostpath` |
 | 生产环境 - 高性能需求 | `openebs-device`   |
 
-### 7.3 存储方案对比与选择
+### 4.4 存储方案对比与选择
 
-#### 7.3.1 OpenEBS：云原生存储解决方案
+#### 4.4.1 OpenEBS：云原生存储解决方案
 
 ```mermaid
 graph LR
@@ -1715,7 +1100,7 @@ graph LR
 - **完全开源**：CNCF 沙箱项目
 - **Kubernetes 原生集成**：通过 StorageClass 动态配置存储
 
-#### 7.3.2 NFS：传统网络文件系统
+#### 4.4.2 NFS：传统网络文件系统
 
 ```mermaid
 graph LR
@@ -1745,7 +1130,7 @@ graph LR
 | **快照/克隆**  | 原生支持                  | 需存储设备支持                        |
 | **适用场景**   | 有状态应用、数据库、AI/ML | 共享存储、内容管理                    |
 
-#### 7.33 混合模式
+#### 4.4.3 混合模式
 
 **结论与推荐：**
 
@@ -1768,14 +1153,22 @@ graph LR
 
 > 在 Kubernetes 生态中，OpenEBS 代表了存储的未来方向，而 NFS 则是成熟的传统解决方案。根据实际需求选择或组合两者，可以实现最优的存储架构。
 
-## 8 Harbor镜像私服（在emon主机root用户安装）
+## 5 Harbor镜像私服
 
-### 8.1 安装docker-compose
+[Harbor官网](https://goharbor.io/)
+
+[Harbor Github](https://github.com/goharbor/harbor)
+
+[为 arm 架构构建 Harbor](https://github.com/goharbor/harbor-arm)
+
+### 5.1 在docker上安装
+
+#### 5.1.1 安装docker-compose
 
 1：下载
 
 ```bash
-$ curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+$ curl -L "https://github.com/docker/compose/releases/download/v2.38.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 ```
 
 2：添加可执行权限
@@ -1791,19 +1184,12 @@ $ ln -snf /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```bash
 $ docker-compose --version
 # 命令行输出结果
-docker-compose version 1.29.2, build 5becea4c
+Docker Compose version v2.38.2
 ```
 
-### 8.2 安装Harbor镜像私服
+#### 5.1.2 安装Harbor镜像私服(docker+amd64版）
 
 Harbor镜像私服（在emon主机root用户安装）
-
-0. 切换目录
-
-```bash
-$ cd
-$ mkdir -pv /root/k8s_soft/k8s_v1.20.15 && cd /root/k8s_soft/k8s_v1.20.15
-```
 
 1. 下载地址
 
@@ -1880,7 +1266,7 @@ $ vim /usr/local/Harbor/harbor/harbor.yml
 ```yaml
 # 修改
 # hostname: reg.mydomain.com
-hostname: 192.168.32.116
+hostname: 192.168.200.116
 # 修改
   # port: 80
   port: 5080
@@ -1906,7 +1292,7 @@ data_volume: /usr/local/dockerv/harbor_home
 # 安装时，确保 /usr/bin/docker-compose 存在，否则会报错：? Need to install docker-compose(1.18.0+) by yourself first and run this script again.
 $ /usr/local/Harbor/harbor/install.sh --with-chartmuseum --with-trivy
 # 切换目录
-$  cd /usr/local/Harbor/harbor/
+$ cd /usr/local/Harbor/harbor/
 # 查看服务状态
 $ docker-compose ps
 # 命令行输出结果
@@ -1927,7 +1313,7 @@ trivy-adapter       /home/scanner/entrypoint.sh      Up (healthy)
 
 8. 登录
 
-访问：http://192.168.32.116:5080 （会被跳转到http://192.168.32.116:5443）
+访问：http://192.168.200.116:5080 （会被跳转到http://192.168.200.116:5443）
 
 用户名密码： admin/Harbor12345
 
@@ -1960,7 +1346,7 @@ $ vim /etc/docker/daemon.json
   "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com","https://dockerproxy.com","https://mirror.baidubce.com","https://docker.nju.edu.cn","https://docker.mirrors.sjtug.sjtu.edu.cn","https://docker.mirrors.ustc.edu.cn"],
   "graph": "/usr/local/lib/docker",
   "exec-opts": ["native.cgroupdriver=cgroupfs"],
-  "insecure-registries": ["192.168.32.116:5080"]
+  "insecure-registries": ["192.168.200.116:5080"]
 }
 ```
 
@@ -1990,22 +1376,296 @@ $ systemctl restart docker
 # 下载
 $ docker pull openjdk:8-jre
 # 打标签
-$ docker tag openjdk:8-jre 192.168.32.116:5080/devops-learning/openjdk:8-jre
+$ docker tag openjdk:8-jre 192.168.200.116:5080/devops-learning/openjdk:8-jre
 # 登录
-$ docker login -u emon -p Emon@123 192.168.32.116:5080
+$ docker login -u emon -p Emon@123 192.168.200.116:5080
 # 上传镜像
-$ docker push 192.168.32.116:5080/devops-learning/openjdk:8-jre
+$ docker push 192.168.200.116:5080/devops-learning/openjdk:8-jre
 # 退出登录
-$ docker logout 192.168.32.116:5080
+$ docker logout 192.168.200.116:5080
 
 机器人账户：
 token：  
 XsttKM4zpuFWcchUmEhJErmiRRRfBu0A
 ```
 
-## 9 新令牌与证书
+### 5.2 在containerd上安装
 
-### 9.1 kubeadm如何加入节点（在master节点执行）
+#### 5.2.1 安装nerdctl（隐含nerdctl compose)
+
+<span style="color:red;font-weight:bold;">系统使用的containerd，而不是docker，请安装nerdctl</span>（**containerd 的 Docker CLI 替代工具**）
+
+```bash
+# 下载 ARM64 版 nerdctl（兼容 containerd 1.7.13）
+$ wget https://github.com/containerd/nerdctl/releases/download/v2.1.3/nerdctl-2.1.3-linux-arm64.tar.gz
+$ tar Cxzvf /usr/local/bin nerdctl-2.1.3-linux-arm64.tar.gz
+# 验证安装
+$ nerdctl --version
+nerdctl version 2.1.3
+$ nerdctl compose version
+nerdctl Compose version v2.1.3
+```
+
+#### 5.2.2 安装Harbor镜像私服（containerd+arm64版）
+
+Harbor镜像私服（在emon主机root用户安装）
+
+1. 下载地址
+
+https://github.com/IabSDocker/harbor/releases
+
+```bash
+$ wget https://github.com/IabSDocker/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1_arm64.tgz
+```
+
+2. 创建解压目录
+
+```bash
+# 创建Harbor解压目录
+$ mkdir /usr/local/Harbor
+# 创建Harbor的volume目录
+$ mkdir -p /usr/local/dockerv/harbor_home
+```
+
+3. 解压
+
+```bash
+$ tar -zxvf harbor-offline-installer-v2.13.1_arm64.tgz -C /usr/local/Harbor/
+$ ls /usr/local/Harbor/harbor
+common.sh  harbor.v2.13.1.tar.gz  harbor.yml.tmpl  install.sh  LICENSE  prepare
+```
+
+4. 创建自签名证书【参考实现，建议走正规渠道的CA证书】【缺少证书无法浏览器登录】
+
+- 创建证书存放目录
+
+```bash
+# 切换目录
+$ mkdir /usr/local/Harbor/cert && cd /usr/local/Harbor/cert
+```
+
+- 创建CA根证书
+
+```bash
+# 其中C是Country，ST是State，L是local，O是Origanization，OU是Organization Unit，CN是common name(eg, your name or your server's hostname)
+$ openssl req -newkey rsa:4096 -nodes -sha256 -keyout ca.key -x509 -days 3650 -out ca.crt \
+-subj "/C=CN/ST=ZheJiang/L=HangZhou/O=HangZhou emon Technologies,Inc./OU=IT emon/CN=emon"
+# 查看结果
+$ ls
+ca.crt  ca.key
+```
+
+- 生成一个证书签名，设置访问域名为 emon
+
+```bash
+$ openssl req -newkey rsa:4096 -nodes -sha256 -keyout emon.key -out emon.csr \
+-subj "/C=CN/ST=ZheJiang/L=HangZhou/O=HangZhou emon Technologies,Inc./OU=IT emon/CN=emon"
+# 查看结果
+$ ls
+ca.crt  ca.key  emon.csr  emon.key
+```
+
+- 生成主机的证书
+
+```bash
+$ openssl x509 -req -days 3650 -in emon.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out emon.crt
+# 查看结果
+$ ls
+ca.crt  ca.key  ca.srl  emon.crt  emon.csr  emon.key
+```
+
+5. 编辑配置
+
+```bash
+$ cp /usr/local/Harbor/harbor/harbor.yml.tmpl /usr/local/Harbor/harbor/harbor.yml
+$ vim /usr/local/Harbor/harbor/harbor.yml
+```
+
+```yaml
+# 修改
+# hostname: reg.mydomain.com
+hostname: 192.168.200.116
+# 修改
+  # port: 80
+  port: 5080
+# 修改
+https:
+  # https port for harbor, default is 443
+  port: 5443
+  # The path of cert and key files for nginx
+  # certificate: /your/certificate/path
+  # private_key: /your/private/key/path
+  # 修改：注意，这里不能使用软连接目录 /usr/loca/harbor替换/usr/local/Harbor/harbor-2.13.1
+  # 否则会发生证书找不到错误：FileNotFoundError: [Errno 2] No such file or directory: 
+  certificate: /usr/local/Harbor/cert/emon.crt
+  private_key: /usr/local/Harbor/cert/emon.key
+# 修改
+# data_volume: /data
+data_volume: /usr/local/dockerv/harbor_home
+```
+
+服务访问方式：
+
+| 协议  | 访问地址                       | 说明                                                         |
+| :---- | :----------------------------- | ------------------------------------------------------------ |
+| HTTP  | `http://192.168.200.116:5080`  | 定义镜像仓库 `192.168.200.116:5080` 的 **镜像加速器（Mirror）** |
+| HTTPS | `https://192.168.200.116:5443` | 指定镜像加速器的实际访问地址（需与 Harbor 服务地址匹配）     |
+
+6. 安装
+
+```bash
+# 切换目录
+$ cd /usr/local/Harbor/harbor/
+# 加载 ARM 架构的 Harbor 镜像
+$ nerdctl load -i harbor.v2.13.1.tar.gz
+# 替换docker命令到nerdctl
+$ sed -i.bak s/docker/nerdctl/ prepare 
+# 生成docker-compose.yaml
+$ sh prepare
+# 使用 nerdctl 启动（自动识别 containerd）
+$ nerdctl compose up -d 
+# 查看服务状态
+$ nerdctl compose ps
+# 命令行输出结果
+NAME                 IMAGE                                            COMMAND                   SERVICE        STATUS     PORTS
+harbor-core          docker.io/goharbor/harbor-core:v2.13.1           "/harbor/entrypoint.…"    core           running    
+harbor-db            docker.io/goharbor/harbor-db:v2.13.1             "/docker-entrypoint.…"    postgresql     running    
+redis                docker.io/goharbor/redis-photon:v2.13.1          "redis-server /etc/r…"    redis          running    
+registry             docker.io/goharbor/registry-photon:v2.13.1       "/home/harbor/entryp…"    registry       running    
+registryctl          docker.io/goharbor/harbor-registryctl:v2.13.1    "/home/harbor/start.…"    registryctl    running    
+harbor-jobservice    docker.io/goharbor/harbor-jobservice:v2.13.1     "/harbor/entrypoint.…"    jobservice     running    
+harbor-log           docker.io/goharbor/harbor-log:v2.13.1            "/bin/sh -c /usr/loc…"    log            running    127.0.0.1:1514->10514/tcp
+harbor-portal        docker.io/goharbor/harbor-portal:v2.13.1         "nginx -g daemon off;"    portal         running    
+nginx                docker.io/goharbor/nginx-photon:v2.13.1          "nginx -g daemon off;"    proxy          running    0.0.0.0:5080->8080/tcp, 0.0.0.0:5443->8443/tcp
+# 使用 nerdctl 停止（自动识别 containerd）
+$ nerdctl compose down -v
+```
+
+8. 登录
+
+访问：http://192.168.200.116:5080 （会被跳转到http://192.168.200.116:5443）
+
+用户名密码： admin/Harbor12345
+
+harbor数据库密码： root123
+
+登录后创建了用户：emon/Emon@123
+
+登录后创建了命名空间：devops-learning 并将emon用户用于该命名空间
+
+9. 私服安全控制
+
+- 通过 `config.toml` 配置镜像仓库代理
+
+适用于为特定仓库配置代理或镜像加速：
+
+1. **编辑 containerd 主配置**
+
+```bash
+$ sudo vim /etc/containerd/config.toml
+```
+
+2. **添加镜像仓库代理配置**（示例为 Docker Hub）【待验证】
+
+```toml
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.cn-beijing.aliyuncs.com/kubesphereio/pause:3.9"
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "/opt/cni/bin"
+      conf_dir = "/etc/cni/net.d"
+      max_conf_num = 1
+      conf_template = ""
+    [plugins."io.containerd.grpc.v1.cri".registry]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:14]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] // [!code --]
+          endpoint = ["https://registry-1.docker.io"] // [!code --]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] // [!code ++]
+          endpoint = ["https://registry-1.docker.io"] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.200.116:5080"] // [!code ++]
+          endpoint = ["https://192.168.200.116:5433"] // [!code ++]
+      [plugins."io.containerd.grpc.v1.cri".registry.configs] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".tls] // [!code ++]
+          insecure_skip_verify = true // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".auth] // [!code ++]
+          username = "admin" // [!code ++]
+          password = "Harbor12345" // [!code ++]
+```
+
+3. **重启 containerd**
+
+```bash
+$ sudo systemctl daemon-reload && sudo systemctl restart containerd
+```
+
+10. 推送镜像
+
+登录harbor后，先创建devops-learning项目，并创建emon用户。
+
+```bash
+# 下载
+$ ctr image pull docker.io/library/openjdk:8-jre
+$ https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 ctr image pull docker.io/library/openjdk:8-jre
+$ crictl pull openjdk:8-jre
+$ https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 crictl pull openjdk:8-jre
+# 打标签
+$ ctr image tag docker.io/library/openjdk:8-jre 192.168.200.116:5443/devops-learning/openjdk:8-jre
+# 登录
+$ nerdctl login --insecure-registry -u emon -p Emon@123 192.168.200.116:5443
+# 上传镜像
+$ ctr image push 192.168.200.116:5443/devops-learning/openjdk:8-jre
+# 退出登录
+$ nerdctl logout 192.168.200.116:5080
+
+机器人账户：
+token：  
+XsttKM4zpuFWcchUmEhJErmiRRRfBu0A
+```
+
+### 5.3 在K8S上安装（helm）
+
+- 解决镜像不支持arm64架构的情况
+
+```bash
+# 下载 ARM64 版 nerdctl（兼容 containerd 1.7.13）
+$ wget https://github.com/containerd/nerdctl/releases/download/v2.1.3/nerdctl-2.1.3-linux-arm64.tar.gz
+$ tar Cxzvf /usr/local/bin nerdctl-2.1.3-linux-arm64.tar.gz
+# 下载 ARM64 版 harbor镜像
+$ wget https://github.com/IabSDocker/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1_arm64.tgz
+# 解压并拷贝到集群中其他节点
+$ tar -zxvf harbor-offline-installer-v2.13.1_arm64.tgz
+$ scp harbor/harbor.v2.13.1.tar.gz root@emon2
+# 加载镜像到 k8s.io 命名空间
+$ nerdctl -n k8s.io load -i harbor.v2.13.1.tar.gz
+```
+
+执行以下命令，使用 Helm 3 安装 Harbor。
+
+- 通过heml安装
+
+```bash
+$ helm repo add harbor https://helm.goharbor.io
+$ helm install harbor-release harbor/harbor -n harbor-system --create-namespace --set $ expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false
+```
+
+访问： http://192.168.200.116:30002
+
+用户名密码：admin/Harbor12345
+
+- 卸载
+
+```bash
+$ helm uninstall harbor-release -n harbor-system
+```
+
+## 6 新令牌与证书
+
+### 6.1 kubeadm如何加入节点（在master节点执行）
 
 - 重新生成新的token
 
@@ -2028,7 +1688,6 @@ kubeadm join emon:6443 --token yslydb.mkmtnbjpfkuaa85n --discovery-token-ca-cert
 > ```bash
 > $ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
 > ```
->
 
 
 
@@ -2051,7 +1710,7 @@ $ kubeadm delete [token-value] ...
 
 > 示例：`kubeadm token delete yslydb.mkmtnbjpfkuaa85n nbdvuh.whaq4d2xm5vr6cih`
 
-### 9.2 查看kubeadm搭建集群的证书过期时间（所有节点皆可）
+### 6.2 查看kubeadm搭建集群的证书过期时间（所有节点皆可）
 
 ```bash
 $ cd /etc/kubernetes/pki/ && for i in $(ls *.crt); do echo "===== $i ====="; openssl x509 -in $i -text -noout | grep -A 3 'Validity' ; done
@@ -2068,169 +1727,4 @@ $ kubeadm certs check-expiration
 ```bash
 $ ./kk certs check-expiration -f ksp-k8s-v1306.yaml
 ```
-
-
-
-# 补充 演练与理解
-
-## 1 常规命令部署一个tomcat
-
-```bash
-# 部署一个tomcat
-$ kubectl create deployment tomcat8 --image=tomcat:8.5-jre8-slim
-# 暴露nginx访问，Pod的80映射容器的8080；service会代理Pod的80.
-$ kubectl expose deployment tomcat8 --port=80 --target-port=8080 --type=NodePort
-# 查询NodePort端口
-$ kubectl get svc|grep tomcat8
-tomcat8      NodePort    10.96.82.16   <none>        80:3736/TCP   86s
-# 访问 http://192.168.32.116:3736
-# 查看所有
-$ kubectl get all
-
-# 扩容：扩容了多份，所以无论访问哪个node的指定端口，都可以访问到tomcat6
-$ kubectl scale --replicas=3 deployment tomcat8
-# 删除
-$ kubectl delete deployment.apps/tomcat8 service/tomcat8
-```
-
-- 查看部署一个tomcat对应的yaml信息
-
-```bash
-$ kubectl create deployment tomcat8 --image=tomcat:8.5-jre8-slim --dry-run=client -o yaml > tomcat8-deploy.yml
-```
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  creationTimestamp: null
-  labels:
-    app: tomcat8
-  name: tomcat8
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: tomcat8
-  strategy: {}
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app: tomcat8
-    spec:
-      containers:
-      - image: tomcat:8.5-jre8-slim
-        name: tomcat
-        resources: {}
-status: {}
-```
-
-```bash
-$ kubectl apply -f tomcat8.yml
-```
-
-- 查看暴露nginx访问对应的yaml信息
-
-```bash
-$ kubectl expose deployment tomcat8 --port=80 --target-port=8080 --type=NodePort --dry-run=client -o yaml > tomcat8-svc.yml
-```
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  creationTimestamp: null
-  labels:
-    app: tomcat8
-  name: tomcat8
-spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app: tomcat8
-  type: NodePort
-status:
-  loadBalancer: {}
-```
-
-- 查看暴露pod对应的yaml信息
-
-```bash
-$ kubectl get pods tomcat8-5796df556f-rzdf6 -o yaml > pod.yaml
-```
-
-## 2 通过yaml部署一个tomcat
-
-- 准备一个部署
-
-```bash
-$ vim tomcat8.yml
-```
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: tomcat8
-  name: tomcat8-deploy
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: tomcat8-pod
-  template:
-    metadata:
-      labels:
-        app: tomcat8-pod
-    spec:
-      containers:
-      - image: tomcat:8.5-jre8-slim
-        name: tomcat
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: tomcat8
-  name: tomcat8-service
-spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 8080
-  selector:
-    app: tomcat8-pod
-  type: NodePort
-
----
-#ingress
-#old version: extensions/v1beta1
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: ingress-http
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: tomcat.fsmall.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: tomcat8-service
-            port:
-              number: 80
-```
-
-```bash
-$ kubectl apply -f tomcat8.yaml
-```
-
-
 

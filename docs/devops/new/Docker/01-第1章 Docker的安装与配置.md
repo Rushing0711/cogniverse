@@ -298,6 +298,16 @@ Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon"
 EOF
 ```
 
+> NO_PROXY需要包含集群内部地址（如 Pod CIDR 、 Service CIDR）、私有仓库、内网域名
+>
+> ```
+> $ kubectl -n kube-system describe pod $(
+> kubectl -n kube-system get pods -l component=kube-controller-manager -o jsonpath='{.items[0].metadata.name}'
+> ) | grep -E 'cluster-cidr|service-cluster-ip-range'
+>   --cluster-cidr=10.233.0.0/17
+> --service-cluster-ip-range=10.96.0.0/16
+> ```
+
 - 重启Docker并查看代理配置情况
 
 ```bash

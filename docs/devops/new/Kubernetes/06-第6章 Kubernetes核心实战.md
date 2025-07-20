@@ -13,7 +13,7 @@
 
 ## 1 工作负载 `N`
 
-### 1.1 pod
+### 1.1 Pod
 
 运行中的一组容器，pod是kubernetes中应用的最小单位。
 
@@ -1214,7 +1214,7 @@ sequenceDiagram
 
 > ⚠️ **生产环境警告**：虽然静态供给简单，但长期管理成本高。当有多个 PVC 时，动态方案能减少 90% 的管理工作。
 
-## 集群
+## 4 集群
 
 ### Namespace 命名空间
 
@@ -1327,13 +1327,19 @@ EOF
 
 :::
 
-# 集群中控制节点的污点查询
+## 集群中控制节点的污点查询
 
 ```bash
 $ kubectl describe node emon | grep Taints
 Taints:             node-role.kubernetes.io/master:NoSchedule
 # 若是高版本K8S得到：
 Taints:             node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+## 为节点添加标签
+
+```bash
+$ kubectl label nodes emon node-role.kubernetes.io/worker=ci --overwrite
 ```
 
 

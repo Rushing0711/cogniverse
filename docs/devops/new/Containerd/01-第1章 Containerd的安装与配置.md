@@ -12,6 +12,12 @@
 
 若加速器不好使，请使用代理服务器，前提是能科学上网，这里推荐一个：Aurora 和 [ClashX](https://bigbearvpn.sodtool.com/login)
 
+- <span style="color:red;font-weight:bold;">对crictl命令生效，对ctr不生效</span>
+
+  - `crictl` → 连接 containerd 的 **CRI 插件**（实现 Kubernetes CRI 接口）
+
+  - `ctr` → 直接连接 containerd 的**核心服务**
+
 - 配置代理
 
 ```bash
@@ -23,21 +29,19 @@ $ sudo tee /etc/systemd/system/containerd.service.d/proxy.conf <<-'EOF'
 [Service]
 Environment="HTTP_PROXY=http://192.168.200.1:7890"
 Environment="HTTPS_PROXY=http://192.168.200.1:7890"
-Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon,10.233.64.0/18,10.233.0.0/18"
+Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon,/10.233.0.0/17,10.96.0.0/16"
 EOF
 ```
 
-> NO_PROXY需要包含集群内部地址（如 Pod CIDR 、 Service CIDR）
->
-> 
+> NO_PROXY需要包含集群内部地址（如 Pod CIDR 、 Service CIDR）、私有仓库、内网域名
 >
 > ```
-> $ kubectl -n kube-system describe pod $(
->   kubectl -n kube-system get pods -l component=kube-controller-manager -o jsonpath='{.items[0].metadata.name}'
+>$ kubectl -n kube-system describe pod $(
+> kubectl -n kube-system get pods -l component=kube-controller-manager -o jsonpath='{.items[0].metadata.name}'
 > ) | grep -E 'cluster-cidr|service-cluster-ip-range'
->       --cluster-cidr=10.233.64.0/18
->       --service-cluster-ip-range=10.233.0.0/18
-> ```
+>      --cluster-cidr=10.233.0.0/17
+>    --service-cluster-ip-range=10.96.0.0/16
+>    ```
 
 - 重载并重启服务并查看代理配置情况
 
@@ -47,7 +51,7 @@ $ systemctl show --property=Environment containerd
 ```
 
 ```bash
-Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon,10.233.64.0/18,10.233.0.0/18
+Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon,10.233.0.0/17,10.96.0.0/16
 ```
 
 ### 1.2 通过 `config.toml` 配置镜像仓库代理
@@ -57,7 +61,7 @@ Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.
 1. **编辑 containerd 主配置**
 
 ```bash
-sudo nano /etc/containerd/config.toml
+sudo vim /etc/containerd/config.toml
 ```
 
 2. **添加镜像仓库代理配置**（示例为 Docker Hub）

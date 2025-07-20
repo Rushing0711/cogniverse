@@ -156,9 +156,7 @@ $ helm search repo bitnami
 ```bash
 $ helm repo update              # 确定我们可以拿到最新的charts列表
 $ helm search repo mysql
-$ helm install bitnami/mysql --generate-name \
-	--set global.proxy.http=http://192.168.200.1:7890 \
-  --set global.proxy.https=http://192.168.200.1:7890
+$ helm install bitnami/mysql --generate-name
 ```
 
 :::info
@@ -166,6 +164,14 @@ $ helm install bitnami/mysql --generate-name \
 > Error: INSTALLATION FAILED: failed to do request: Head "https://registry-1.docker.io/v2/bitnamicharts/mysql/manifests/13.0.2": dial tcp 162.125.34.133:443: i/o timeout
 
 安装失败，请使用下面的 azure 仓库
+
+或者，在安装之前，配置代理：
+
+```bash
+export https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 all_proxy=socks5://192.168.200.1:7890 no_proxy="xxx"
+```
+
+- xxx表示忽略代理的地址，比如：`127.0.0.1`
 
 :::
 

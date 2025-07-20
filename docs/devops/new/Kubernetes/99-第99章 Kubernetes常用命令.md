@@ -23,6 +23,7 @@ https://kubernetes.io/zh-cn/docs/reference/kubectl/introduction/
 | serviceaccount        | sa      | true               |
 | clusterrole           |         | true               |
 | clusterrolebinding    |         | true               |
+| daemonset             | ds      | true               |
 
 ## 1.2 版本
 
@@ -123,7 +124,13 @@ ctr 是 containerd 的一个客户端工具。 crictl 是 CRI 兼容的容器运
 | 推送镜像            | docker push       | ctr image push               | 无                   |
 | 在容器内部执行命令  | docker exec       | 无                           | crictl exec          |
 
+## 3 ctr（containerd）、crictl（k8s）和nerdctl（**containerd 的 Docker CLI 替代工具**）
 
+| 工具            | 默认命名空间 | 适用场景                 |
+| :-------------- | :----------- | :----------------------- |
+| `ctr images ls` | `default`    | 管理手动导入的镜像       |
+| `crictl images` | `k8s.io`     | 查看 Kubernetes 集群镜像 |
+| `nerdctl`       | `default`    | 运行非 Kubernetes 容器   |
 
 
 
