@@ -1189,7 +1189,7 @@ Docker Compose version v2.38.2
 
 #### 5.1.2 安装Harbor镜像私服(docker+amd64版）
 
-Harbor镜像私服（在emon主机root用户安装）
+Harbor镜像私服（<span style="color:#9400D3;font-weight:bold;">在emon主机root用户安装</span>）
 
 1. 下载地址
 
@@ -1293,6 +1293,9 @@ data_volume: /usr/local/dockerv/harbor_home
 $ /usr/local/Harbor/harbor/install.sh --with-chartmuseum --with-trivy
 # 切换目录
 $ cd /usr/local/Harbor/harbor/
+```
+
+```bash
 # 查看服务状态
 $ docker-compose ps
 # 命令行输出结果
@@ -1311,11 +1314,27 @@ registryctl         /home/harbor/start.sh            Up (healthy)
 trivy-adapter       /home/scanner/entrypoint.sh      Up (healthy)
 ```
 
+7. 更新harbor.yml配置
+
+```bash
+# 若harbor.yml更新后，如下执行才生效
+# 切换目录
+$ cd /usr/local/Harbor/harbor/
+# 重新生成docker-compose.yaml
+$ sh prepare
+# 移除容器和关联资源；-v 表示删除Compose文件的volumes部分中声明的命名卷和附加到容器的匿名卷，推荐用 -v，除非有特殊匿名卷数据需保留
+$ nerdctl compose down -v
+# 创建并启动容器
+$ nerdctl compose up -d
+```
+
 8. 登录
 
 访问：http://192.168.200.116:5080 （会被跳转到http://192.168.200.116:5443）
 
 用户名密码： admin/Harbor12345
+
+<span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
 
 harbor数据库密码： root123
 
@@ -1408,7 +1427,7 @@ nerdctl Compose version v2.1.3
 
 #### 5.2.2 安装Harbor镜像私服（containerd+arm64版）
 
-Harbor镜像私服（在emon主机root用户安装）
+Harbor镜像私服（<span style="color:#9400D3;font-weight:bold;">在emon主机root用户安装</span>）
 
 1. 下载地址
 
@@ -1435,7 +1454,13 @@ $ ls /usr/local/Harbor/harbor
 common.sh  harbor.v2.13.1.tar.gz  harbor.yml.tmpl  install.sh  LICENSE  prepare
 ```
 
-4. 创建自签名证书【参考实现，建议走正规渠道的CA证书】【缺少证书无法浏览器登录】
+4. 准备配置文件
+
+```bash
+$ cp /usr/local/Harbor/harbor/harbor.yml.tmpl /usr/local/Harbor/harbor/harbor.yml
+```
+
+5. 创建自签名证书【参考实现，建议走正规渠道的CA证书】【缺少证书无法浏览器登录】
 
 - 创建证书存放目录
 
@@ -1474,44 +1499,45 @@ $ ls
 ca.crt  ca.key  ca.srl  emon.crt  emon.csr  emon.key
 ```
 
-5. 编辑配置
+##### 5.2.2.1 仅http模式【内网推荐】
+
+1. 编辑配置，仅http模式
 
 ```bash
-$ cp /usr/local/Harbor/harbor/harbor.yml.tmpl /usr/local/Harbor/harbor/harbor.yml
 $ vim /usr/local/Harbor/harbor/harbor.yml
 ```
 
-```yaml
-# 修改
-# hostname: reg.mydomain.com
-hostname: 192.168.200.116
-# 修改
-  # port: 80
+```yml
+# Configuration file of Harbor
+
+# The IP address or hostname to access admin UI and registry service.
+# DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
+hostname: reg.mydomain.com # [!code --] [!code focus:2]
+hostname: 192.168.200.116 # [!code ++]
+
+# http related config
+http:
+  # port for http, default is 80. If https enabled, this port will redirect to https port
+  port: 80 # [!code --] [!code focus:2]
   port: 5080
-# 修改
-https:
+
+# https related config
+https: # [!code --] [!code focus:1]
   # https port for harbor, default is 443
-  port: 5443
+  port: 443 # [!code --] [!code focus:1]
   # The path of cert and key files for nginx
-  # certificate: /your/certificate/path
-  # private_key: /your/private/key/path
-  # 修改：注意，这里不能使用软连接目录 /usr/loca/harbor替换/usr/local/Harbor/harbor-2.13.1
-  # 否则会发生证书找不到错误：FileNotFoundError: [Errno 2] No such file or directory: 
-  certificate: /usr/local/Harbor/cert/emon.crt
-  private_key: /usr/local/Harbor/cert/emon.key
-# 修改
-# data_volume: /data
-data_volume: /usr/local/dockerv/harbor_home
+  certificate: /your/certificate/path # [!code --] [!code focus:2]
+  private_key: /your/private/key/path # [!code --] 
+  # enable strong ssl ciphers (default: false)
+  # strong_ssl_ciphers: false
+......
+# The default data volume
+data_volume: /data # [!code --] [!code focus:2]
+data_volume: /usr/local/dockerv/harbor_home # [!code ++]
+......
 ```
 
-服务访问方式：
-
-| 协议  | 访问地址                       | 说明                                                         |
-| :---- | :----------------------------- | ------------------------------------------------------------ |
-| HTTP  | `http://192.168.200.116:5080`  | 定义镜像仓库 `192.168.200.116:5080` 的 **镜像加速器（Mirror）** |
-| HTTPS | `https://192.168.200.116:5443` | 指定镜像加速器的实际访问地址（需与 Harbor 服务地址匹配）     |
-
-6. 安装
+2. 安装
 
 ```bash
 # 切换目录
@@ -1522,50 +1548,28 @@ $ nerdctl load -i harbor.v2.13.1.tar.gz
 $ sed -i.bak s/docker/nerdctl/ prepare 
 # 生成docker-compose.yaml
 $ sh prepare
-# 使用 nerdctl 启动（自动识别 containerd）
-$ nerdctl compose up -d 
-# 查看服务状态
-$ nerdctl compose ps
-# 命令行输出结果
-NAME                 IMAGE                                            COMMAND                   SERVICE        STATUS     PORTS
-harbor-core          docker.io/goharbor/harbor-core:v2.13.1           "/harbor/entrypoint.…"    core           running    
-harbor-db            docker.io/goharbor/harbor-db:v2.13.1             "/docker-entrypoint.…"    postgresql     running    
-redis                docker.io/goharbor/redis-photon:v2.13.1          "redis-server /etc/r…"    redis          running    
-registry             docker.io/goharbor/registry-photon:v2.13.1       "/home/harbor/entryp…"    registry       running    
-registryctl          docker.io/goharbor/harbor-registryctl:v2.13.1    "/home/harbor/start.…"    registryctl    running    
-harbor-jobservice    docker.io/goharbor/harbor-jobservice:v2.13.1     "/harbor/entrypoint.…"    jobservice     running    
-harbor-log           docker.io/goharbor/harbor-log:v2.13.1            "/bin/sh -c /usr/loc…"    log            running    127.0.0.1:1514->10514/tcp
-harbor-portal        docker.io/goharbor/harbor-portal:v2.13.1         "nginx -g daemon off;"    portal         running    
-nginx                docker.io/goharbor/nginx-photon:v2.13.1          "nginx -g daemon off;"    proxy          running    0.0.0.0:5080->8080/tcp, 0.0.0.0:5443->8443/tcp
-# 使用 nerdctl 停止（自动识别 containerd）
+# 若不是第一次启动，移除容器和关联资源
+# -v 表示删除Compose文件的volumes部分中声明的命名卷和附加到容器的匿名卷，推荐用 -v，除非有特殊匿名卷数据需保留
 $ nerdctl compose down -v
+# 创建并启动容器
+$ nerdctl compose up -d
 ```
 
-8. 登录
-
-访问：http://192.168.200.116:5080 （会被跳转到http://192.168.200.116:5443）
+访问：http://192.168.200.116:5080
 
 用户名密码： admin/Harbor12345
 
-harbor数据库密码： root123
+<span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
 
-登录后创建了用户：emon/Emon@123
+3. containerd配置
 
-登录后创建了命名空间：devops-learning 并将emon用户用于该命名空间
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
 
-9. 私服安全控制
-
-- 通过 `config.toml` 配置镜像仓库代理
-
-适用于为特定仓库配置代理或镜像加速：
-
-1. **编辑 containerd 主配置**
+- 配置
 
 ```bash
-$ sudo vim /etc/containerd/config.toml
+$ vim /etc/containerd/config.toml
 ```
-
-2. **添加镜像仓库代理配置**（示例为 Docker Hub）【待验证】
 
 ```toml
 [plugins]
@@ -1581,55 +1585,346 @@ $ sudo vim /etc/containerd/config.toml
       max_conf_num = 1
       conf_template = ""
     [plugins."io.containerd.grpc.v1.cri".registry]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:14]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] // [!code --]
-          endpoint = ["https://registry-1.docker.io"] // [!code --]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:2]
       [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code ++]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"] // [!code ++]
-          endpoint = ["https://registry-1.docker.io"] // [!code ++]
-        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.200.116:5080"] // [!code ++]
-          endpoint = ["https://192.168.200.116:5433"] // [!code ++]
-      [plugins."io.containerd.grpc.v1.cri".registry.configs] // [!code ++]
-        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".tls] // [!code ++]
-          insecure_skip_verify = true // [!code ++]
-        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".auth] // [!code ++]
-          username = "admin" // [!code ++]
-          password = "Harbor12345" // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.200.116:5080"] // [!code ++] [!code focus:2]
+          endpoint = ["http://192.168.200.116:5080"] // [!code ++]
 ```
 
-3. **重启 containerd**
+- 重启
 
 ```bash
-$ sudo systemctl daemon-reload && sudo systemctl restart containerd
+$ sudo systemctl restart containerd
 ```
 
-10. 推送镜像
+4. 推送镜像
 
-登录harbor后，先创建devops-learning项目，并创建emon用户。
+- 使用nerdctl
 
 ```bash
 # 下载
-$ ctr image pull docker.io/library/openjdk:8-jre
-$ https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 ctr image pull docker.io/library/openjdk:8-jre
-$ crictl pull openjdk:8-jre
-$ https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 crictl pull openjdk:8-jre
+$ https_proxy=http://192.168.200.1:7890 nerdctl pull openjdk:8-jre
 # 打标签
-$ ctr image tag docker.io/library/openjdk:8-jre 192.168.200.116:5443/devops-learning/openjdk:8-jre
-# 登录
-$ nerdctl login --insecure-registry -u emon -p Emon@123 192.168.200.116:5443
+$ nerdctl tag openjdk:8-jre 192.168.200.116:5080/library/openjdk:8-jre
+# 登录，登录后信息存储在用户目录下的 .docker/config.json
+# --insecure-registry 告诉 nerdctl 允许使用 HTTP 连接（否则默认强制 HTTPS）。
+$ echo "Harbor12345" | nerdctl login --insecure-registry -u admin --password-stdin 192.168.200.116:5080
 # 上传镜像
-$ ctr image push 192.168.200.116:5443/devops-learning/openjdk:8-jre
+$ nerdctl push --insecure-registry 192.168.200.116:5080/library/openjdk:8-jre
 # 退出登录
 $ nerdctl logout 192.168.200.116:5080
-
-机器人账户：
-token：  
-XsttKM4zpuFWcchUmEhJErmiRRRfBu0A
 ```
 
-### 5.3 在K8S上安装（helm）
+- 使用crictl
 
-- 解决镜像不支持arm64架构的情况
+```bash
+# 查看镜像
+$ crictl images | grep openjdk
+# 拉取镜像
+$ crictl pull 192.168.200.116:5080/library/openjdk:8-jre
+# 删除镜像
+$ crictl rmi 192.168.200.116:5080/library/openjdk:8-jre
+```
+
+##### 5.2.2.2 仅https模式【外网推荐】
+
+1. 编辑配置，仅https模式
+
+```bash
+$ vim /usr/local/Harbor/harbor/harbor.yml
+```
+
+```bash
+# Configuration file of Harbor
+
+# The IP address or hostname to access admin UI and registry service.
+# DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
+hostname: reg.mydomain.com # [!code --] [!code focus:2]
+hostname: 192.168.200.116 # [!code ++]
+
+# http related config
+http: # [!code --] [!code focus:1]
+  # port for http, default is 80. If https enabled, this port will redirect to https port
+  port: 80 # [!code --] [!code focus:1]
+
+# https related config
+https:
+  # https port for harbor, default is 443
+  port: 443 # [!code --] [!code focus:2]
+  port: 5443 # [!code ++] [!code focus:1]
+  # The path of cert and key files for nginx
+  certificate: /your/certificate/path # [!code --] [!code focus:2]
+  private_key: /your/private/key/path # [!code --] 
+  # 修改：注意，这里不能使用软连接目录 /usr/loca/harbor替换/usr/local/Harbor/harbor-2.13.1
+  # 否则会发生证书找不到错误：FileNotFoundError: [Errno 2] No such file or directory: 
+  certificate: /usr/local/Harbor/cert/emon.crt # [!code ++] [!code focus:2]
+  private_key: /usr/local/Harbor/cert/emon.key # [!code ++]
+  # enable strong ssl ciphers (default: false)
+  # strong_ssl_ciphers: false
+......
+# The default data volume
+data_volume: /data # [!code --] [!code focus:2]
+data_volume: /usr/local/dockerv/harbor_home # [!code ++]
+......
+```
+
+2. 安装
+
+```bash
+# 切换目录
+$ cd /usr/local/Harbor/harbor/
+# 加载 ARM 架构的 Harbor 镜像
+$ nerdctl load -i harbor.v2.13.1.tar.gz
+# 替换docker命令到nerdctl
+$ sed -i.bak s/docker/nerdctl/ prepare 
+# 生成docker-compose.yaml
+$ sh prepare
+# 若不是第一次启动，移除容器和关联资源
+# -v 表示删除Compose文件的volumes部分中声明的命名卷和附加到容器的匿名卷，推荐用 -v，除非有特殊匿名卷数据需保留
+$ nerdctl compose down -v
+# 创建并启动容器
+$ nerdctl compose up -d
+```
+
+访问：https://192.168.200.116:5443 
+
+用户名密码： admin/Harbor12345
+
+<span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
+
+3. containerd配置
+
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+
+- 配置
+
+```bash
+$ vim /etc/containerd/config.toml
+```
+
+```toml
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.cn-beijing.aliyuncs.com/kubesphereio/pause:3.9"
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "/opt/cni/bin"
+      conf_dir = "/etc/cni/net.d"
+      max_conf_num = 1
+      conf_template = ""
+    [plugins."io.containerd.grpc.v1.cri".registry]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:2]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+      [plugins."io.containerd.grpc.v1.cri".registry.configs] // [!code ++] [!code focus:3]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".tls] // [!code ++]
+          insecure_skip_verify = true // [!code ++]
+        # 若是私有库，必须配置这个
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".auth] // [!code ++] [!code focus:3]
+          username = "admin" // [!code ++]
+          password = "Harbor12345" # [!code ++]          
+```
+
+- 重启
+
+```bash
+$ sudo systemctl restart containerd
+```
+
+4. 推送镜像
+
+- 使用nerdctl
+
+```bash
+# 下载
+$ https_proxy=http://192.168.200.1:7890 nerdctl pull openjdk:8-jre
+# 打标签
+$ nerdctl tag openjdk:8-jre 192.168.200.116:5443/library/openjdk:8-jre
+# 登录，登录后信息存储在用户目录下的 .docker/config.json
+# --insecure-registry 告诉 nerdctl 允许使用 HTTP 连接（否则默认强制 HTTPS）。
+$ echo "Harbor12345" | nerdctl login --insecure-registry -u admin --password-stdin 192.168.200.116:5443
+# 上传镜像
+$ nerdctl push --insecure-registry 192.168.200.116:5443/library/openjdk:8-jre
+# 退出登录
+$ nerdctl logout 192.168.200.116:5443
+```
+
+- 使用crictl
+
+```bash
+# 查看镜像
+$ crictl images | grep openjdk
+# 拉取镜像
+$ crictl pull 192.168.200.116:5443/library/openjdk:8-jre
+# 删除镜像
+$ crictl rmi 192.168.200.116:5443/library/openjdk:8-jre
+```
+
+##### 5.2.2.3 http与https模式都开启【不必要】
+
+1. 编辑配置，开启http和https模式
+
+```bash
+$ vim /usr/local/Harbor/harbor/harbor.yml
+```
+
+```bash
+# Configuration file of Harbor
+
+# The IP address or hostname to access admin UI and registry service.
+# DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
+hostname: reg.mydomain.com # [!code --] [!code focus:2]
+hostname: 192.168.200.116 # [!code ++]
+
+# http related config
+http:
+  # port for http, default is 80. If https enabled, this port will redirect to https port
+  port: 80 # [!code --] [!code focus:2]
+  port: 5080 # [!code ++] 
+
+# https related config
+https:
+  # https port for harbor, default is 443
+  port: 443 # [!code --] [!code focus:2]
+  port: 5443 # [!code ++] [!code focus:1]
+  # The path of cert and key files for nginx
+  certificate: /your/certificate/path # [!code --] [!code focus:2]
+  private_key: /your/private/key/path # [!code --] 
+  # 修改：注意，这里不能使用软连接目录 /usr/loca/harbor替换/usr/local/Harbor/harbor-2.13.1
+  # 否则会发生证书找不到错误：FileNotFoundError: [Errno 2] No such file or directory: 
+  certificate: /usr/local/Harbor/cert/emon.crt # [!code ++] [!code focus:2]
+  private_key: /usr/local/Harbor/cert/emon.key # [!code ++]
+  # enable strong ssl ciphers (default: false)
+  # strong_ssl_ciphers: false
+......
+# The default data volume
+data_volume: /data # [!code --] [!code focus:2]
+data_volume: /usr/local/dockerv/harbor_home # [!code ++]
+......
+```
+
+2. 安装
+
+```bash
+# 切换目录
+$ cd /usr/local/Harbor/harbor/
+# 加载 ARM 架构的 Harbor 镜像
+$ nerdctl load -i harbor.v2.13.1.tar.gz
+# 替换docker命令到nerdctl
+$ sed -i.bak s/docker/nerdctl/ prepare 
+# 生成docker-compose.yaml
+$ sh prepare
+# 若不是第一次启动，移除容器和关联资源
+# -v 表示删除Compose文件的volumes部分中声明的命名卷和附加到容器的匿名卷，推荐用 -v，除非有特殊匿名卷数据需保留
+$ nerdctl compose down -v
+# 创建并启动容器
+$ nerdctl compose up -d
+```
+
+访问：http://192.168.200.116:5080 （会被跳转到http://192.168.200.116:5443）<span style="color:red;font-weight:bold;">注意：无法直接访问5443端口</span>
+
+用户名密码： admin/Harbor12345
+
+<span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
+
+3. containerd配置
+
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+
+- 配置
+
+```bash
+$ vim /etc/containerd/config.toml
+```
+
+```toml
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.cn-beijing.aliyuncs.com/kubesphereio/pause:3.9"
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "/opt/cni/bin"
+      conf_dir = "/etc/cni/net.d"
+      max_conf_num = 1
+      conf_template = ""
+    [plugins."io.containerd.grpc.v1.cri".registry]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:2]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+        # 增加该配置，crictl访问5080会被转发到5443
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.200.116:5080"] // [!code ++] [!code focus:2]
+          endpoint = ["https://192.168.200.116:5443"] // [!code ++]
+      [plugins."io.containerd.grpc.v1.cri".registry.configs] // [!code ++] [!code focus:3]
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".tls] // [!code ++]
+          insecure_skip_verify = true // [!code ++]
+        # 若是私有库，必须配置这个
+        [plugins."io.containerd.grpc.v1.cri".registry.configs."192.168.200.116:5443".auth] // [!code ++] [!code focus:3]
+          username = "admin" // [!code ++]
+          password = "Harbor12345" # [!code ++]          
+```
+
+- 重启
+
+```bash
+$ sudo systemctl restart containerd
+```
+
+4. 推送镜像
+
+- 使用nerdctl
+
+<span style="color:#9400D3;font-weight:bold;">http和https都开启，nerdctl只认5443端口</span>
+
+```bash
+# 下载
+$ https_proxy=http://192.168.200.1:7890 nerdctl pull openjdk:8-jre
+# 打标签
+$ nerdctl tag openjdk:8-jre 192.168.200.116:5443/library/openjdk:8-jre
+# 登录，登录后信息存储在用户目录下的 .docker/config.json
+# --insecure-registry 告诉 nerdctl 允许使用 HTTP 连接（否则默认强制 HTTPS）。
+$ echo "Harbor12345" | nerdctl login --insecure-registry -u admin --password-stdin 192.168.200.116:5443
+# 上传镜像
+$ nerdctl push --insecure-registry 192.168.200.116:5443/library/openjdk:8-jre
+# 退出登录
+$ nerdctl logout 192.168.200.116:5443
+```
+
+- 使用crictl
+
+<span style="color:#9400D3;font-weight:bold;">http和https都开启,crictl在containerd转发5080到5443情况下，可以认得5080和5443两个端口</span>
+
+```bash
+# 查看镜像
+$ crictl images | grep openjdk
+# 拉取镜像
+$ crictl pull 192.168.200.116:5443/library/openjdk:8-jre
+$ crictl pull 192.168.200.116:5080/library/openjdk:8-jre
+# 删除镜像
+$ crictl rmi 192.168.200.116:5443/library/openjdk:8-jre
+$ crictl rmi 192.168.200.116:5080/library/openjdk:8-jre
+```
+
+### 5.3 在K8S上安装
+
+#### 5.3.1 安装nerdctl
+
+[安装nerdctl](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_5-2-1-%E5%AE%89%E8%A3%85nerdctl-%E9%9A%90%E5%90%ABnerdctl-compose)
+
+#### 5.3.2 安装Harbor镜像私服（helm+arm64版）
+
+1. 解决镜像不支持arm64架构的情况
+
+<span style="color:#9400D3;font-weight:bold;">在emon主机root用户安装</span>
 
 ```bash
 # 下载 ARM64 版 nerdctl（兼容 containerd 1.7.13）
@@ -1637,12 +1932,20 @@ $ wget https://github.com/containerd/nerdctl/releases/download/v2.1.3/nerdctl-2.
 $ tar Cxzvf /usr/local/bin nerdctl-2.1.3-linux-arm64.tar.gz
 # 下载 ARM64 版 harbor镜像
 $ wget https://github.com/IabSDocker/harbor/releases/download/v2.13.1/harbor-offline-installer-v2.13.1_arm64.tgz
-# 解压并拷贝到集群中其他节点
-$ tar -zxvf harbor-offline-installer-v2.13.1_arm64.tgz
-$ scp harbor/harbor.v2.13.1.tar.gz root@emon2
+# 查看包内文件
+$ tar -ztvf harbor-offline-installer-v2.13.1_arm64.tgz
 # 加载镜像到 k8s.io 命名空间
-$ nerdctl -n k8s.io load -i harbor.v2.13.1.tar.gz
+$ tar -xOzf harbor-offline-installer-v2.13.1_arm64.tgz harbor/harbor.v2.13.1.tar.gz | nerdctl -n k8s.io load
 ```
+
+> 其他节点，如上处理：
+>
+> ```bash
+> # 拷贝到集群中其他节点
+> $ kubectl get nodes -o name | awk -F'/' '{print $2}' | grep -v '^emon$' | xargs -I {} scp harbor-offline-installer-v2.13.1_arm64.tgz nerdctl-2.1.3-linux-arm64.tar.gz root@{}:/root
+> ```
+
+2. 安装
 
 执行以下命令，使用 Helm 3 安装 Harbor。
 
@@ -1650,17 +1953,94 @@ $ nerdctl -n k8s.io load -i harbor.v2.13.1.tar.gz
 
 ```bash
 $ helm repo add harbor https://helm.goharbor.io
-$ helm install harbor-release harbor/harbor -n harbor-system --create-namespace --set $ expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false
+$ helm install harbor harbor/harbor -n harbor-system --create-namespace --set expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false
+```
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n harbor-system
 ```
 
 访问： http://192.168.200.116:30002
 
 用户名密码：admin/Harbor12345
 
+<span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
+
 - 卸载
 
 ```bash
-$ helm uninstall harbor-release -n harbor-system
+$ helm uninstall harbor -n harbor-system
+# 删除K8S命名空间（间接删除配置等仍被保留的资源）
+$ kubectl delete ns harbor-system
+```
+
+3. containerd配置
+
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+
+- 配置
+
+```bash
+$ vim /etc/containerd/config.toml
+```
+
+```toml
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+    runtime_type = "io.containerd.runc.v2"
+    [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+      SystemdCgroup = true
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.cn-beijing.aliyuncs.com/kubesphereio/pause:3.9"
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "/opt/cni/bin"
+      conf_dir = "/etc/cni/net.d"
+      max_conf_num = 1
+      conf_template = ""
+    [plugins."io.containerd.grpc.v1.cri".registry]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code --] [!code focus:2]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors] // [!code ++]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."192.168.200.116:30002"] // [!code ++] [!code focus:2]
+          endpoint = ["http://192.168.200.116:30002"] // [!code ++]
+```
+
+- 重启
+
+```bash
+$ sudo systemctl restart containerd
+```
+
+4. 推送镜像
+
+- 使用nerdctl
+
+```bash
+# 下载
+$ https_proxy=http://192.168.200.1:7890 nerdctl pull openjdk:8-jre
+# 打标签
+$ nerdctl tag openjdk:8-jre 192.168.200.116:30002/library/openjdk:8-jre
+# 登录，登录后信息存储在用户目录下的 .docker/config.json
+# --insecure-registry 告诉 nerdctl 允许使用 HTTP 连接（否则默认强制 HTTPS）。
+$ echo "Harbor12345" | nerdctl login --insecure-registry -u admin --password-stdin 192.168.200.116:30002
+# 上传镜像
+$ nerdctl push --insecure-registry 192.168.200.116:30002/library/openjdk:8-jre
+# 退出登录
+$ nerdctl logout 192.168.200.116:30002
+```
+
+- 使用crictl
+
+```bash
+# 查看镜像
+$ crictl images | grep openjdk
+# 拉取镜像
+$ crictl pull 192.168.200.116:30002/library/openjdk:8-jre
+# 删除镜像
+$ crictl rmi 192.168.200.116:30002/library/openjdk:8-jre
 ```
 
 ## 6 新令牌与证书
