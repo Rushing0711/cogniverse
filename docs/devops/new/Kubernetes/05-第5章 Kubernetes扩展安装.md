@@ -2043,9 +2043,11 @@ $ crictl pull 192.168.200.116:30002/library/openjdk:8-jre
 $ crictl rmi 192.168.200.116:30002/library/openjdk:8-jre
 ```
 
-## 6 新令牌与证书
 
-### 6.1 kubeadm如何加入节点（在master节点执行）
+
+## 9 新令牌与证书
+
+### 9.1 kubeadm如何加入节点（在master节点执行）
 
 - 重新生成新的token
 
@@ -2090,7 +2092,7 @@ $ kubeadm delete [token-value] ...
 
 > 示例：`kubeadm token delete yslydb.mkmtnbjpfkuaa85n nbdvuh.whaq4d2xm5vr6cih`
 
-### 6.2 查看kubeadm搭建集群的证书过期时间（所有节点皆可）
+### 9.2 查看kubeadm搭建集群的证书过期时间（所有节点皆可）
 
 ```bash
 $ cd /etc/kubernetes/pki/ && for i in $(ls *.crt); do echo "===== $i ====="; openssl x509 -in $i -text -noout | grep -A 3 'Validity' ; done
