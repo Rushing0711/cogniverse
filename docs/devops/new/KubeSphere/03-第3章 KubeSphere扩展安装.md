@@ -1043,7 +1043,102 @@ echo http://$NODE_IP:$NODE_PORT
 http://192.168.200.116:30180
 ```
 
-2. 参照[登录 Jenkins 仪表板](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/07-access-jenkins-console)进行配置。
+2. 参照[登录 Jenkins 仪表板](http://localhost:8751/devops/new/KubeSphere/02-%E7%AC%AC2%E7%AB%A0%20KubeSphere%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8.html#_2-%E7%99%BB%E5%BD%95-jenkins-%E4%BB%AA%E8%A1%A8%E6%9D%BF)进行配置。
+
+3. 使用地址 [http://NodeIP:30180](http://nodeip:30180/) 访问 Jenkins。
+
+安装 DevOps 时，默认情况下也会安装 Jenkins 仪表板。此外，Jenkins 还配置有 KubeSphere LDAP，这意味着您可以直接使用 KubeSphere 账户（例如 `admin/P@88w0rd`）登录 Jenkins。有关配置 Jenkins 的更多信息，请参阅 [Jenkins 系统设置](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/07-jenkins-setting/)。
+
+4. 点击左侧导航栏中的**系统管理**。
+
+5. 向下滚动并点击**系统配置**。
+
+6. 搜寻到 **SonarQube servers**，然后点击 **Add SonarQube**。
+7. 输入 **Name** 和 **Server URL** ([http://NodeIP:NodePort)。](http://nodeip:NodePort)。/) 点击**添加**，选择 **Jenkins**，然后在弹出的对话框中用 SonarQube 管理员令牌创建凭证（如下方第二张截图所示）。创建凭证后，从 **Server authentication token** 旁边的下拉列表中选择该凭证。点击**应用**完成操作。
+
+![image-20250726152249049](images/image-20250726152249049.png)
+
+> | 说明                                                         |
+> | :----------------------------------------------------------- |
+> | 如果点击**添加**按钮无效，可前往**系统管理**下的 **Manage Credentials** 并点击 **Stores scoped to Jenkins** 下的 **Jenkins**，再点击**全局凭据 (unrestricted)**，然后点击左侧导航栏的**添加凭据**，参考下方第二张截图用 SonarQube 管理员令牌添加凭证。添加凭证后，从 **Server authentication token** 旁边的下拉列表中选择该凭证。 |
+
+![image-20250726151905135](images/image-20250726151905135.png)
+
+#### 2.3.5 步骤 5：将 SonarQube 配置添加到 DevOps
+
+1. 执行以下命令编辑配置字典 `devops-config`。
+
+```bash
+$ kubectl -n kubesphere-devops-system edit cm devops-config
+```
+
+2. 在 `devops` 段后添加字段 `sonarQube` 并在其下方指定 `host` 和 `token`。
+
+```js
+data:
+  kubesphere.yaml: |
+    authentication:
+      authenticateRateLimiterMaxTries: 10
+      authenticateRateLimiterDuration: 10m0s
+      loginHistoryRetentionPeriod: 168h
+      maximumClockSkew: 10s
+      jwtSecret: "UDjssmmDgxZtkXVDSeFvBtsZeBSFWhJ6"
+
+    devops:
+      host: http://devops-jenkins.kubesphere-devops-system
+      username: admin
+      maxConnections: 100
+      namespace: kubesphere-devops-system
+      workerNamespace: kubesphere-devops-worker
+
+    sonarQube: // [!code ++][!code focus:3]
+      host: http://192.168.200.116:30180 // [!code ++]
+      token: sqa_fc5ecc5cabda522c7b67b40d05fd6bc894e3584f // [!code ++]
+```
+
+3. 完成操作后保存此文件。
+
+#### 2.3.6 步骤 6：将 sonarqubeURL 添加到 KubeSphere 控制台
+
+您需要指定 **sonarqubeURL**，以便可以直接从 KubeSphere Web 控制台访问 SonarQube。
+
+1. 执行以下命令：
+
+   ```bash
+   $ kubectl edit cm -n kubesphere-system ks-console-config
+   ```
+
+2. 搜寻到 **data:client:enableKubeConfig**，在下方添加 **devops** 字段并指定 **sonarqubeURL**。
+
+   ```yaml
+       client:
+         version:
+           kubesphere: v4.1.3
+           kubernetes: v1.30.6
+         enableKubeConfig: true
+         devops: # 手动添加该字段。 [!code ++][!code focus:2]
+           sonarqubeURL: http://192.168.200.116:30180 # SonarQube IP 地址。[!code ++]
+   ```
+
+3. 保存该文件。
+
+#### 2.3.7 步骤 7：重启服务
+
+执行以下命令重启服务。
+
+```bash
+$ kubectl -n kubesphere-devops-system rollout restart deploy devops-apiserver
+```
+
+```bash
+$ kubectl -n kubesphere-system rollout restart deploy ks-console
+```
+
+
+
+
+
+
 
 
 

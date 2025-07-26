@@ -161,8 +161,9 @@ KubeSphere v4 将原有的监控功能拆解成了 8个新版的监控组件并�
 - WhizardTelemetry系列组件
 - OpenSearch分布式检索与分析引擎组件
 - Metrics Server组件
-- KubeSphere网络组件
-- KubeSphere服务网格组件
+- KubeSphere服务网格（蓝绿发布、链路追踪）
+- KubeSphere网络（类比calico）
+- KubeSphere网关（NodePort、LoadBalancer 与 ClusterIP。）
 - DevOps组件
 - KubeSphere应用管理组件
 - KubeSphere存储组件
@@ -261,6 +262,56 @@ loki:
 
  quay.io 镜像仓库里没有这个镜像 arm 版本的；可以手动编辑下 Deployment devops-agent-argocd-applicationset-controller，更新下 image 为 kubespheredev/argocd-applicationset-arm64:v0.4.1
 
+<span style="color:#9400D3;font-weight:bold;font-size:18px">在DevOps安装时，请检查扩展组件配置里 `jenkins.securityRealm.openIdConnect.kubesphereCoreApi` 和 `jenkins.securityRealm.openIdConnect.jenkinsURL` ，确保已经分别修改为 ks-console 和 devops-jenkins 服务实际可访问的地址。否则可能导致Jenkins在浏览器端无法被访问。</span>
+
+#### 1.9.5 解决Jenkins登录后被认证拦截的问题
+
+​	若在安装DevOps时没留意扩展组件中的配置，导致了Jenkins无法被访问（表现为通过NodePort访问Jenkins时，触发认证问题，被拦截到ks-apiserver），可以如下解决！！！
+
+1. 请检查扩展组件配置里 `jenkins.securityRealm.openIdConnect.kubesphereCoreApi` 和 `jenkins.securityRealm.openIdConnect.jenkinsURL` ，确保已经分别修改为 ks-console 和 devops-jenkins 服务实际可访问的地址，如果不是，请修改并等待组件更新完成。
+
+   ```yaml
+   jenkins:
+     securityRealm:
+       openIdConnect:
+         # The kubesphere-core api used for jenkins OIDC
+         # If you want to access to jenkinsWebUI, the kubesphereCoreApi must be specified and browser-accessible
+         # Modifying this configuration will take effect only during installation
+         # If you wish for changes to take effect after installation, you need to update the jenkins-casc-config ConfigMap, copy the securityRealm configuration from jenkins.yaml to jenkins_user.yaml, save, and wait for approximately 70 seconds for the changes to take effect.
+         kubesphereCoreApi: "http://192.168.200.116:30880"
+         # The jenkins web URL used for OIDC redirect
+         jenkinsURL: "http://192.168.200.116:30180"
+   ```
+
+2. 请检查配置字典 `jenkins-casc-config` 中 `jenkins_user.yaml` 下 `securityRealm.oic` 的所有地址，确保已经改为与 `jenkins.yaml` 下 `securityRealm.oic` 里一样的，都改成 kubesphere-console 实际可访问的地址，如果不一样，请修改并等待 70s 左右使其生效。
+
+   ```yaml
+       securityRealm:
+         oic:
+           clientId: "jenkins"
+           clientSecret: "jenkins"
+           tokenServerUrl: "http://192.168.200.116:30880/oauth/token"
+           authorizationServerUrl: "http://192.168.200.116:30880/oauth/authorize"
+           userInfoServerUrl: "http://192.168.200.116:30880/oauth/userinfo"
+           endSessionEndpoint: "http://192.168.200.116:30880/oauth/logout"
+           logoutFromOpenidProvider: true
+           scopes: openid profile email
+           fullNameFieldName: url
+           userNameField: preferred_username
+   ```
+
+3. 请检查配置字典 `kubesphere-config` 中的 `authentication.issuer.url` ，确保已经修改为 kubesphere-console 实际可访问的地址，如果不是，请修改并重启 Deployment ks-apiserver 使其生效。
+
+   ```yaml
+   authentication:
+     issuer:
+       url: "http://192.168.200.116:30880"
+   ```
+
+   ```shell
+   $ kubectl -n kubesphere-system rollout restart deploy ks-apiserver
+   ```
+
 ## 2 登录 Jenkins 仪表板
 
 安装 DevOps 时，默认情况下也会安装 Jenkins 仪表板。
@@ -305,13 +356,19 @@ data:
 
 3. 使用获取的用户名和密码，登录 Jenkins 仪表板。
 
+- 执行以下命令获取 Jenkins 的地址。
 
+```bash
+export NODE_PORT=$(kubectl get svc --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" devops-jenkins)
+export NODE_IP=$(kubectl get no --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+echo http://$NODE_IP:$NODE_PORT
+```
 
+输出：
 
+http://192.168.200.116:30180
 
-
-
-
+<span style="color:red;font-weight:bold;">访问时，未登录KubeSphere会被拦截并调整到KubeSphere的登录界面，登录后自动进入Jenkins页面</span>
 
 
 

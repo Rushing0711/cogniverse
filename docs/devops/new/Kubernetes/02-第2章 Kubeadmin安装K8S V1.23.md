@@ -8,7 +8,7 @@ Kubeadm是一个K8s部署工具，提供kubeadm init和kubeadm join，用于快�
 
 ## 1 基础环境准备
 
-[基础环境准备](http://localhost:5173/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87.html)
+[基础环境准备](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87.html)
 
 ## 2 安装基础工具（所有节点）
 

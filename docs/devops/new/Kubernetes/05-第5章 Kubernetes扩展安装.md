@@ -1561,7 +1561,7 @@ $ nerdctl compose up -d
 
 <span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
 
-3. containerd配置
+3. containerd配置（所有节点）
 
 <span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
 
@@ -1833,9 +1833,9 @@ $ nerdctl compose up -d
 
 <span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
 
-3. containerd配置
+3. containerd配置（所有节点）
 
-<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>（所有节点）
 
 - 配置
 
@@ -1918,7 +1918,7 @@ $ crictl rmi 192.168.200.116:5080/library/openjdk:8-jre
 
 #### 5.3.1 安装nerdctl
 
-[安装nerdctl](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_5-2-1-%E5%AE%89%E8%A3%85nerdctl-%E9%9A%90%E5%90%ABnerdctl-compose)
+[安装nerdctl](http://localhost:8751/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_5-2-1-%E5%AE%89%E8%A3%85nerdctl-%E9%9A%90%E5%90%ABnerdctl-compose)
 
 #### 5.3.2 安装Harbor镜像私服（helm+arm64版）
 
