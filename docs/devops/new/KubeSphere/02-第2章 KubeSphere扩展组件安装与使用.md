@@ -4,6 +4,8 @@
 
 ##  1 安装并使用扩展组件（快速版）
 
+[KubeSphere V4 扩展组件使用指南](https://ask.kubesphere.com.cn/forum/d/24123-kubesphere-v4-kuo-zhan-zu-jian-shi-yong-zhi-nan)
+
 ### 1.0 安装流程介绍
 
 1. 以具有 **platform-admin** 角色的用户登录 KubeSphere Web 控制台。
@@ -161,12 +163,12 @@ KubeSphere v4 将原有的监控功能拆解成了 8个新版的监控组件并�
 - WhizardTelemetry系列组件
 - OpenSearch分布式检索与分析引擎组件
 - Metrics Server组件
-- KubeSphere服务网格（蓝绿发布、链路追踪）
-- KubeSphere网络（类比calico）
-- KubeSphere网关（NodePort、LoadBalancer 与 ClusterIP。）
+- KubeSphere服务网格（蓝绿发布、链路追踪、自制应用、istio）
+- KubeSphere网络（类比calico，IP池、网络隔离）
+- KubeSphere网关（NodePort、LoadBalancer 与 ClusterIP。项目、企业空间、集群网关）
 - DevOps组件
-- KubeSphere应用管理组件
-- KubeSphere存储组件
+- KubeSphere应用商店管理（应用上架审核，chart 包上传）
+- KubeSphere存储（存储类授权规则，PVC 自动扩容，快照）
 
 ### 1.9 安装问题与解决方案锦集
 

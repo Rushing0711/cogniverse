@@ -138,6 +138,15 @@ EOF
   $ kubectl get pod --show-labels
   ```
 
+  <span style="color:#9400D3;font-weight:bold;">查看容器组内部有多少容器</span>
+
+  ```bash
+  # 方式一
+  $ kubectl get pod <pod-name> -n <namespace> -o jsonpath='{.spec.initContainers[*].name} {.spec.containers[*].name}'
+  # 方式二
+  $ kubectl get pod <pod-name> -n <namespace> -o json | jq -r '[.spec.initContainers[].name, .spec.containers[].name] | join(" ")'
+  ```
+
 - 监控pod
 
 ```bash

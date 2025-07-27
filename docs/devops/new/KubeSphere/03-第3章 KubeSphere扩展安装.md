@@ -1134,13 +1134,35 @@ $ kubectl -n kubesphere-devops-system rollout restart deploy devops-apiserver
 $ kubectl -n kubesphere-system rollout restart deploy ks-console
 ```
 
+### 2.4 为新项目创建 SonarQube Token
 
+创建一个 SonarQube 令牌，以便流水线在运行时可以与 SonarQube 通信。
 
+1. 在 SonarQube 控制台上，点击 **Create new project**。
 
+![image-20250726223432814](images/image-20250726223432814.png)
 
+2. 输入项目密钥，例如 **java-demo**，然后点击 **Set Up**。
 
+![image-20250726223613832](images/image-20250726223613832.png)
 
+3. 输入项目名称，例如 **Analyze "java-demo"**，然后点击 **Generate**。
 
+![image-20250726224132873](images/image-20250726224132873.png)
+
+![image-20250726225126200](images/image-20250726225126200.png)
+
+4. 创建令牌后，点击 **Continue**。
+
+![image-20250726225520823](images/image-20250726225520823.png)
+
+Analyze "java-demo": **sqp_2e1db3bcb24cb8022b079aed60bb48e211a1df01**
+
+5. 选择 **Maven**，复制下图所示红色框中的序列号。如果要在流水线中使用，则需要在[凭证](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/05-devops-settings/01-credential-management/)中添加此序列号。![image-20250726225741811](images/image-20250726225741811.png)
+
+### 2.5 在 KubeSphere 控制台查看结果
+
+[使用 Jenkinsfile 创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/02-create-a-pipeline-using-jenkinsfile/)或[使用图形编辑面板创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/01-create-a-pipeline-using-graphical-editing-panel/)之后，即可查看代码质量分析的结果。
 
 
 
