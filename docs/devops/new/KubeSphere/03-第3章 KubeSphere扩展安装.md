@@ -586,7 +586,7 @@ $ kubectl get pods -n openelb-system -l component=speaker -o name|xargs -I {} ku
 $ curl 192.168.200.91
 ```
 
-### 1.4 在 VIP 模式下使用 OpenELB
+### 1.4 在 VIP 模式下使用 OpenELB【本地推荐】
 
 #### 1.4.0 前置条件
 
@@ -896,8 +896,8 @@ $ kubectl -n kubesphere-controls-system get svc
 - 通过heml安装
 
 ```bash
-$ helm repo add sonarqube https://charts.kubesphere.io/main
-$ helm upgrade --install sonarqube sonarqube/sonarqube \
+$ helm repo add kubesphere https://charts.kubesphere.io/main
+$ helm upgrade --install sonarqube kubesphere/sonarqube \
 -n kubesphere-devops-system --create-namespace --set service.type=NodePort \
 --set image.tag=9.9.0-community \
 --set postgresql.image.tag=11.19.0-debian-11-r32

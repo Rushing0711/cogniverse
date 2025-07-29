@@ -937,7 +937,7 @@ spec:
       serviceAccountName: nfs-client-provisioner
       containers:
         - name: nfs-client-provisioner
-          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2 // [!code focus:1]
+          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
           volumeMounts:
             - name: nfs-client-root
               mountPath: /persistentvolumes

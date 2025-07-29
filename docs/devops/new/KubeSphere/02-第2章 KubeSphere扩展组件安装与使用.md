@@ -201,7 +201,18 @@ $ sysctl vm.max_map_count  # 应显示 262144
 $ kubectl delete pod <opensearch-pod-name>
 ```
 
-#### 1.9.2 安装Grafana Loki for WhizardTelemetry的错误
+#### 1.9.2 安装KubeSphere 服务网格
+
+- 扩展组件配置
+
+```yaml
+backend:
+  ## istio
+  istio:
+    revision: "1-17-8" # [!code ++][!code focus:1]
+```
+
+#### 1.9.3 安装Grafana Loki for WhizardTelemetry的错误
 
 - 问题
 
@@ -228,7 +239,7 @@ spec:
     - --max-mutating-requests-inflight=1000  # 默认值 200 // [!code ++]
 ```
 
-#### 1.9.3 loki安装失败
+#### 1.9.4 loki安装失败
 
 - 问题
 
@@ -260,13 +271,13 @@ loki:
     dnsService: kube-dns // [!code ++]
 ```
 
-#### 1.9.4 devops安装失败
+#### 1.9.5 devops安装失败
 
  quay.io 镜像仓库里没有这个镜像 arm 版本的；可以手动编辑下 Deployment devops-agent-argocd-applicationset-controller，更新下 image 为 kubespheredev/argocd-applicationset-arm64:v0.4.1
 
 <span style="color:#9400D3;font-weight:bold;font-size:18px">在DevOps安装时，请检查扩展组件配置里 `jenkins.securityRealm.openIdConnect.kubesphereCoreApi` 和 `jenkins.securityRealm.openIdConnect.jenkinsURL` ，确保已经分别修改为 ks-console 和 devops-jenkins 服务实际可访问的地址。否则可能导致Jenkins在浏览器端无法被访问。</span>
 
-#### 1.9.5 解决Jenkins登录后被认证拦截的问题
+#### 1.9.6 解决Jenkins登录后被认证拦截的问题
 
 ​	若在安装DevOps时没留意扩展组件中的配置，导致了Jenkins无法被访问（表现为通过NodePort访问Jenkins时，触发认证问题，被拦截到ks-apiserver），可以如下解决！！！
 

@@ -37,15 +37,15 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 
 ### 0.2 服务器规划
 
-| 机器名 | 系统类型 | IP地址          | CPU  | 内存  | 部署内容 |
-| ------ | -------- | --------------- | ---- | ----- | -------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 4核  | >=16G | master   |
-| emon2  | Rocky9.5 | 192.168.200.117 | 4核  | >=16G | worker   |
-| emon3  | Rocky9.5 | 192.168.200.118 | 4核  | >=16G | worker   |
+| 机器名 | 系统类型 | IP地址          | CPU  | 内存  | 部署内容             |
+| ------ | -------- | --------------- | ---- | ----- | -------------------- |
+| emon   | Rocky9.5 | 192.168.200.116 | 4核  | >=16G | control-plane,worker |
+| emon2  | Rocky9.5 | 192.168.200.117 | 4核  | >=16G | control-plane,worker |
+| emon3  | Rocky9.5 | 192.168.200.118 | 4核  | >=16G | control-plane,worker |
 
 ### 0.3 基础环境准备
 
-参考：[基础环境准备](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_1-%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87)
+参考：[基础环境准备](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87.html)
 
 ### 0.4 安装Docker【若用KK安装，请忽略】
 
@@ -55,7 +55,7 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 
 参考：[kubeadm创建K8S集群](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-kubeadm%E5%88%9B%E5%BB%BA%E9%9B%86%E7%BE%A4-%E4%BB%85master%E8%8A%82%E7%82%B9)
 
-### 0.6 **创建数据目录**
+### 0.6 **创建数据目录（所有节点）**
 
 #### 0.6.1 创建 **OpenEBS** 本地数据根目录
 
@@ -77,9 +77,19 @@ $ ln -snf /data/containerd /var/lib/containerd
 
 :::info
 
-**说明：** KubeKey 到 v3.1.1 版为止，一直不支持在部署的时候更改 Containerd 的数据目录，只能用这种目录软链接的方式，变相增加存储空间（**也可以提前手工安装 Containerd**）。
+**说明：** KubeKey 到 v3.1.10 版为止，一直不支持在部署的时候更改 Containerd 的数据目录，只能用这种目录软链接的方式，变相增加存储空间（**也可以提前手工安装 Containerd**）。
 
 :::
+
+### 0.7 别名定义
+
+| 原名       | 别名 |
+| ---------- | ---- |
+| Kubernetes | k8s  |
+| KubeKey    | kk   |
+| KubeSphere | ks   |
+
+
 
 ## 1 部署 Kubernetes 集群
 
@@ -92,8 +102,8 @@ $ ln -snf /data/containerd /var/lib/containerd
 - 下载最新版（v3.1.10）
 
 ```bash
-$ mkdir /k8s_soft/kubekey
-$ cd /k8s_soft/kubekey/
+$ mkdir -pv ~/k8s_soft/kubekey
+$ cd ~/k8s_soft/kubekey/
 
 # 选择中文区下载(访问 GitHub 受限时使用)
 $ export KKZONE=cn
@@ -106,28 +116,28 @@ $ curl -sfL https://get-kk.kubesphere.io | sh -
 $ ./kk version --show-supported-k8s
 ```
 
-> KubeKey 支持的 K8s 版本相对较新。本文选择 v1.30.6，而在生产环境中，建议选择 v1.28.15 或其他次要版本为双数且补丁版本超过 5 的版本，以确保更高的稳定性和兼容性。建议避免选择过老的版本，毕竟目前 v1.31.2 已经发布，可以为集群提供更强的功能和安全性。
+> KubeKey 支持的 K8s 版本相对较新。本文选择 v1.30.13，而在生产环境中，建议选择 v1.28.15 或其他次要版本为双数且补丁版本超过 5 的版本，以确保更高的稳定性和兼容性。建议避免选择过老的版本，毕竟目前 v1.33.1 已经发布，可以为集群提供更强的功能和安全性。
 
 ### 1.2 创建 Kubernetes 集群部署配置
 
 1. 创建集群配置文件
 
-本文选择了 **v1.30.6**。因此，指定配置文件名称为 **ksp-k8s-v1306.yaml**，如果不指定，默认的文件名为 **config-sample.yaml**。
+本文选择了 **v1.30.13**。因此，指定配置文件名称为 **kk-k8s-v13013.yaml**，如果不指定，默认的文件名为 **config-sample.yaml**。
 
 ```bash
-$ ./kk create config -f ksp-k8s-v1306.yaml --with-kubernetes v1.30.6
+$ ./kk create config -f kk-k8s-v13013.yaml --with-kubernetes v1.30.13
 ```
 
 > **注意：**
 >
-> - 安装完成后，请勿删除安装配置文件 **ksp-k8s-v1306.yaml**，后续进行节点扩容、卸载等操作时仍需要使用该文件。如果该文件丢失，您需要重新创建安装配置文件。
+> - 安装完成后，请勿删除安装配置文件 **kk-k8s-v13013.yaml**，后续进行节点扩容、卸载等操作时仍需要使用该文件。如果该文件丢失，您需要重新创建安装配置文件。
 > - 生成的默认配置文件内容较多，请参阅 [KubeKey 配置示例](https://github.com/kubesphere/kubekey/blob/master/docs/config-example.md) 了解完整配置说明。
 
 2. 修改配置文件
 
-请使用 `vi` 编辑器，编辑配置文件 `ksp-k8s-v1306.yaml`，修改 **kind: Cluster** 小节中 hosts 和 roleGroups 等信息，修改说明如下：
+请使用 `vi` 编辑器，编辑配置文件 `kk-k8s-v13013.yaml`，修改 **kind: Cluster** 小节中 hosts 和 roleGroups 等信息，修改说明如下：
 
-- metadata.name：自定义集群名称 **kspxlab**，默认值 **sample**
+- metadata.name：自定义集群名称 **ks-k8s**，默认值 **sample**
 
 - hosts：指定节点的 IP、ssh 用户、ssh 密码；若是arm架构，请指定 arch
 - roleGroups：指定 3 个 etcd、control-plane 节点，并复用为 worker 节点
@@ -147,7 +157,7 @@ $ ./kk create config -f ksp-k8s-v1306.yaml --with-kubernetes v1.30.6
 apiVersion: kubekey.kubesphere.io/v1alpha2
 kind: Cluster
 metadata:
-  name: kspxlab
+  name: ks-k8s
 spec:
   hosts:
   - {name: emon, address: 192.168.200.116, internalAddress: 192.168.200.116, user: root, password: "root123", arch: arm64}
@@ -173,7 +183,7 @@ spec:
     address: ""
     port: 6443
   kubernetes:
-    version: v1.30.6
+    version: v1.30.13
     clusterName: cluster.local
     autoRenewCerts: true
     containerManager: containerd # 部署 kubernetes v1.24+ 版本，建议将 containerManager 设置为 containerd
@@ -181,6 +191,8 @@ spec:
     type: kubekey
   network:
     plugin: calico
+    # kubePodsCIDR: 10.233.64.0/18
+    # kubeServiceCIDR: 10.233.0.0/18
     kubePodsCIDR: 10.233.0.0/17
     kubeServiceCIDR: 10.96.0.0/16
     ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
@@ -190,6 +202,8 @@ spec:
     openebs:
       basePath: /data/openebs/local # 默认没有的新增配置，base path of the local PV 
   registry:
+    # privateRegistry: ""
+    # namespaceOverride: ""
     privateRegistry: "registry.cn-beijing.aliyuncs.com" # 使用 KubeSphere 在阿里云的镜像仓库
     namespaceOverride: "kubesphereio"
     registryMirrors: []
@@ -204,7 +218,7 @@ spec:
 
 ```bash
 $ export KKZONE=cn
-$ ./kk create cluster -f ksp-k8s-v1306.yaml --with-local-storage
+$ ./kk create cluster -f kk-k8s-v13013.yaml --with-local-storage
 ```
 
 > 说明：
@@ -225,34 +239,34 @@ $ ./kk create cluster -f ksp-k8s-v1306.yaml --with-local-storage
                                     __/ |
                                    |___/
 
-10:43:06 CST [GreetingsModule] Greetings
-10:43:07 CST message: [emon3]
+21:45:42 CST [GreetingsModule] Greetings
+21:45:42 CST message: [emon3]
 Greetings, KubeKey!
-10:43:07 CST message: [emon2]
+21:45:42 CST message: [emon]
 Greetings, KubeKey!
-10:43:07 CST message: [emon]
+21:45:43 CST message: [emon2]
 Greetings, KubeKey!
-10:43:07 CST success: [emon3]
-10:43:07 CST success: [emon2]
-10:43:07 CST success: [emon]
-10:43:07 CST [NodePreCheckModule] A pre-check on nodes
-10:43:07 CST success: [emon]
-10:43:07 CST success: [emon2]
-10:43:07 CST success: [emon3]
-10:43:07 CST [ConfirmModule] Display confirmation form
+21:45:43 CST success: [emon3]
+21:45:43 CST success: [emon]
+21:45:43 CST success: [emon2]
+21:45:43 CST [NodePreCheckModule] A pre-check on nodes
+21:45:43 CST success: [emon]
+21:45:43 CST success: [emon3]
+21:45:43 CST success: [emon2]
+21:45:43 CST [ConfirmModule] Display confirmation form
 +-------+------+------+---------+----------+-------+-------+---------+-----------+--------+--------+------------+------------+-------------+------------------+--------------+
 | name  | sudo | curl | openssl | ebtables | socat | ipset | ipvsadm | conntrack | chrony | docker | containerd | nfs client | ceph client | glusterfs client | time         |
 +-------+------+------+---------+----------+-------+-------+---------+-----------+--------+--------+------------+------------+-------------+------------------+--------------+
-| emon  | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 10:43:07 |
-| emon2 | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 10:43:07 |
-| emon3 | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 10:43:07 |
+| emon  | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 21:45:43 |
+| emon2 | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 21:45:43 |
+| emon3 | y    | y    | y       | y        | y     | y     | y       | y         | y      |        | y          |            |             |                  | CST 21:45:43 |
 +-------+------+------+---------+----------+-------+-------+---------+-----------+--------+--------+------------+------------+-------------+------------------+--------------+
 
 This is a simple check of your environment.
 Before installation, ensure that your machines meet all requirements specified at
 https://github.com/kubesphere/kubekey#requirements-and-recommendations
 
-Install k8s with specify version:  v1.30.6
+Install k8s with specify version:  v1.30.13
 
 Continue this installation? [yes/no]: yes
 ```
@@ -267,7 +281,7 @@ Continue this installation? [yes/no]: yes
 部署完成后，如果在终端上显示如下信息，则表明 K8s 集群创建成功。
 
 ```bash
-10:49:12 CST Pipeline[CreateClusterPipeline] execute successfully
+20:38:09 CST Pipeline[CreateClusterPipeline] execute successfully
 Installation is complete.
 
 Please check the result using the command:
@@ -277,7 +291,11 @@ Please check the result using the command:
 
 ### 1.4 虚拟机挂起并恢复后k8s网络问题（所有节点）
 
-[虚拟机挂起并恢复后k8s网络问题（所有节点）](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-4-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8C%82%E8%B5%B7%E5%B9%B6%E6%81%A2%E5%A4%8D%E5%90%8Ek8s%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98-%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9)
+[虚拟机挂起并恢复后k8s网络问题（所有节点](http://localhost:5173/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-4-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8C%82%E8%B5%B7%E5%B9%B6%E6%81%A2%E5%A4%8D%E5%90%8Ek8s%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98-%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9)
+
+### 1.5 配置Containerd代理服务器
+
+[配置Containerd代理服务器](http://localhost:5173/devops/new/Containerd/01-%E7%AC%AC1%E7%AB%A0%20Containerd%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html#_1-%E9%85%8D%E7%BD%AEdocker%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8)
 
 ## 2 验证 K8s 集群状态
 
@@ -292,10 +310,10 @@ $ kubectl get nodes -o wide
 在输出结果中可以看到，当前的 K8s 集群有三个可用节点、节点角色、K8s 版本号、节点的内部 IP、操作系统类型、内核版本、容器运行时及版本号等信息。
 
 ```bash
-NAME    STATUS   ROLES                  AGE   VERSION   INTERNAL-IP       EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
-emon    Ready    control-plane,worker   19m   v1.30.6   192.168.200.116   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
-emon2   Ready    control-plane,worker   18m   v1.30.6   192.168.200.117   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
-emon3   Ready    control-plane,worker   18m   v1.30.6   192.168.200.118   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+NAME    STATUS   ROLES                  AGE   VERSION    INTERNAL-IP       EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
+emon    Ready    control-plane,worker   20m   v1.30.13   192.168.200.116   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+emon2   Ready    control-plane,worker   19m   v1.30.13   192.168.200.117   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+emon3   Ready    control-plane,worker   19m   v1.30.13   192.168.200.118   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
 ```
 
 ### 2.2 查看 Pod 信息
@@ -309,29 +327,29 @@ $ kubectl get pods -A -o wide
 输出结果符合预期，所有 Pod 的状态都是 **Running**。
 
 ```bash
-NAMESPACE     NAME                                           READY   STATUS    RESTARTS        AGE     IP                NODE    NOMINATED NODE   READINESS GATES
-kube-system   calico-kube-controllers-848b87ffbc-dgctg       1/1     Running   6 (130m ago)    10h     10.233.73.3       emon    <none>           <none>
-kube-system   calico-node-d5t6l                              1/1     Running   0               10h     192.168.200.118   emon3   <none>           <none>
-kube-system   calico-node-mxsg8                              1/1     Running   0               10h     192.168.200.117   emon2   <none>           <none>
-kube-system   calico-node-w6tn8                              1/1     Running   0               10h     192.168.200.116   emon    <none>           <none>
-kube-system   coredns-7849b497cd-wtk4b                       1/1     Running   0               83m     10.233.73.4       emon    <none>           <none>
-kube-system   coredns-7849b497cd-zv6cw                       1/1     Running   0               83m     10.233.68.2       emon3   <none>           <none>
-kube-system   kube-apiserver-emon                            1/1     Running   6 (130m ago)    10h     192.168.200.116   emon    <none>           <none>
-kube-system   kube-apiserver-emon2                           1/1     Running   7 (127m ago)    10h     192.168.200.117   emon2   <none>           <none>
-kube-system   kube-apiserver-emon3                           1/1     Running   7 (130m ago)    10h     192.168.200.118   emon3   <none>           <none>
-kube-system   kube-controller-manager-emon                   1/1     Running   2 (4h1m ago)    10h     192.168.200.116   emon    <none>           <none>
-kube-system   kube-controller-manager-emon2                  1/1     Running   4 (128m ago)    10h     192.168.200.117   emon2   <none>           <none>
-kube-system   kube-controller-manager-emon3                  1/1     Running   3 (3h44m ago)   10h     192.168.200.118   emon3   <none>           <none>
-kube-system   kube-proxy-fz9ln                               1/1     Running   0               10h     192.168.200.118   emon3   <none>           <none>
-kube-system   kube-proxy-p4sx7                               1/1     Running   0               10h     192.168.200.117   emon2   <none>           <none>
-kube-system   kube-proxy-p6b6c                               1/1     Running   0               10h     192.168.200.116   emon    <none>           <none>
-kube-system   kube-scheduler-emon                            1/1     Running   3 (4h1m ago)    10h     192.168.200.116   emon    <none>           <none>
-kube-system   kube-scheduler-emon2                           1/1     Running   3 (4h2m ago)    10h     192.168.200.117   emon2   <none>           <none>
-kube-system   kube-scheduler-emon3                           1/1     Running   2 (3h44m ago)   10h     192.168.200.118   emon3   <none>           <none>
-kube-system   nodelocaldns-8th4p                             1/1     Running   0               10h     192.168.200.116   emon    <none>           <none>
-kube-system   nodelocaldns-httvk                             1/1     Running   0               10h     192.168.200.118   emon3   <none>           <none>
-kube-system   nodelocaldns-tf6r4                             1/1     Running   0               10h     192.168.200.117   emon2   <none>           <none>
-kube-system   openebs-localpv-provisioner-677c4fdd9b-4rbc2   1/1     Running   0               83m     10.233.82.3       emon2   <none>           <none>
+NAMESPACE     NAME                                           READY   STATUS    RESTARTS   AGE   IP                NODE    NOMINATED NODE   READINESS GATES
+kube-system   calico-kube-controllers-848b87ffbc-2vhlz       1/1     Running   0          19m   10.233.76.1       emon2   <none>           <none>
+kube-system   calico-node-hkdfz                              1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   calico-node-v68jh                              1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   calico-node-zjrxv                              1/1     Running   0          19m   192.168.200.116   emon    <none>           <none>
+kube-system   coredns-5cccf8599-jjftb                        1/1     Running   0          19m   10.233.103.1      emon3   <none>           <none>
+kube-system   coredns-5cccf8599-xwftw                        1/1     Running   0          19m   10.233.103.2      emon3   <none>           <none>
+kube-system   kube-apiserver-emon                            1/1     Running   0          20m   192.168.200.116   emon    <none>           <none>
+kube-system   kube-apiserver-emon2                           1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   kube-apiserver-emon3                           1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   kube-controller-manager-emon                   1/1     Running   0          20m   192.168.200.116   emon    <none>           <none>
+kube-system   kube-controller-manager-emon2                  1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   kube-controller-manager-emon3                  1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   kube-proxy-g6d8c                               1/1     Running   0          19m   192.168.200.116   emon    <none>           <none>
+kube-system   kube-proxy-pq8qc                               1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   kube-proxy-w764t                               1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   kube-scheduler-emon                            1/1     Running   0          20m   192.168.200.116   emon    <none>           <none>
+kube-system   kube-scheduler-emon2                           1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   kube-scheduler-emon3                           1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   nodelocaldns-cbgkm                             1/1     Running   0          19m   192.168.200.116   emon    <none>           <none>
+kube-system   nodelocaldns-gc9d6                             1/1     Running   0          19m   192.168.200.118   emon3   <none>           <none>
+kube-system   nodelocaldns-hz52p                             1/1     Running   0          19m   192.168.200.117   emon2   <none>           <none>
+kube-system   openebs-localpv-provisioner-677c4fdd9b-z7br2   1/1     Running   0          19m   10.233.9.1        emon    <none>           <none>
 ```
 
 ### 2.3 查看 Image 列表
@@ -350,11 +368,11 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/cni                       v3.27.4 
 registry.cn-beijing.aliyuncs.com/kubesphereio/coredns                   1.9.3               b19406328e70d       13.4MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/haproxy                   2.9.6-alpine        f6930329d1bbb       12.2MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/k8s-dns-node-cache        1.22.20             c98d4299ba7a2       27.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-apiserver            v1.30.6             6c71f76b69610       29.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controller-manager   v1.30.6             b572f51d3f4cc       28.3MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-apiserver            v1.30.13            07fa38411d5de       29.9MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controller-manager   v1.30.13            231a42659f418       28.4MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controllers          v3.27.4             624858d5c19fe       29.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-proxy                v1.30.6             95ea5eecb1c87       25.7MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-scheduler            v1.30.6             41769a7fc0b67       17.6MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-proxy                v1.30.13            031981b4b997a       25.8MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-scheduler            v1.30.13            f9ff66a6b7c52       17.8MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/node                      v3.27.4             c3c4dda1645a0       115MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.9                 829e9de338bd5       268kB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pod2daemon-flexvol        v3.27.4             1088adbc5e875       5.87MB
@@ -365,9 +383,9 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/provisioner-localpv       3.3.0   
 
 ## 3 安装 NFS 存储
 
-[部署NFS](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-1-%E9%83%A8%E7%BD%B2nfs)
+[部署NFS](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_4-1-%E9%83%A8%E7%BD%B2nfs)
 
-[安装Kubernetes NFS Subdir External Provisioner](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-2-%E5%AE%89%E8%A3%85kubernetes-nfs-subdir-external-provisioner)
+[安装Kubernetes NFS Subdir External Provisioner](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_4-2-%E5%AE%89%E8%A3%85kubernetes-nfs-subdir-external-provisioner)
 
 ## 4 部署 KubeSphere
 
@@ -375,16 +393,21 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/provisioner-localpv       3.3.0   
 
 ### 4.1 安装核心组件 KubeSphere Core
 
-执行以下命令通过 `helm` 安装 KubeSphere 的核心组件 KubeSphere Core。
+在**集群节点**执行以下命令通过 `helm` 安装 KubeSphere 的核心组件 KubeSphere Core。
 
 KubeSphere Core (ks-core) 是 KubeSphere 的核心组件，为扩展组件提供基础的运行环境。KubeSphere Core 安装完成后，即可访问 KubeSphere Web 控制台。
 
 > **说明：** KubeKey 部署 Kubernetes 集群时会自动安装 Helm，无需手动安装。
+>
+> ```bash
+> $ helm version
+> version.BuildInfo{Version:"v3.14.3", GitCommit:"f03cc04caaa8f6d7c3e67cf918929150cf6f3f12", GitTreeState:"clean", GoVersion:"go1.21.7"}
+> ```
 
 ```bash
 # 如果无法访问 charts.kubesphere.io, 可将 charts.kubesphere.io 替换为 charts.kubesphere.com.cn
 $ helm upgrade --install -n kubesphere-system --create-namespace ks-core https://charts.kubesphere.com.cn/main/ks-core-1.1.4.tgz --debug --wait \
---set multicluster.hostClusterName=kspxlab-main
+--set multicluster.hostClusterName=ks-k8s-main
 ```
 
 > 说明：
@@ -489,7 +512,7 @@ http://192.168.200.116:30880
 
 ![image-20250713233811153](images/image-20250713233811153.png)
 
-> 注意： 集群名称显示符合自定义的 **kspxlab-main**, 默认名称为 host。
+> 注意： 集群名称显示符合自定义的 **ks-k8s-main**, 默认名称为 host。
 
 点击「opsxlab-main 」主集群，进入集群管理页面。新版本的集群管理菜单更加简洁，默认只有基本的 K8s 管理功能。
 
