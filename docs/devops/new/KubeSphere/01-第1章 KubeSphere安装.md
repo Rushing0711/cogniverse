@@ -381,17 +381,11 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/provisioner-localpv       3.3.0   
 
 至此，我们已经完成了在三台服务器部署 Control 和 Worker 节点复用的高可用 Kubernetes 集群。
 
-## 3 安装 NFS 存储
-
-[部署NFS](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_4-1-%E9%83%A8%E7%BD%B2nfs)
-
-[安装Kubernetes NFS Subdir External Provisioner](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E5%AE%89%E8%A3%85.html#_4-2-%E5%AE%89%E8%A3%85kubernetes-nfs-subdir-external-provisioner)
-
-## 4 部署 KubeSphere
+## 3 部署 KubeSphere
 
 接下来我们部署最新的 KubeSphere 4.1.3，实现 K8s 集群的可视化管理。
 
-### 4.1 安装核心组件 KubeSphere Core
+### 3.1 安装核心组件 KubeSphere Core
 
 在**集群节点**执行以下命令通过 `helm` 安装 KubeSphere 的核心组件 KubeSphere Core。
 
@@ -458,7 +452,7 @@ For additional information and details, please visit https://kubesphere.io.
 
 从成功信息中的 **Console**、**Account** 和 **Password** 参数分别获取 KubeSphere Web 控制台的 IP 地址、管理员用户名和管理员密码，并使用网页浏览器登录 KubeSphere Web 控制台
 
-### 4.2 命令行验证 KubeSphere Core 状态
+### 3.2 命令行验证 KubeSphere Core 状态
 
 1. 查看 Pod 列表
 
@@ -488,9 +482,9 @@ http://192.168.200.116:30880
 | ------ | -------- | -------- |
 | admin  | P@88w0rd | P@88word |
 
-## 5 KubeSphere Core 功能概览
+## 4 KubeSphere Core 功能概览
 
-### 5.1 工作台
+### 4.1 工作台
 
 我们打开浏览器访问 **Control-1** 节点的 IP 地址和端口 **30880**，可以打开熟悉的 KubeSphere 管理控制台的登录页面。
 
@@ -506,41 +500,41 @@ http://192.168.200.116:30880
 
 ![image-20250713225419258](images/image-20250713225419258.png)
 
-### 5.2 集群管理
+### 4.2 集群管理
 
 在「工作台」页面，点击「集群管理」，进入集群管理页面，页面风格更方便多集群管理。
 
-![image-20250713233811153](images/image-20250713233811153.png)
+![image-20250730081519401](images/image-20250730081519401.png)
 
 > 注意： 集群名称显示符合自定义的 **ks-k8s-main**, 默认名称为 host。
 
-点击「opsxlab-main 」主集群，进入集群管理页面。新版本的集群管理菜单更加简洁，默认只有基本的 K8s 管理功能。
+点击「ks-k8s-main 」主集群，进入集群管理页面。新版本的集群管理菜单更加简洁，默认只有基本的 K8s 管理功能。
 
 - 集群概览
 
-![image-20250713234108566](images/image-20250713234108566.png)
+![image-20250730081629933](images/image-20250730081629933.png)
 
 - 集群节点
 
-![image-20250713234233108](images/image-20250713234233108.png)
+![image-20250730081717873](images/image-20250730081717873.png)
 
 - 存储类
 
-![image-20250713234327943](images/image-20250713234327943.png)
+![image-20250730081746065](images/image-20250730081746065.png)
 
-> **注意：** 可以正常显示 K8s 集群已经配置的nfs-client 和 local两个存储类。
+> **注意：** 可以正常显示 K8s 集群已经配置的nfs-storage 和 local两个存储类。
 
 至此，我们完成了 KubeSphere Core 的安装部署。
 
-## 6 通过域名访问 KubeSphere 控制台
+## 5 通过域名访问 KubeSphere 控制台
 
-### 6.1 前提条件
+### 5.1 前提条件
 
 - 已安装 Kubernetes 集群。
 - [已安装 Helm](https://helm.sh/zh/docs/intro/install/)（用于安装 cert-manager 和 ingress-nginx）。
 - 已安装 KubeSphere 或准备安装 KubeSphere。
 
-### 6.2 步骤 1：安装 NGINX Ingress Controller
+### 5.2 步骤 1：安装 NGINX Ingress Controller
 
 如果您尚未安装 [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)，请按照以下步骤安装。
 
@@ -564,7 +558,7 @@ $ kubectl -n ingress-nginx get svc ingress-nginx-controller
 $ kubectl get ingressclass
 ```
 
-### 6.3 步骤 2：安装 cert-manager
+### 5.3 步骤 2：安装 cert-manager
 
 [cert-manager](https://cert-manager.io/docs/) 是一个 Kubernetes 原生的证书管理控制器，可以帮助您自动化 TLS 证书的管理和签发。
 
@@ -586,7 +580,7 @@ $ helm install cert-manager jetstack/cert-manager \
 $ kubectl get pods -n cert-manager
 ```
 
-### 6.4 步骤 3：为 KubeSphere 配置 TLS
+### 5.4 步骤 3：为 KubeSphere 配置 TLS
 
 ##### 方法 1：安装 KubeSphere 时，配置 TLS
 
@@ -692,7 +686,7 @@ $ kubectl describe certificate kubesphere-tls-certs -n kubesphere-system
 $ kubectl get challenges,orders,certificaterequests -n kubesphere-system
 ```
 
-### 6.5 步骤 4：验证 TLS 配置
+### 5.5 步骤 4：验证 TLS 配置
 
 - 检查证书是否成功签发。
 
@@ -733,7 +727,7 @@ $ curl --resolve k8s.flyin.com:443:$INGRESS_IP https://k8s.flyin.com -k
 Redirecting to <a href="/login">/login</a>.
 ```
 
-### 6.6 步骤 5：访问 KubeSphere Web 控制台
+### 5.6 步骤 5：访问 KubeSphere Web 控制台
 
 在使用自定义 DNS 的情况下，如果要在其他机器使用域名访问 KubeSphere Web 控制台，还需要执行以下步骤。
 
@@ -783,16 +777,16 @@ vim /etc/hosts
 
 
 
-## 7 KubeSphere核心概念关系梳理
+## 6 KubeSphere核心概念关系梳理
 
-### 7.1 资源种类
+### 6.1 资源种类
 
 - 平台
 - 企业空间
 - 集群
 - 项目
 
-### 7.2 直观层级关系
+### 6.2 直观层级关系
 
 ```bash
 KubeSphere 平台 (Platform)
@@ -811,7 +805,7 @@ KubeSphere 平台 (Platform)
 └── 其他集群...
 ```
 
-### 7.3 示例场景
+### 6.3 示例场景
 
 ```bash
 平台：公司云平台
@@ -838,9 +832,9 @@ KubeSphere 平台 (Platform)
 
 :::
 
-### 7.4 各种角色
+### 6.4 各种角色
 
-#### 7.4.1 平台角色
+#### 6.4.1 平台角色
 
 KubeSphere 平台提供以下预置平台角色，您也可以创建角色以自定义角色权限。
 
@@ -850,7 +844,7 @@ KubeSphere 平台提供以下预置平台角色，您也可以创建角色以自
 | platform-regular          | 平台普通用户，在平台级别只有应用查看权限。该角色一般授予不需要其他平台权限的企业空间成员。 |
 | platform-self-provisioner | 创建企业空间并成为所创建的企业空间的管理员。                 |
 
-#### 7.4.2 企业空间角色
+#### 6.4.2 企业空间角色
 
 KubeSphere 平台提供以下预置企业空间角色：
 
@@ -861,7 +855,7 @@ KubeSphere 平台提供以下预置企业空间角色：
 | workspace-viewer           | 企业空间观察员，可以查看企业空间内的所有资源。               |
 | workspace-regular          | 企业空间普通用户，在企业空间内只具有企业空间设置查看权限。该角色一般授予不需要其他企业空间权限的项目成员。 |
 
-#### 7.4.3 集群角色
+#### 6.4.3 集群角色
 
 KubeSphere 平台提供以下预置集群角色：
 
@@ -870,7 +864,7 @@ KubeSphere 平台提供以下预置集群角色：
 | cluster-admin  | 集群管理员，在集群内具有除创建和删除集群以外的所有权限。 |
 | cluster-viewer | 集群观察员，在集群内具有所有资源的查看权限。             |
 
-#### 7.4.4 项目角色
+#### 6.4.4 项目角色
 
 KubeSphere 提供以下预置项目角色：
 
@@ -880,17 +874,17 @@ KubeSphere 提供以下预置项目角色：
 | operator | 项目操作员，在项目中具有除项目设置管理、角色管理、成员管理以外的权限。 |
 | viewer   | 项目观察员，在项目中具有资源查看权限。                       |
 
-## 9  如何控制用户权限？【快速了解】
+## 7  如何控制用户权限？【快速了解】
 
 <span style="color:red;font-weight:bold;">目标：快速了解如何创建用户，并使用企业空间、项目和角色控制用户的访问权限。</span>
 
 作为多租户系统，KubeSphere 支持在平台、集群、企业空间和项目级别基于角色对用户的权限进行控制，实现逻辑层面的资源隔离。
 
-### 9.1 前提条件
+### 7.1 前提条件
 
 您需要准备一个 Kubernetes 集群，并已安装 KubeSphere。
 
-### 9.2 创建用户
+### 7.2 创建用户
 
 1. 使用默认用户 **admin** 和密码 **P@88w0rd** 登录 KubeSphere Web 控制台。
 
@@ -910,7 +904,7 @@ KubeSphere 提供以下预置项目角色：
 
 6. 点击**确定**。用户创建后将显示在用户列表中。
 
-### 9.3 创建企业空间
+### 7.3 创建企业空间
 
 1. 登录 KubeSphere Web 控制台。
 
@@ -926,7 +920,7 @@ KubeSphere 提供以下预置项目角色：
 
 4. 点击**确定**。企业空间创建后将显示在企业空间列表中。
 
-### 9.4 创建企业空间角色
+### 7.4 创建企业空间角色
 
 1. 在企业空间列表页面，点击企业空间的名称 **demo-workspace** 进入该企业空间。
 
@@ -955,14 +949,14 @@ KubeSphere 提供以下预置项目角色：
 
 6. 点击**确定**。新创建的角色将显示在企业空间角色列表中。
 
-### 9.5 邀请用户到企业空间
+### 7.5 邀请用户到企业空间
 
 1. 在左侧导航栏，选择**企业空间设置** > **企业空间成员**。
 2. 在企业空间成员列表页面，点击**邀请**。
 3. 在**邀请成员**对话框，点击用户（**demo-user**）右侧的<img src="./images/add-dark.svg" alt="add" style="width:25px;height:25px;display:inline" />并为用户分配在当前企业空间中的角色（**demo-workspace-role**）。
 4. 点击**确定**。用户被邀请后将显示在企业空间成员列表中。
 
-### 9.6 创建项目
+### 7.6 创建项目
 
 1. 在左侧导航栏，选择**项目**。
 
@@ -974,7 +968,7 @@ KubeSphere 提供以下预置项目角色：
 
 4. 点击**确定**。项目创建后将显示在项目列表中。
 
-### 9.7 创建项目角色
+### 7.7 创建项目角色
 
 1. 在**项目**页签，点击项目的名称 **demo-project** 进入该项目。
 
@@ -998,153 +992,26 @@ KubeSphere 提供以下预置项目角色：
 
 6. 点击**确定**。新创建的角色将显示在项目角色列表中。
 
-### 9.8 邀请用户到项目
+### 7.8 邀请用户到项目
 
 1. 在左侧导航栏，选择**项目设置** > **项目成员**。
 2. 在项目成员列表页面，点击**邀请**。
 3. 在**邀请成员**对话框，点击用户（**demo-user**）右侧的<img src="./images/add-dark.svg" alt="add" style="width:25px;height:25px;display:inline" />并为用户分配在当前项目中的（**demo-project-role**）。
 4. 点击**确定**。用户被邀请后将显示在项目成员列表中。
 
-### 9.9 登录
+### 7.9 登录
 
 首次登录后修改密码
 
 http://192.168.200.116:30880
 
-| 用户名    | 原密码   | 新密码   |
-| --------- | -------- | -------- |
-| demo-user | P@88w0rd | P@88word |
-
-## 10 创建并部署 WordPress
-
-本节以安装 WordPress 为例，演示如何在 KubeSphere Web 控制台部署应用程序，并在集群外进行访问。
-
-### 10.1 WordPress 简介
-
-WordPress 是一款基于 PHP 的免费、开源内容管理系统，您可以使用 WordPress 搭建自己的网站。完整的 WordPress 应用程序包括以下 Kubernetes 对象，由 MySQL 作为后端数据库。
-
-![WordPress](images/WordPress.png)
-
-### 10.2 前提条件
-
-- 准备一个项目（例如 **demo-project**）和一个已邀请到该项目的用户（例如 **project-regular**）。该用户在项目中应具有 **operator** 角色。有关更多信息，请参阅[控制用户权限](http://localhost:8751/devops/new/KubeSphere/01-%E7%AC%AC1%E7%AB%A0%20KubeSphere%E5%AE%89%E8%A3%85.html#_9-%E5%A6%82%E4%BD%95%E6%8E%A7%E5%88%B6%E7%94%A8%E6%88%B7%E6%9D%83%E9%99%90-%E3%80%90%E5%BF%AB%E9%80%9F%E4%BA%86%E8%A7%A3%E3%80%91)。
-- KubeSphere 平台需要安装并启用 **KubeSphere 服务网格**扩展组件。
-
-### 10.3 操作步骤
-
-#### 1. 创建保密字典
-
-创建两个保密字典，分别用于设置 MySQL 和 WordPress 的 root 密码。
-
-1. 使用 **project-regular** 用户登录 KubeSphere Web 控制台，点击**企业空间管理**并进入项目所在的企业空间，在项目列表中点击 **demo-project**。
-2. 在左侧导航栏，选择**配置** > **保密字典**，在页面右侧点击**创建**。
-3. 在**基本信息**页签，输入保密字典的基本信息（例如，将**名称**设置为 **mysql-secret**），点击**下一步**。
-4. 在**数据配置**页签，点击**添加数据**添加键值对。
-5. 将**键**和**值**分别设置为 **MYSQL_ROOT_PASSWORD** 和 **123456**，在页面右下角点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />保存设置。
-6. 点击**创建**以创建保密字典，用于为 MySQL 提供 root 密码。
-7. 重复以上步骤创建一个名为 **wordpress-secret** 的保密字典，将**键**和**值**分别设置为 **WORDPRESS_DB_PASSWORD** 和 **123456**，用于为 WordPress 提供 root 密码。
-
-#### 2. 创建持久卷声明
-
-创建持久卷声明用于存储 WordPress 应用数据。
-
-1. 在左侧导航栏，选择**存储** > **持久卷声明**，在页面右侧点击**创建**。
-2. 在**基本信息**页签，输入持久卷声明的基本信息（例如，将**名称**设置为 **wordpress-pvc**），点击**下一步**。
-3. 在**存储设置**页签，点击**下一步**。
-4. 在**高级设置**页签，点击**创建**即可。
-
-#### 3 创建 MySQL 应用
-
-创建 MySQL 应用为 WordPress 提供数据库服务。
-
-1. 在左侧导航栏，选择**服务网格** > **自制应用**，在页面右侧点击**创建**。
-
-2. 在**基本信息**页面，输入应用基本信息（例如，将**名称**设置为 **wordpress**），点击**下一步**。
-
-3. 在**服务设置**页面，点击**创建服务**为自制应用创建一个服务。
-
-4. 在**创建服务**对话框，点击**有状态服务**。
-
-5. 在弹出的**创建有状态服务**对话框，输入有状态服务的名称（例如 **mysql**）并点击**下一步**。
-
-6. 在**容器组设置**页签，点击**添加容器**。
-
-7. 在搜索框中输入 **mysql:8.4**，按下回车键，向下滚动鼠标，点击**使用默认镜像端口**。
-
-   :::danger
-
-   此时配置还未完成，请不要在页面右下角点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />。
-
-   :::
-
-8. 在**容器组设置**页签的**高级设置**区域，将内存上限设置为 1000 Mi 或以上，否则 MySQL 可能因内存不足而无法启动。
-
-| CPU预留        | CPU限制        | 内存预留     | 内存上限   |
-   | :------------- | :------------- | :----------- | :--------- |
-   | 无预留（Core） | 无上限（Core） | 无预留（Mi） | 1000（Mi） |
-
-9. 在**容器组设置**页签的**端口设置**区域，设置如下：
-
-| 协议 | 名称     | 容器端口 | 服务端口 |
-   | :--- | :------- | :------- | :------- |
-   | TCP  | tcp-3306 | 3306     | 3306     |
+| 企业空间            | 项目              | 用户名    | 原密码   | 新密码   |
+| ------------------- | ----------------- | --------- | -------- | -------- |
+| demo-workspace      | demo-project      | demo-user | P@88w0rd | P@88word |
+| 企业空间角色        | 项目角色          |           |          |          |
+| demo-workspace-role | demo-project-role |           |          |          |
 
 
-10. 向下滚动鼠标到**环境变量**区域，选择**环境变量**，在下拉框中选择**来自保密字典**。参数设置如下：
-
-| 来源   | 键              | 资源         | 资源中的键          |
-| :----- | :-------------- | :----------- | ------------------- |
-| 自定义 | MYSQL_ROOT_HOST | mysql-secret | MYSQL_ROOT_PASSWORD |
-
-11. 点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />保存配置，然后点击**下一步**。
-
-12. 在**存储设置**页签，点击**添加持久卷声明模板**。
-
-13. 输入 PVC 名称前缀（例如，**mysql**），并指定挂载路径（存储类：基于OpenEBS的**LocalPV**，模式：**RWO-读写**，路径：**/var/lib/mysql**）。
-
-14. 点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />保存配置，然后点击**下一步**。
-
-15. 在**高级设置**页签，点击**创建**以创建 MySQL 应用。
-
-#### 4 创建 WordPress 应用
-
-1. 再次点击**创建服务**。在弹出的**创建服务**对话框，点击**无状态服务**。
-
-2. 在弹出的**创建无状态服务**对话框，输入无状态服务的名称（例如，**wordpress**）并点击**下一步**。
-
-3. 在**容器组设置**页签，点击**添加容器**。
-
-4. 在搜索框中输入 **wordpress:4.8-apache**，按下回车键，向下滚动鼠标，点击**使用默认镜像端口**。
-
-   | 说明                                                         |
-   | :----------------------------------------------------------- |
-   | 此时配置还未完成，请不要在页面右下角点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />。 |
-
-5. 向下滚动鼠标到**环境变量**区域，选择**环境变量**。此处需要添加两个环境变量，请按如下信息设置：
-
-   - 在下拉框中选择**来自保密字典**，输入键名称 **WORDPRESS_DB_PASSWORD**，选择资源 **wordpress-secret** 和资源值 **WORDPRESS_DB_PASSWORD**。
-
-   - 点击**添加环境变量**，分别输入键名称 **WORDPRESS_DB_HOST** 和值 **mysql**。
-
-     | 说明                                                         |
-     | :----------------------------------------------------------- |
-     | **WORDPRESS_DB_HOST** 环境变量的值必须与[创建 MySQL 应用](https://www.kubesphere.io/zh/docs/v4.1/02-quickstart/05-deploy-wordpress/#_3_创建_mysql_应用)中创建的 MySQL 有状态服务的名称完全相同。否则，WordPress 将无法连接到 MySQL 数据库。 |
-
-6. 点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />保存配置，然后点击**下一步**。
-
-7. 在**存储设置**页签，点击**挂载卷**。
-
-8. 在**持久卷**页签，点击**选择持久卷声明**。
-
-9. 选择已创建的 **wordpress-pvc**，将模式设置为**读写**，并输入挂载路径 **/var/www/html**。
-
-10. 点击<img src="./images/check-dark.svg" alt="check" style="width:25px;height:25px;display:inline" />保存配置，再点击**下一步**。
-
-11. 在**高级设置**页签，点击**创建**。
-
-12. 在**服务**页面，点击**下一步**。
-
-13. 在**路由设置**页面，点击**创建**以创建 WordPress。您可以在**自制应用**页面查看已创建的应用。
 
 ## 99、FAQ
 

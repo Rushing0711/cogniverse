@@ -193,7 +193,7 @@ $ docker compose version
 Docker Compose version v2.35.1
 ```
 
-### 3.2 配置docker加速器
+### 3.2 配置Docker加速器
 
 - 配置
 
@@ -277,7 +277,7 @@ $ cat /etc/docker/daemon.json
 $ sudo systemctl restart docker
 ```
 
-### 3.3 配置docker代理服务器
+### 3.3 配置Docker代理服务器
 
 [官网Docker代理配置](https://docs.docker.com/engine/daemon/proxy/#daemon-configuration)
 

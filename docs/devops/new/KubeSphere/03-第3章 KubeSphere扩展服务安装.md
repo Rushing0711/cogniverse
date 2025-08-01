@@ -1,4 +1,4 @@
-# 第3章 KubeSphere扩展安装
+# 第3章 KubeSphere扩展服务安装
 
 ## 1 安装OpenELB负载均衡器
 
@@ -258,7 +258,7 @@ $ kubectl get po -n openelb-system
 $ kubectl delete -f openelb.yaml
 ```
 
-### 1.2 使用helm安装
+### 1.2 使用helm安装【推荐】
 
 #### 1 配置helm仓库并安装
 
@@ -268,7 +268,7 @@ $ helm repo update
 $ helm install openelb openelb/openelb -n openelb-system --create-namespace
 ```
 
-> 若网络不通，设置代理：
+> 若添加repo时网络不通，设置代理：
 >
 > ```bash
 > $ export https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 all_proxy=socks5://192.168.200.1:7890 no_proxy="xxx"
@@ -586,7 +586,7 @@ $ kubectl get pods -n openelb-system -l component=speaker -o name|xargs -I {} ku
 $ curl 192.168.200.91
 ```
 
-### 1.4 在 VIP 模式下使用 OpenELB【本地推荐】
+### 1.4 在 VIP 模式下使用 OpenELB【本地环境推荐安装】
 
 #### 1.4.0 前置条件
 
@@ -893,12 +893,16 @@ $ kubectl -n kubesphere-controls-system get svc
 
 ### 2.1 安装
 
+#### 2.1.1 安装：使用kubesphere仓库
+
 - 通过heml安装
 
 ```bash
 $ helm repo add kubesphere https://charts.kubesphere.io/main
+$ helm repo update
 $ helm upgrade --install sonarqube kubesphere/sonarqube \
--n kubesphere-devops-system --create-namespace --set service.type=NodePort \
+-n kubesphere-devops-system --create-namespace \
+--set service.type=NodePort --set service.nodePort=30681 \
 --set image.tag=9.9.0-community \
 --set postgresql.image.tag=11.19.0-debian-11-r32
 ```
@@ -915,6 +919,58 @@ NOTES:
   export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
   export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
+```
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n kubesphere-devops-system
+```
+
+- 卸载
+
+```bash
+$ helm uninstall sonarqube -n kubesphere-devops-system
+```
+
+#### 2.1.2 安装：使用官方仓库安装
+
+- 通过helm安装
+
+```bash
+$ helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+$ helm repo update
+$ export MONITORING_PASSCODE="yourPasscode"
+$ helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.4.0 \
+-n kubesphere-devops-system --create-namespace \
+--set service.type=NodePort --set service.nodePort=30681 \
+--set postgresql.image.tag=11.19.0-debian-11-r32 \
+--set edition=developer,monitoringPasscode=$MONITORING_PASSCODE
+```
+
+```bash
+Release "sonarqube" does not exist. Installing it now.
+NAME: sonarqube
+LAST DEPLOYED: Fri Aug  1 16:25:29 2025
+NAMESPACE: kubesphere-devops-system
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
+  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+WARNING: 
+         Please note that the SonarQube image runs with a non-root user (uid=1000) belonging to the root group (guid=0). In this way, the chart can support arbitrary user ids as recommended in OpenShift.
+         Please visit https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images for more information.
+
+WARNING: The embedded PostgreSQL is intended for evaluation only, it is DEPRECATED, and it will be REMOVED in a future release.
+         Please visit https://artifacthub.io/packages/helm/sonarqube/sonarqube#production-use-case for more information.
+
+
+WARNING: Setting the deployment strategy type is deprecated and will be removed in a future release. It will be hard-coded to Recreate.
+
+WARNING: The deploymentType value is deprecated and won't be supported anymore. SonarQube will be deployed as a Deployment by default.
 ```
 
 - 验证，确保所有 pod 都running
@@ -968,9 +1024,9 @@ http://192.168.200.116:30681
 
 3. 点击右上角的 **Log in**，然后使用默认账户 **admin/admin** 登录。
 
-| 用户名 | 原密码 | 新密码   |
-| ------ | ------ | -------- |
-| admin  | admin  | P@88word |
+| 用户名 | 原密码 | 新密码       |
+| ------ | ------ | ------------ |
+| admin  | admin  | P@88word1234 |
 
 :::info
 
@@ -1164,262 +1220,17 @@ Analyze "java-demo": **sqp_2e1db3bcb24cb8022b079aed60bb48e211a1df01**
 
 [使用 Jenkinsfile 创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/02-create-a-pipeline-using-jenkinsfile/)或[使用图形编辑面板创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/01-create-a-pipeline-using-graphical-editing-panel/)之后，即可查看代码质量分析的结果。
 
+## 3 安装 NFS 存储
 
+[部署NFS](http://localhost:5173/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-1-部署nfs)
 
-## 9、用户-企业空间-项目
+[安装Kubernetes NFS Subdir External Provisioner](http://localhost:5173/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-2-安装kubernetes-nfs-subdir-external-provisioner)
 
-- 登录 admin 创建如下用户
 
-| 用户名          | 密码     | 角色                      | 作用                                                         |
-| --------------- | -------- | ------------------------- | ------------------------------------------------------------ |
-| admin           | Ks@12345 | platform-admin            | 平台管理员，可以管理平台内的所有资源。                       |
-| ws-manager      | Ws@12345 | platform-self-provisioner | 创建企业空间并成为所创建企业空间的管理员。                   |
-| ws-admin        | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
-| project-admin   | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
-| project-regular | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
 
-- <span style="color:green;font-weight:bold;">登录 ws-manager 创建企业空间</span>
+## 99 扩展登录信息
 
-企业空间： demo-workspace 邀请管理员 ws-admin
-
-- 登录 ws-admin 邀请 project-admin/project-regular 进入企业空间，分别授予 demo-workspace-self-provisioner 和 demo-workspace-viewer 角色。<span style="color:red;font-weight:bold;">可编辑项目配额、默认容器配额</span>
-
-> 备注：
->
-> 实际角色名称的格式：`<workspace name>-<role name>`。例如，在名为 demo-workspace 的企业空间中，角色viewer的实际角色名称为 demo-workspace-viewer
-
-| 用户名          | 角色             | 企业空间角色                    |                                                              |
-| --------------- | ---------------- | ------------------------------- | ------------------------------------------------------------ |
-| ws-admin        | platform-regular | demo-workspace-admin            | 管理指定企业空间中的所有资源（在此示例中，此用户用于邀请新成员加入企业空间）。 |
-| project-admin   | platform-regular | demo-workspace-self-provisioner | 创建和管理项目以及 DevOps 项目，并邀请新成员加入项目。       |
-| project-regular | platform-regular | demo-workspace-viewer           | `project-regular` 将由 `project-admin` 邀请至项目或 DevOps 项目。该用户将用于在指定项目中创建工作负载、流水线和其他资源。 |
-
-- <span style="color:green;font-weight:bold;">登录 project-admin  创建项目 demo-project</span>，邀请 project-regular 进入项目，并授权 operator 角色。<span style="color:red;font-weight:bold;">可编辑项目配额（仅1次）、默认容器配额</span>
-
-| 用户名          | 角色             | 企业空间角色                    | 项目角色 |
-| --------------- | ---------------- | ------------------------------- | -------- |
-| project-admin   | platform-regular | demo-workspace-self-provisioner | admin    |
-| project-regular | platform-regular | demo-workspace-viewer           | operator |
-
-- <span style="color:green;font-weight:bold;">登录 project-admin  创建项目 demo-devops</span>，邀请 project-regular 进入项目，并授权 operator 角色。<span style="color:red;font-weight:bold;">可编辑项目配额（仅1次）、默认容器配额</span>
-
-| 用户名          | 角色             | 企业空间角色                    | 项目角色 |
-| --------------- | ---------------- | ------------------------------- | -------- |
-| project-admin   | platform-regular | demo-workspace-self-provisioner | admin    |
-| project-regular | platform-regular | demo-workspace-viewer           | operator |
-
-![image-20240628180327978](images/cicd-tools-fullsize.jpeg)
-
-
-
-## 10、DevOps项目部署
-
-### 10.1、准备工作
-
-您需要[启用 KubeSphere DevOps 系统](https://www.kubesphere.io/zh/docs/v3.3/pluggable-components/devops/)。
-
-注意：若内存不是很大，建议开启 devops 时内存可以限制为2G。
-
-### 10.2、[将 SonarQube 集成到流水线](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-integrate/sonarqube/)
-
-要将 SonarQube 集成到您的流水线，必须先安装 SonarQube 服务器。
-
-- 登录
-
-http://192.168.200.116:30712
-
-默认用户名密码：admin/admin
-
-修改密码为： admin/Sq@12345
-
-- 安装后资源概况
-
-![image-20240630105708229](images/image-20240630105708229.png)
-
-### 10.3、将 Harbor 集成到流水线
-
-在应用商店安装Harbor
-
-- 创建企业空间
-
-<span style="color:green;font-weight:bold;">登录 admin 创建企业空间</span>
-
-企业空间： harbor 邀请管理员 admin
-
-- 创建项目
-
-<span style="color:green;font-weight:bold;">登录 admin 在企业空间创建项目</span>
-
-企业空间：harbor 创建项目 harbor
-
-- 安装
-
-在项目中，点击【应用负载】=>【应用】=>【创建】=>【从应用商店】=>搜索“Harbor”并安装。
-
-> 如果不想使用ingress网关访问Harbor，则需要进行以下设置，然后点击**安装**
->
-> 请按照如下指示的”修改x”进行修改（不是复制粘贴）
-
-```yaml
-expose:
-  type: nodePort # 修改1：ingress => nodePort
-  tls:
-    enabled: false # 修改2：true=>false
-      commonName: "192.168.200.116" # 修改3：""=>将commonName更改成你自己的值
-externalURL: http://192.168.200.116:30002 # 修改4：使用自己的ipi
-```
-
-更改了应用设置后，点击安装即可！等待项目harbor下【应用负载】变成 running 后服务即可使用。
-
-- 登录
-
-http://192.168.200.116:30002
-
-admin/Harbor12345
-
-- 获取Harbor凭证
-
-1. 安装 Harbor 后，请访问 `<NodeIP>:30002` 并使用默认帐户和密码 (`admin/Harbor12345`) 登录控制台。在左侧导航栏中点击**项目**并在**项目**页面点击**新建项目**。
-2. 在弹出的对话框中，设置项目名称  ks-devops-harbor  并点击**确定**。
-3. 点击刚刚创建的项目，在**机器人帐户**选项卡下点击**添加机器人帐户**。
-4. 在弹出的对话框中，为机器人帐户设置名称  robot-test 以及设置永不过期，并点击**添加**。请确保在**权限**中勾选推送制品的权限选框。
-5. 在弹出的对话框中，点击**导出到文件中**，保存该令牌。
-
-- 启用 Insecure Registry
-
-您需要配置 Docker，使其忽略您 Harbor 仓库的安全性。
-
-1. 在您的主机上运行 `vim /etc/docker/daemon.json` 命令以编辑 `daemon.json` 文件，输入以下内容并保存更改。
-
-```json
-{
-  "insecure-registries" : ["192.168.200.116:30002"]
-}
-```
-
-2. 运行以下命令重启 Docker，使更改生效。
-
-```bash
-# 执行重启后，会影响到k8s环境，需要等待一会才可以继续访问k8s
-$ systemctl daemon-reload && systemctl restart docker
-```
-
-- 安装后资源概况
-
-![image-20240702135052980](images/image-20240702135052980.png)
-
-- 测试
-
-    - 创建凭证
-
-    1. 以 `project-regular` 身份登录 KubeSphere 控制台，转到您的 DevOps 项目，在 **DevOps 项目设置**下的**凭证**页面为 Harbor 创建凭证。
-    2. 在**创建凭证**页面，设置凭证 ID (`robot-test`)，**类型**选择**用户名和密码**。**用户名**字段必须和您刚刚下载的 JSON 文件中 `name` 的值相同，并在**密码/令牌**中输入该文件中 `token` 的值。
-    3. 点击**确定**以保存。
-
-    - 创建流水
-
-    1. 转到**流水线**页面，点击**创建**。在**基本信息**选项卡，输入名称 (`demo-pipeline`)，然后点击**下一步**。
-    2. **高级设置**中使用默认值，点击**创建**。
-
-    - 编辑Jenkinsfile
-
-    1. 点击该流水线进入其详情页面，然后点击**编辑 Jenkinsfile**。
-    2. 将以下内容复制粘贴至 Jenkinsfile。请注意，您必须将 `REGISTRY`、`HARBOR_NAMESPACE`、`APP_NAME` 和 `HARBOR_CREDENTIAL` 替换为您自己的值。
-
-  ```groovy
-  pipeline {  
-    agent {
-      node {
-        label 'maven'
-      }
-    }
-  
-    environment {
-      // 您 Harbor 仓库的地址。
-      REGISTRY = '192.168.200.116:30002'
-      // 项目名称。
-      // 请确保您的机器人帐户具有足够的项目访问权限。
-      HARBOR_NAMESPACE = 'ks-devops-harbor'
-      // Docker 镜像名称。
-      APP_NAME = 'docker-example'
-      // ‘robot-test’是您在 KubeSphere 控制台上创建的凭证 ID。
-      HARBOR_CREDENTIAL = credentials('robot-test')
-    }
-  
-    stages {
-      stage('docker login') {
-        steps{
-          container ('maven') {
-            // 请替换 -u 后面的 Docker Hub 用户名，不要忘记加上 ''。您也可以使用 Docker Hub 令牌。
-            sh '''echo $HARBOR_CREDENTIAL_PSW | docker login $REGISTRY -u 'robot$robot-test' --password-stdin'''
-          }
-        }  
-      }
-  
-      stage('build & push') {
-        steps {
-          container ('maven') {
-            sh 'git clone https://github.com/kstaken/dockerfile-examples.git'
-            sh 'cd dockerfile-examples/rethinkdb && docker build -t $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:devops-test .'
-            sh 'docker push  $REGISTRY/$HARBOR_NAMESPACE/$APP_NAME:devops-test'
-          }
-        }
-      }
-    }
-  }
-  ```
-
-    - 运行流水线
-
-  保存该 Jenkinsfile，KubeSphere 会自动在图形编辑面板上创建所有阶段和步骤。点击**运行**来运行该流水线。如果一切运行正常，Jenkins 将推送镜像至您的 Harbor 仓库。
-
-### 10.4、[使用 Jenkinsfile 创建流水线涉及的凭证](https://kubesphere.io/zh/docs/v3.4/devops-user-guide/how-to-use/pipelines/create-a-pipeline-using-jenkinsfile/)
-
-| 凭证ID          | 类型                                     |
-| --------------- | ---------------------------------------- |
-| harbor-id       | 用户名和密码（密码填写Harbor机器人令牌） |
-| github-id       | 用户名和密码（密码填写PAT令牌）          |
-| demo-kubeconfig | kubeconfig                               |
-| github-token    | 访问令牌                                 |
-| gitee-id        | 用户名和密码（密码填写私人令牌）         |
-| gitee-token     | 访问令牌                                 |
-
-其中，github-id的创建方式：
-
-![image-20240702175121985](images/image-20240702175121985.png)
-
-![image-20240702175016014](images/image-20240702175016014.png)
-
-### 10.5、为 KubeSphere 中的 Jenkins 安装插件（可选）
-
-- 获取Jenkins地址
-
-1. 运行以下命令获取 Jenkins 的地址。
-
-```bash
-export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services devops-jenkins)
-export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
-echo http://$NODE_IP:$NODE_PORT
-```
-
-2. 您会得到类似如下的输出。您可以通过输出的地址使用自己的 KubeSphere 用户和密码（例如 `admin/P@88w0rd`）访问 Jenkins 面板。
-
-http://192.168.200.116:30180
-
-- 在Jenkins面板上安装插件
-
-1. 登录 Jenkins 面板，点击**系统管理**。
-
-2. 在**系统管理**页面，下滑到**插件管理**并点击。
-
-3. 点击**可选插件**选项卡，您必须使用搜索框来搜索所需插件。例如，您可以在搜索框中输入 `git`，勾选所需插件旁边的复选框，然后按需点击**直接安装**或**下载待重启后安装**。
-
-   备注
-
-   Jenkins 的插件相互依赖。安装插件时，您可能还需要安装其依赖项。
-
-4. 如果已预先下载 HPI 文件，您也可以点击**高级**选项卡，上传该 HPI 文件作为插件进行安装。
-
-5. 在**已安装**选项卡，可以查看已安装的全部插件。能够安全卸载的插件将会在右侧显示**卸载**按钮。
-
-6. 在**可更新**选项卡，先勾选插件左侧的复选框，再点击**下载待重启后安装**，即可安装更新的插件。您也可以点击**立即获取**按钮检查更新。
+| 登录地址                     | 描述      | 用户名 | 密码        | 原密码      |
+| ---------------------------- | --------- | ------ | ----------- | ----------- |
+| http://192.168.200.116:30002 | Harbor    | admin  | Harbor12345 | Harbor12345 |
+| http://192.168.200.116:30681 | SonarQube | admin  | P@88word    | admin       |

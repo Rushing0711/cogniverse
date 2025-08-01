@@ -1,4 +1,4 @@
-# 第5章 Kubernetes扩展安装
+# 第5章 Kubernetes扩展服务安装
 
 ## 1 部署dashboard（在master节点执行）
 
@@ -711,7 +711,7 @@ $ kubectl delete -f nginx-ds.yaml
 
 本文只介绍 K8s 集群上的操作，NFS 服务器的部署和更多细节请参阅[探索 Kubernetes 持久化存储之 NFS 终极实战指南](https://mp.weixin.qq.com/s/FRZppup6W_AS2O-_CR1KFg) 。
 
-## 4.0 三种访问模式
+### 4.0 三种访问模式
 
 - `ReadWriteOnce`（RWO）：单个 Pod 读写。
 - `ReadOnlyMany`（ROX）：多个 Pod 只读。
@@ -1601,7 +1601,7 @@ $ nerdctl compose up -d
 
 3. containerd配置（所有节点）
 
-<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>（所有节点）
 
 - 配置
 
@@ -1732,9 +1732,9 @@ $ nerdctl compose up -d
 
 <span style="color:red;font-weight:bold;">登录时如果提示：用户名或者密码不正确，在确认用户名密码正确的情况下，请清理浏览器缓存！！！</span>
 
-3. containerd配置
+3. containerd配置（所有节点）
 
-<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>（所有节点）
 
 - 配置
 
@@ -2014,9 +2014,9 @@ $ helm uninstall harbor -n harbor-system
 $ kubectl delete ns harbor-system
 ```
 
-3. containerd配置
+3. containerd配置（所有节点）
 
-<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>
+<span style="color:#9400D3;font-weight:bold;">这个配置对ctr、nerdctl无效，但对crictl生效</span>（所有节点）
 
 - 配置
 
