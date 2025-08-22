@@ -4,13 +4,13 @@
 
 - 登录 admin 创建如下用户
 
-| 用户名          | 密码     | 角色                      | 作用                                                         |
-| --------------- | -------- | ------------------------- | ------------------------------------------------------------ |
-| admin           | Ks@12345 | platform-admin            | 平台管理员，可以管理平台内的所有资源。                       |
-| ws-manager      | Ws@12345 | platform-self-provisioner | 创建企业空间并成为所创建企业空间的管理员。                   |
-| ws-admin        | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
-| project-admin   | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
-| project-regular | Ws@12345 | platform-regular          | 平台普通用户，在被邀请加入企业空间或集群之前没有任何资源操作权限。 |
+| 用户名          | 密码     | 角色                      | 作用                                         |
+| --------------- | -------- | ------------------------- | -------------------------------------------- |
+| admin           | P@88word | platform-admin            | 管理 KubeSphere 平台上的所有资源。           |
+| ws-manager      | P@88word | platform-self-provisioner | 创建企业空间并成为所创建的企业空间的管理员。 |
+| ws-admin        | P@88word | platform-regular          | 被邀请加入企业空间之前无法访问任何资源。     |
+| project-admin   | P@88word | platform-regular          | 被邀请加入企业空间之前无法访问任何资源。     |
+| project-regular | P@88word | platform-regular          | 被邀请加入企业空间之前无法访问任何资源。     |
 
 - <span style="color:green;font-weight:bold;">登录 ws-manager 创建企业空间</span>
 

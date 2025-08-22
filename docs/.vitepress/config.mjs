@@ -23,7 +23,12 @@ export default defineConfig({
                             {text: 'JavaScript', link: '/frontend/new/JavaScript/00-引言'},
                         ]
                     },
-                    {text: '前端框架', items: []}
+                    {
+                        text: '前端框架', items: [
+                            {text: 'React', link: '/frontend/new/React/00-引言'},
+                            {text: 'Vite', link: '/frontend/new/Vite/00-引言'},
+                        ]
+                    }
                 ]
             },
             {
@@ -64,6 +69,7 @@ export default defineConfig({
                             {text: 'Kubernetes', link: '/devops/new/Kubernetes/00-引言'},
                             {text: 'Helm', link: '/devops/new/Helm/00-引言'},
                             {text: 'KubeSphere', link: '/devops/new/KubeSphere/00-引言'},
+                            {text: 'Rancher', link: '/devops/new/Rancher/00-引言'},
                         ]
                     },
                     {items: [{text: 'Git', link: '/devops/new/Git/00-引言'}]},
@@ -89,6 +95,8 @@ export default defineConfig({
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
             '/frontend/new/CSS/': autoGenSidebar('/frontend/new/CSS'),
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
+            '/frontend/new/React/': autoGenSidebar('/frontend/new/React'),
+            '/frontend/new/Vite/': autoGenSidebar('/frontend/new/Vite'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
             '/devops/new/Linux': autoGenSidebar('/devops/new/Linux'),
@@ -98,6 +106,7 @@ export default defineConfig({
             '/devops/new/Kubernetes': autoGenSidebar('/devops/new/Kubernetes'),
             '/devops/new/Helm': autoGenSidebar('/devops/new/Helm'),
             '/devops/new/KubeSphere': autoGenSidebar('/devops/new/KubeSphere'),
+            '/devops/new/Rancher': autoGenSidebar('/devops/new/Rancher'),
             '/devops/new/Git': autoGenSidebar('/devops/new/Git'),
         },
 

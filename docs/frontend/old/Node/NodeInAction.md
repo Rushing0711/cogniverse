@@ -663,6 +663,14 @@ npm i -g pnpm
 npm r -g pnpm
 ```
 
+- pnpm dlx 在临时环境运行一个包
+
+```bash
+$ pnpm dlx create-umi
+# 等效
+$ pnpm create umi
+```
+
 ### 3.15、npm audit
 
 **是npm 6 新增的一个命令,可以允许开发人员分析复杂的代码并查明特定的漏洞。** 该命令会在项目中更新或者下载新的依赖包之后自动运行，如果你在项目中使用了具有已知安全问题的依赖，就收到官方的警告通知。
