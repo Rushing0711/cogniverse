@@ -21,6 +21,7 @@ export default defineConfig({
                             {text: 'HTML', link: '/frontend/new/HTML/00-引言'},
                             {text: 'CSS', link: '/frontend/new/CSS/00-引言'},
                             {text: 'JavaScript', link: '/frontend/new/JavaScript/00-引言'},
+                            {text: 'Node', link: '/frontend/new/Node/00-引言'},
                         ]
                     },
                     {
@@ -95,6 +96,7 @@ export default defineConfig({
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
             '/frontend/new/CSS/': autoGenSidebar('/frontend/new/CSS'),
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
+            '/frontend/new/Node/': autoGenSidebar('/frontend/new/Node'),
             '/frontend/new/React/': autoGenSidebar('/frontend/new/React'),
             '/frontend/new/Vite/': autoGenSidebar('/frontend/new/Vite'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
