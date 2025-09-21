@@ -319,11 +319,86 @@ flyin-awesome-package
 
 ## 2 使用npm包
 
-### 2.1 安装
+### 2.0 目录结构
+
+```bash
+$ tree --dirsfirst
+.
+├── flyin-awesome-package
+│   ├── src
+│   │   ├── helloWorld.js
+│   │   ├── index.js
+│   │   ├── test.js
+│   │   └── welcome.js
+│   ├── package.json
+│   └── README.md
+└── flyin-awesome-package-test
+    ├── src
+    │   └── test.js
+    ├── package-lock.json
+    └── package.json
+
+5 directories, 9 files
+```
+
+### 2.1 如何引用已发布的包？
+
+#### 2.1.1 方案一：安装已发布的包
 
 ```bash
 $ mkdir flyin-awesome-package-test && cd flyin-awesome-package-test
 $ npm i flyin-awesome-package
+```
+
+#### 2.1.2 方案二：无需发布，直接link引用
+
+- 方式一
+
+  - 第一步：进入被<span style="color:#9400D3;font-weight:bold;">引用的包</span>所在项目的根目录，创建全局链接
+
+    ```bash
+    $ cd flyin-awesome-package
+    # 会在全局创建链接
+    $ npm link
+    # 查看链接
+    $ npm list -g --depth=0
+    ```
+
+    ```BASH
+    /Users/wenqiu/.nvm/versions/node/v20.19.4/lib
+    ├── corepack@0.32.0
+    ├── flyin-awesome-package@1.0.2 -> ./../../../../../WebstormProjects/frontend-node-learning/flyin-awesome-package
+    ```
+
+  - 第二步：进入要使用链接的项目
+
+    ```bash
+    $ cd flyin-awesome-package-test
+    # 使用链接，这里指定的是包名（注意：不会在package.json添加依赖，但会在node_modules目录下挂载）
+    $ npm link flyin-awesome-package
+    ```
+
+    ![image-20250918094236673](images/image-20250918094236673.png)
+
+  - 第三步：清理（非必须，视需要而定）
+
+    ```bash
+    # 用后可以解除对链接的使用
+    $ cd flyin-awesome-package-test
+    $ npm unlink flyin-awesome-package
+    # 删除创建的引用包的全局链接
+    $ npm rm -g flyin-awesome-package
+    ```
+
+    
+
+- 方式二
+
+该方式是上面的步骤合二为一，效果一样，但这里的link后面，指定的是被引用包的目录。
+
+```bash
+$ cd flyin-awesome-package-test
+$ npm link ../flyin-awesome-package
 ```
 
 ### 2.2 使用
