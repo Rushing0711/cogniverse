@@ -25,9 +25,23 @@
 ```nginx
 location / {
     proxy_pass http://IP:Port;
-    proxy_read_timeout 600s;
+  
+    proxy_http_version 1.1; # 必须使用 HTTP/1.1
+  
+    # WebSocket代理协议升级头
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
+  
+    # 标准代理头
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr; # 客户端的真实IP
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # 告诉后端客户端的真实IP
+    proxy_set_header X-Forwarded-Proto $scheme;
+  
+    # 其他WebSocket优化配置
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+    proxy_connect_timeout 60s;
 }
 ```
 
@@ -127,14 +141,29 @@ server {
     }
 
     location ^~ /eden-server/website/introduction {
-        #location ^~ /website/introduction {
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
         #proxy_set_header x-rule "offline";
         proxy_pass http://edeninterface;
-        proxy_read_timeout 600s;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+    
+        # 客户端真实信息
+        proxy_set_header X-Real-IP $remote_addr; # 客户端的真实IP
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; # 告诉后端客户端的真实IP
+        
+        # 协议和主机信息
+        proxy_set_header Host $http_host; # 客户端请求头中的 Host 值，包含端口号（如果指定），比如：example.com:8080	
+        proxy_set_header X-Forwarded-Proto $scheme; # 告诉后端原始请求的协议（http/https）
+        proxy_set_header X-Forwarded-Host $host; # 告诉后端原始请求的主机名，不包含端口号，比如：example.com	
+        proxy_set_header X-Forwarded-Port $server_port; # 告诉后端原始请求的端口
+        
+        # 连接设置
+        proxy_set_header Connection "Keep-Alive";
+        proxy_http_version 1.1;
+        
+        # 超时设置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        proxy_redirect off;
     }
     #error_page  404              /404.html;
 

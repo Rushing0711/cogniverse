@@ -25,9 +25,14 @@ export default defineConfig({
                         ]
                     },
                     {
+                        text: '前端工具链', items: [
+                            {text: 'Vite', link: '/frontend/new/Vite/00-引言'},
+                        ]
+                    },
+                    {
                         text: '前端框架', items: [
                             {text: 'React', link: '/frontend/new/React/00-引言'},
-                            {text: 'Vite', link: '/frontend/new/Vite/00-引言'},
+                            {text: 'Vue', link: '/frontend/new/Vue/00-引言'},
                         ]
                     }
                 ]
@@ -97,8 +102,9 @@ export default defineConfig({
             '/frontend/new/CSS/': autoGenSidebar('/frontend/new/CSS'),
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
             '/frontend/new/Node/': autoGenSidebar('/frontend/new/Node'),
-            '/frontend/new/React/': autoGenSidebar('/frontend/new/React'),
             '/frontend/new/Vite/': autoGenSidebar('/frontend/new/Vite'),
+            '/frontend/new/React/': autoGenSidebar('/frontend/new/React'),
+            '/frontend/new/Vue/': autoGenSidebar('/frontend/new/Vue'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
             '/devops/new/Linux': autoGenSidebar('/devops/new/Linux'),

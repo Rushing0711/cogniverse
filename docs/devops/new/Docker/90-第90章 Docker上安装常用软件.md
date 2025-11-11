@@ -1401,6 +1401,8 @@ $ docker rm -v $(docker ps -a|grep es-node-|awk '{print $1}')
 
 ### 90.8.1 普通启动
 
+- 启动mongo
+
 ```bash
 # /usr/local/dockerv/mongo 目录会自动创建
 $ docker run --name mongo \
@@ -1408,8 +1410,30 @@ $ docker run --name mongo \
 -e MONGO_INITDB_ROOT_PASSWORD=root123 \
 -v /usr/local/dockerv/mongo/data/:/data/db \
 -p 27017:27017 \
--d mongo:5.0.11
+-d mongo:8.2.1
+
+# 验证服务是否启动成功
+$ docker exec -it mongo mongosh mongodb://root:root123@localhost:27017/admin?authSource=admin
 ```
+
+- 启动 mongo-express
+
+```bash
+$ docker run --name mongo-express \
+-e ME_CONFIG_MONGODB_URL="mongodb://root:root123@mongo:27017/admin?authSource=admin" \
+-e ME_CONFIG_BASICAUTH_ENABLED=true \
+-e ME_CONFIG_BASICAUTH_USERNAME=admin \
+-e ME_CONFIG_BASICAUTH_PASSWORD=express123 \
+-p 8081:8081 \
+--link mongo:mongo \
+-d mongo-express:1.0.2
+```
+
+访问： http://192.168.200.119:8081
+
+用户名/密码：admin/express123
+
+
 
 ## 90.9 JFrog Artifactory
 

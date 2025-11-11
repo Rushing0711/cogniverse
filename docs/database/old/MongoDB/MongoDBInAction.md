@@ -4,6 +4,8 @@
 
 [TOC]
 
+官网文档： https://www.mongodb.com/zh-cn/docs/manual/
+
 # 一、安装
 
 1. 下载
@@ -626,25 +628,33 @@ rs.addArb("repo.emon.vip:27019") 或者 rs.add({host:"repo.emon.vip:27019",arbit
 | Mysqld/Oracle | mongod                       |
 | mysql/sqlplus | mongo                        |
 
-## 2.2、数据类型
+## 2.2、数据类型（Mongodb8.2）
 
-| 数据类型           | 描述                                     |
-| ------------------ | ---------------------------------------- |
-| String             | 字符串                                   |
-| Integer            | 整形数值                                 |
-| Boolean            | 布尔值                                   |
-| Double             | 双精度浮点值                             |
-| Min/Max keys       | 将一个值与BSON最低值和最高值对比         |
-| Array              | 用于将数组或列表或多个值存储为一个键     |
-| Timestamp          | 时间戳                                   |
-| Object             | 用于内嵌文档                             |
-| Null               | 用于创建空值                             |
-| Symbol             | 符号                                     |
-| Date               | 日期时间                                 |
-| Object ID          | 对象ID。用于创建文档的ID                 |
-| Binary Data        | 二进制数据                               |
-| Code               | 代码类型。用于在文档中存储JavaScript代码 |
-| Regular expression | 正则表达式类型                           |
+https://www.mongodb.com/zh-cn/docs/manual/reference/operator/query/type/
+
+| 类型                  | 数值 | 别名                  | 注意     |
+| :-------------------- | :--- | :-------------------- | :------- |
+| double                | 1    | "double"              |          |
+| 字符串                | 2    | "string"              |          |
+| 对象                  | 3    | "object"              |          |
+| 阵列                  | 4    | "array"               |          |
+| 二进制数据            | 5    | "binData"             |          |
+| 未定义                | 6    | "undefined"           | 已弃用。 |
+| ObjectId              | 7    | "objectId"            |          |
+| 布尔                  | 8    | "bool"                |          |
+| Date                  | 9    | "date"                |          |
+| null                  | 10   | "null"                |          |
+| 正则表达式            | 11   | "regex"               |          |
+| 数据库指针            | 12   | "dbPointer"           | 已弃用。 |
+| JavaScript            | 13   | "javascript"          |          |
+| 符号                  | 14   | "symbol"              | 已弃用。 |
+| 带作用域的 JavaScript | 15   | "javascriptWithScope" | 已弃用。 |
+| 32 位整数             | 16   | "int"                 |          |
+| 时间戳                | 17   | "timestamp"           |          |
+| 64 位整型             | 18   | "long"                |          |
+| Decimal128            | 19   | "decimal"             |          |
+| Min key               | -1   | "minKey"              |          |
+| Max key               | 127  | "maxKey"              |          |
 
 ## 2.3、对象主键ObjectId
 
@@ -713,6 +723,8 @@ WriteResult({ "nInserted" : 1 })
 ```bash
 # 删除当前数据库
 > db.dropDatabase()
+# 删除指定数据库
+> db.dropDatabase('dbname')
 ```
 
 - 查看所有数据库
@@ -792,7 +804,11 @@ db.`<collection>`.drop({writeConcern: `<document>`})
 > db.col.drop()
 ```
 
+- 修改集合名称
 
+```bash
+> db.col.renameCollection('newCol')
+```
 
 # 四、数据操纵语言之创建文档（DML）
 
@@ -927,9 +943,7 @@ db.`<collection>`.insertMany(
 
 在执行`db.<collection>.insertMany`命令时，默认的`{ordered: true}` 在遇到错误时，操作便会退出，剩余的文档无论正确与否，都不会被写入；如果是 `{ordered: false}` 在遇到错误时，剩余正确的文档也会被写入。
 
-
-
-- 插入文档（单个或者多个）
+## 4.3、插入文档（单个或者多个）【<span style="color:red;">即将废弃</span>】
 
 语法格式：
 
@@ -952,6 +966,8 @@ db.collection.insert(
 `writeConcern`: 定义了本次文档创建操作的安全写级别，简单来说，安全写级别用来判断一次数据库写入操作是否成功。如果不提供writeConsern文档，MongoDB使用默认的安全写级别。
 
 `ordered`: 指定是否按顺序写入，默认true，按顺序写入；如果将ordered参赛设置为false，MongoDB可以打乱文档写入顺序，以便优化写入操作的性能。
+
+<span style="color:red;">注意：不支持顺序写</span>
 
 执行命令：
 
@@ -991,9 +1007,17 @@ WriteResult({ "nInserted" : 1 })
 >
 >insert支持db.collection.explain()命令
 
+| 特性             | `insertOne()`                | `insertMany()`                     | `insert()`                                                   |
+| :--------------- | :--------------------------- | :--------------------------------- | :----------------------------------------------------------- |
+| **插入数量**     | 只能单文档                   | 只能多文档                         | 单文档或多文档                                               |
+| **语法示例**     | `db.col.insertOne({a:1})`    | `db.col.insertMany([{a:1},{a:2}])` | `db.col.insert({a:1})` 或 `db.col.insert([{a:1},{a:2}])`     |
+| **返回值**       | `{acknowledged, insertedId}` | `{acknowledged, insertedIds}`      | 简单结果或 BulkWriteResult                                   |
+| **性能**         | 单文档标准速度               | 批量高速插入                       | 单文档慢，批量中等                                           |
+| **错误处理**     | 立即报错                     | 可配置有序/无序                    | 立即报错                                                     |
+| **MongoDB版本**  | 3.2+                         | 3.2+                               | 所有版本                                                     |
+| **推荐使用场景** | 插入单个文档                 | 批量插入数据                       | 兼容老版本代码（<span style="color:red;font-weight:bold;">即将废弃</span>） |
 
-
-## 4.3、插入或者更新文档
+## 4.4、插入或者更新文档
 
 描述：当`db.<collection>.save()`命令处理一个新文档时，会调用`db.<collection>.save()`命令。
 
@@ -1187,7 +1211,7 @@ WriteResult({ "nInserted" : 1 })
 
 ### 文档投影
 
-不适用投影时，`db.collection.find()`返回符合条件的完整文档，而使用投影可以有选择的返回文档中的部分字段。
+不使用投影时，`db.collection.find()`返回符合条件的完整文档，而使用投影可以有选择的返回文档中的部分字段。
 
 语法格式：
 
@@ -1217,6 +1241,17 @@ WriteResult({ "nInserted" : 1 })
 ```js
 > db.accounts.find({}, {name: 0, _id:0})
 ```
+
+- 在投影时可以修改返回的结果（不影响数据源）<span style="color:red;font-weight:bold;">一种错误的用法</span>
+
+```bash
+# 源数据，name的值是问秋，结果是name的值：一个新的名字
+> db.accounts.find({}, {name: '一个新的名字'})
+# 源数据，price的值是19.9，结果是price的值：19.9，你看，表现不稳定！！！正确应该是用1和0投影决策。
+> db.accounts.find({}, {price: 29.9})
+```
+
+总结：**字符串字面值**在投影中会直接替换字段值
 
 #### $slice
 
@@ -1719,6 +1754,10 @@ v8.41`正则表达式库。
 
 # 六、数据操纵语言之更新文档（DML）
 
+## 6.1、更新文档（一个或者多个）【即将废弃】
+
+<span style="color:red;font-weight:bold;">update 方法已废弃：请使用 Use updateOne, updateMany, or bulkWrite </span>
+
 语法格式：
 
 ```js
@@ -1744,8 +1783,6 @@ db.`<collection>`.update(
 | update  | document or pipeline | 1、更新操作符；2、更新文档；3、聚合管道 |
 | options | document             | 可选，更新操作的控制项                  |
 
-## 6.1、常规更新
-
 - 更新整篇文档（在`<update>`文档不包含任何更新操作符的情况下，称为：`replacement-style update`）
 
   - `<update>`会替换原文档；如果字段在原文档已存在，则覆盖；如果不存在，则添加；如果原文档比指定文档多，则去掉。
@@ -1755,15 +1792,55 @@ db.`<collection>`.update(
 
   - 文档主键_id是不可以更改的，如果指定的文档包含_id，值要和被更新文档主键值一样
 
-```js
-> db.accounts.update({_id:"account1"}, {name:"alice",balance:123})
-```
+  <span style="color:red;font-weight:bold;">已废弃：请使用replaceOne</span>
+
+  ```bash
+  # 已废弃
+  > db.accounts.update({_id:"account1"}, {name:"alice",balance:123})
+  ```
+
+  ```bash
+  # 替换语法
+  > db.accounts.replaceOne({_id:"account1"}, {name:"alice",balance:123})
+  ```
 
 - 更新特定字段（在`<update>`文档包含更新操作符）
 
 
 
-## 6.2、文档更新操作符
+## 6.2、更新单个文档
+
+语法格式：
+
+https://mongodb.github.io/node-mongodb-native/3.6/api/Collection.html#updateOne
+
+```js
+db.`<collection>`.updateOne(filter, update, options, callback)
+```
+
+
+
+## 6.3、更新多个文档
+
+语法格式：
+
+https://mongodb.github.io/node-mongodb-native/3.6/api/Collection.html#updateMany
+
+```js
+db.`<collection>`.updateMany(filter, update, options, callback)
+```
+
+## 6.4、替换一个文档
+
+语法格式：
+
+https://mongodb.github.io/node-mongodb-native/3.6/api/Collection.html#replaceOne
+
+```js
+db.`<collection>`.replaceOne(filter, doc, options, callback)
+```
+
+## 6.5、文档更新操作符
 
 ### $set 更新或新增字段
 
@@ -2396,7 +2473,7 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 
 
 
-## 6.3、数组更新操作符
+### 6.1.3、数组更新操作符
 
 ### $addToSet 向数组中添加元素
 
@@ -3180,9 +3257,9 @@ $[]指代数组字段中的所有元素，搭配更新操作符使用，可以�
   );
   ```
 
-## 6.4、更新文档选项
+## 6.6、更新文档选项
 
-### 6.4.1、更新多个文档选项
+### 6.6.1、更新多个文档选项
 
 语法格式：
 
@@ -3224,7 +3301,7 @@ $[]指代数组字段中的所有元素，搭配更新操作符使用，可以�
 
 如果需要保证多个文档操作时的原子性，就需要使用MongoDB4.0版本引入的事务功能进行操作。
 
-### 6.4.2、更新或者创建文档
+### 6.6.2、更新或者创建文档
 
 在默认情况下，如果update命令中的筛选条件没有匹配任何文档，则不会进行任何操作。
 
@@ -3256,7 +3333,7 @@ $[]指代数组字段中的所有元素，搭配更新操作符使用，可以�
 
 
 
-## 6.5、另一个更新文档的命令
+## 6.7、另一个更新文档的命令
 
 语法格式：
 
@@ -3281,14 +3358,18 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 
 # 七、数据操纵语言之删除文档（DML）
 
-语法格式：
+## 7.1 删除文档（单个或者多个）【即将废弃】
+
+<span style="color:red;font-weight:bold;">update 方法已废弃：请使用 Use deleteOne, deleteMany, findOneAndDelete, or bulkWrite. </span>
+
+语法格式：删除与指定过滤器匹配的单个文档或所有文档。
 
 ```js
 db.collection.remove(
    `<query>`,
    `<justOne>`
 )
-# 和
+// 和
 db.collection.remove(
    `<query>`,
    {
@@ -3347,7 +3428,25 @@ db.collection.remove(
 
 **总结**：如果集合中的文档数量很多，使用remove命令删除所有文档的效率不高；这种情况下，更加有效率的方法，是使用drop命令删除集合，然后再创建空集合并创建索引。
 
+## 7.2 删除一个文档
 
+https://www.mongodb.com/zh-cn/docs/manual/reference/method/db.collection.deleteOne/#mongodb-method-db.collection.deleteOne
+
+语法格式：即使多个文档可能与指定筛选器匹配，最多也只删除与指定筛选器匹配的单个文档。
+
+```js
+db.collection.deleteOne()
+```
+
+## 7.3 删除多个文档
+
+https://www.mongodb.com/zh-cn/docs/manual/reference/method/db.collection.deleteMany/#mongodb-method-db.collection.deleteMany
+
+语法格式：删除所有与指定筛选器匹配的文档。
+
+```js
+db.collection.deleteMany()
+```
 
 # 八、聚合操作
 
