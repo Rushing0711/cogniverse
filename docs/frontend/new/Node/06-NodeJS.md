@@ -713,6 +713,650 @@ username: {
 
 https://www.ruanyifeng.com/blog/2014/05/restful_api.html
 
+## 16 json-server
+
+### 16.1 安装与启动
+
+json-server本身是一个 JS 编写的工具包，可以快速搭建 RESTful API 服务。
+
+官方地址： https://github.com/typicode/json-server
+
+操作步骤：
+
+1. 全局安装 `json-server`
+
+```bash
+$ npm i -g json-server@0.17.4
+```
+
+2. 创建 JSON 文件（db.json或者db.js），编写基本结构
+
+```js
+{
+  "song": [
+    {"id": 1, "name": "干杯", "singer": "五月天"},
+    {"id": 2, "name": "当", "singer": "动力火车"},
+    {"id": 3, "name": "不能说的秘密", "singer": "周杰伦"}
+  ]
+}
+```
+
+3. 以 JSON 文件所在文件夹作为工作目录，执行如下命令
+
+```bash
+$ json-server --watch db.json
+```
+
+默认监听端口为 3000
+
+4. `json-server.json`简化命令
+
+- 中间件`middlewares/delay.js`
+
+```js
+module.exports = (req, res, next) => {
+    const delay = Math.floor(Math.random() * 1000);
+    console.log(`请求: ${req.method} ${req.url} - 延迟 ${delay}ms`);
+    setTimeout(next, delay);
+};
+```
+
+- 配置`json-server.json`
+
+```json
+{
+  "port": 3001,
+  "watch": true,
+  "middlewares": [
+    "./middlewares/delay.js"
+  ]
+}
+```
+
+```bash
+# 与 json-server.json 同目录
+$ json-server db.json
+```
+
+### 16.2以下是对json-server的增删改查curl命令操作列表：
+
+#### 16.2.1 查询操作
+
+- 查询所有歌曲
+
+```bash
+curl -X GET "http://localhost:3001/song"
+```
+
+- 查询指定ID的歌曲
+
+```bash
+# 查询ID为1的歌曲
+curl -X GET "http://localhost:3001/song/1"
+```
+
+- 条件查询
+
+```bash
+# 查询歌手为周杰伦的歌曲
+curl -G "http://localhost:3001/song" --data-urlencode "singer=周杰伦"
+
+# 查询名称包含"干"的歌曲
+curl -G "http://localhost:3001/song" --data-urlencode "name_like=干"
+
+# 多条件查询
+curl -G "http://localhost:3001/song" --data-urlencode "singer=五月天&name=干杯"
+```
+
+- 分页查询
+
+```bash
+# 每页2条，第1页
+curl -X GET "http://localhost:3001/song?_page=1&_limit=2"
+# _start从0开始，表示：获取第3条
+curl -X GET "http://localhost:3001/song?_start=2&_end=3"
+# _start从0开始，表示：获取第2、3共2条
+curl -X GET "http://localhost:3001/song?_start=1&_limit=2"
+
+# 排序查询（按名称升序）
+curl -X GET "http://localhost:3001/song?_sort=name&_order=asc"
+```
+
+#### 16.2.2 添加操作
+
+- 添加新歌曲
+
+```bash
+curl -X POST "http://localhost:3001/song" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "夜曲",
+  "singer": "周杰伦"
+}'
+```
+
+#### 16.2.3 修改操作
+
+- 完整修改（PUT）
+
+```bash
+# 修改ID为1的歌曲（会替换整个对象）
+curl -X PUT "http://localhost:3001/song/1" \
+-H "Content-Type: application/json" \
+-d '{
+  "id": 1,
+  "name": "干杯 - 十年版",
+  "singer": "五月天"
+}'
+```
+
+- 部分修改（PATCH）
+
+```bash
+# 只修改ID为1的歌曲名称
+curl -X PATCH "http://localhost:3001/song/1" \
+-H "Content-Type: application/json" \
+-d '{
+  "name": "干杯（新版）"
+}'
+```
+
+#### 16.2.4 删除操作
+
+- 删除指定歌曲
+
+```bash
+# 删除ID为3的歌曲
+curl -X DELETE "http://localhost:3001/song/3"
+```
+
+- 批量删除
+
+```bash
+# 删除歌手为动力火车的所有歌曲，不支持中文编码问题！！！所以这个命令无效
+curl -X DELETE "http://localhost:3001/song" -G --data-urlencode "singer=动力火车"
+```
+
+#### 16.2.5 高级查询
+
+- 范围查询
+
+```bash
+# 查询ID大于1的歌曲
+curl -X GET "http://localhost:3001/song?id_gte=2"
+
+# 查询ID在1-2之间的歌曲
+curl -X GET "http://localhost:3001/song?id_gte=1&id_lte=2"
+```
+
+- 全文搜索
+
+```bash
+# 搜索包含"秘密"的歌曲
+curl -G "http://localhost:3001/song"  --data-urlencode "q=秘密"
+```
+
+#### 16.2.6 实用技巧
+
+- 获取特定字段
+
+```bash
+# 只获取歌曲名称
+curl -X GET "http://localhost:3001/song"  | jq '.[].name'
+
+# 获取名称和歌手
+curl -X GET "http://localhost:3001/song" | jq '.[] | {name, singer}'
+
+# 获取名称、歌手和ID
+curl -s -X GET "http://localhost:3001/song" | jq '.[] | {id, name, singer}'
+
+# 保持数组格式
+curl -s -X GET "http://localhost:3001/song" | jq 'map({name, singer})'
+```
+
+### 16.3 命令脚本化
+
+:::details
+
+```bash
+#!/bin/bash
+
+# song.sh - JSON Server歌曲管理脚本
+# 使用方法: ./song.sh [command] [parameters]
+
+BASE_URL="http://localhost:3001/song"
+
+# 完全避免echo兼容性问题，统一使用printf
+cecho() {
+    local color_code=""
+    case "$1" in
+        red) color_code='\033[0;31m' ;;
+        green) color_code='\033[0;32m' ;;
+        yellow) color_code='\033[1;33m' ;;
+        blue) color_code='\033[0;34m' ;;
+        *) color_code='' ;;
+    esac
+    shift
+    printf "%b%s%b\n" "$color_code" "$*" '\033[0m'
+}
+
+# 帮助信息
+show_help() {
+    cecho blue "歌曲管理脚本使用说明:"
+    echo "=========================="
+    cecho green "查询操作:"
+    echo "  ./song.sh list                   # 列出所有歌曲"
+    echo "  ./song.sh get <id>              # 根据ID查询歌曲"
+    echo "  ./song.sh search <keyword>      # 搜索歌曲（名称或歌手）"
+    echo "  ./song.sh by-singer <singer>    # 按歌手查询"
+    echo "  ./song.sh by-name <name>        # 按歌曲名查询"
+    echo ""
+    cecho green "添加操作:"
+    echo "  ./song.sh add <name> <singer>   # 添加新歌曲"
+    echo ""
+    cecho green "修改操作:"
+    echo "  ./song.sh update <id> <name> <singer>  # 完整修改歌曲"
+    echo "  ./song.sh patch <id> <field> <value>   # 部分修改歌曲"
+    echo ""
+    cecho green "删除操作:"
+    echo "  ./song.sh delete <id>           # 删除指定ID的歌曲"
+    echo "  ./song.sh delete-by-singer <singer> # 删除指定歌手的歌曲"
+    echo ""
+    cecho green "其他操作:"
+    echo "  ./song.sh help                  # 显示此帮助信息"
+    echo "  ./song.sh status               # 检查服务状态"
+    echo ""
+    cecho yellow "示例:"
+    echo "  ./song.sh add \"夜曲\" \"周杰伦\""
+    echo "  ./song.sh search \"周杰伦\""
+    echo "  ./song.sh update 1 \"干杯新版\" \"五月天\""
+}
+
+# 检查服务状态
+check_status() {
+    cecho blue "检查服务状态..."
+    if curl -s -o /dev/null -w "%{http_code}" "$BASE_URL" | grep -q "200"; then
+        cecho green "✓ 服务运行正常"
+        return 0
+    else
+        cecho red "✗ 服务未运行或无法访问"
+        return 1
+    fi
+}
+
+# 格式化JSON输出
+format_json() {
+    if command -v jq &> /dev/null; then
+        jq .
+    else
+        # 回退方案
+        python3 -c "import json, sys; print(json.dumps(json.load(sys.stdin), ensure_ascii=False, indent=2))" 2>/dev/null || cat
+    fi
+}
+
+# 列出所有歌曲
+list_songs() {
+    cecho blue "获取所有歌曲..."
+    curl -s -X GET "$BASE_URL" | format_json
+}
+
+# 根据ID查询歌曲
+get_song() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供歌曲ID"
+        return 1
+    fi
+    cecho blue "查询歌曲 ID: $1"
+    curl -s -X GET "$BASE_URL/$1" | format_json
+}
+
+# 搜索歌曲
+search_songs() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供搜索关键词"
+        return 1
+    fi
+    cecho blue "搜索关键词: $1"
+    curl -s -G "$BASE_URL" --data-urlencode "q=$1" | format_json
+}
+
+# 按歌手查询
+get_by_singer() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供歌手名称"
+        return 1
+    fi
+    cecho blue "查询歌手: $1 的歌曲"
+    curl -s -G "$BASE_URL" --data-urlencode "singer=$1" | format_json
+}
+
+# 按歌曲名查询
+get_by_name() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供歌曲名称"
+        return 1
+    fi
+    cecho blue "查询歌曲: $1"
+    curl -s -G "$BASE_URL" --data-urlencode "name=$1" | format_json
+}
+
+# 添加新歌曲
+add_song() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        cecho red "错误: 请提供歌曲名称和歌手"
+        echo "用法: ./song.sh add <歌曲名> <歌手>"
+        return 1
+    fi
+
+    cecho blue "添加新歌曲: $1 - $2"
+    response=$(curl -s -X POST "$BASE_URL" \
+        -H "Content-Type: application/json" \
+        -d "{\"name\":\"$1\", \"singer\":\"$2\"}")
+
+    echo "$response" | format_json
+    cecho green "✓ 歌曲添加成功"
+}
+
+# 完整修改歌曲
+update_song() {
+    if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+        cecho red "错误: 请提供歌曲ID、新名称和新歌手"
+        echo "用法: ./song.sh update <id> <新歌曲名> <新歌手>"
+        return 1
+    fi
+
+    cecho blue "修改歌曲 ID: $1 -> $2 - $3"
+    response=$(curl -s -X PUT "$BASE_URL/$1" \
+        -H "Content-Type: application/json" \
+        -d "{\"id\":$1, \"name\":\"$2\", \"singer\":\"$3\"}")
+
+    echo "$response" | format_json
+    cecho green "✓ 歌曲修改成功"
+}
+
+# 部分修改歌曲
+patch_song() {
+    if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+        cecho red "错误: 请提供歌曲ID、字段名和字段值"
+        echo "用法: ./song.sh patch <id> <字段名> <字段值>"
+        return 1
+    fi
+
+    cecho blue "部分修改歌曲 ID: $1 ($2=$3)"
+    response=$(curl -s -X PATCH "$BASE_URL/$1" \
+        -H "Content-Type: application/json" \
+        -d "{\"$2\":\"$3\"}")
+
+    echo "$response" | format_json
+    cecho green "✓ 歌曲部分修改成功"
+}
+
+# 删除歌曲
+delete_song() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供要删除的歌曲ID"
+        return 1
+    fi
+
+    cecho yellow "确定要删除歌曲 ID: $1 吗? (y/N)"
+    read -r confirmation
+
+    if [ "$confirmation" = "y" ] || [ "$confirmation" = "Y" ]; then
+        curl -s -X DELETE "$BASE_URL/$1"
+        cecho green "✓ 歌曲删除成功"
+    else
+        cecho blue "取消删除操作"
+    fi
+}
+
+# 按歌手删除歌曲
+delete_by_singer() {
+    if [ -z "$1" ]; then
+        cecho red "错误: 请提供要删除的歌手名称"
+        return 1
+    fi
+
+    # 先查询匹配的歌曲ID
+    ids=$(curl -s -G "$BASE_URL" --data-urlencode "singer=$1" | jq -r '.[].id')
+    cecho yellow "确定要删除所有歌手为 '$1' 的歌曲吗（歌曲ID为 $ids ）? (y/N)"
+    read -r confirmation
+
+    if [ "$confirmation" = "y" ] || [ "$confirmation" = "Y" ]; then
+        # 然后逐个删除
+        echo "$ids" | while read id; do
+            curl -X DELETE "$BASE_URL/$id"
+        done
+        cecho green "✓ 歌手 '$1' 的所有歌曲已删除"
+    else
+        cecho blue "取消删除操作"
+    fi
+}
+
+# 主程序
+main() {
+    case "$1" in
+        "list"|"l")
+            list_songs
+            ;;
+        "get"|"g")
+            get_song "$2"
+            ;;
+        "search"|"s")
+            search_songs "$2"
+            ;;
+        "by-singer"|"bs")
+            get_by_singer "$2"
+            ;;
+        "by-name"|"bn")
+            get_by_name "$2"
+            ;;
+        "add"|"a")
+            add_song "$2" "$3"
+            ;;
+        "update"|"u")
+            update_song "$2" "$3" "$4"
+            ;;
+        "patch"|"p")
+            patch_song "$2" "$3" "$4"
+            ;;
+        "delete"|"d")
+            delete_song "$2"
+            ;;
+        "delete-by-singer"|"dbs")
+            delete_by_singer "$2"
+            ;;
+        "status"|"st")
+            check_status
+            ;;
+        "help"|"h"|"")
+            show_help
+            ;;
+        *)
+            cecho red "未知命令: $1"
+            echo "使用 './song.sh help' 查看可用命令"
+            ;;
+    esac
+}
+
+# 检查依赖
+check_dependencies() {
+    if ! command -v curl &> /dev/null; then
+        cecho red "错误: 需要安装 curl"
+        exit 1
+    fi
+
+    if ! command -v jq &> /dev/null; then
+        cecho yellow "警告: 未找到 jq，JSON输出将不会格式化"
+        format_json() {
+            cat
+        }
+    fi
+
+    if ! command -v python3 &> /dev/null; then
+        cecho yellow "警告: 未找到 python3，JSON输出将不会格式化"
+        format_json() {
+            cat
+        }
+    fi
+}
+
+# 脚本入口
+check_dependencies
+
+if [ $# -eq 0 ]; then
+    show_help
+else
+    main "$@"
+fi
+```
+:::
+
+## 17 会话控制
+
+### 17.1 介绍
+
+所谓会话控制就是`对会话进行控制`
+
+HTTP是一种无状态的协议，它没有办法区分多次的请求是否来自于同一个客户端，`无法区分用户`
+
+而产品中又大量存在这样的需求，所以我们需要通过`会话控制`来解决该问题。
+
+常见的会话控制技术有三种：
+
+- cookie
+- session
+- token
+
+### 17.2 cookie
+
+#### 17.2.1 cookie是什么
+
+cookie是HTTP服务器发送到用户浏览器并保存在本地的一小块数据。
+
+`cookie 是保存在浏览器端的一小块数据`
+
+`cookie 是按照域名划分保存的`
+
+简单示例：
+
+| 域名             | cookie                       |
+| ---------------- | ---------------------------- |
+| www.baidu.com    | a=100;b=200                  |
+| www.bilibili.com | xid=1020abce121;hm=112411213 |
+| jd.com           | x=100;ocw=12414cce           |
+
+#### 17.2.2 cookie的特点
+
+浏览器向服务器发送请求时，会自动将`当前域名下`可用的cookie设置在请求头中传递给服务器。
+
+这个请求头的名字页叫做`cookie`，所以将`cookie`理解为一个HTTP的请求头也是可以的。
+
+#### 17.2.3 cookie的运行流程
+
+填写账号和密码校验身份，校验通过后下发cookie。
+
+<img src="./images/image-20251114085104400.png" alt="image-20251114085104400" style="zoom:50%;" />
+
+有了cookie之后，后续向服务器发送请求时，就会自动携带cookie。
+
+<img src="./images/image-20251114085409184.png" alt="image-20251114085409184" style="zoom:50%;" />
+
+### 17.3 session
+
+#### 17.3.1 session是什么
+
+session是保存在`服务器端的一块儿数据`，保存当前访问用户的相关信息。
+
+#### 17.3.2 session的作用
+
+实现会话控制，可以识别用户的身份，快速获取当前用户的相关信息。
+
+#### 17.3.3 session运行流程
+
+填写账号和密码校验身份，校验通过后创建`session信息`，然后将`session_id`的值通过响应头返回给浏览器。
+
+<img src="./images/image-20251115100900965.png" alt="image-20251115100900965" style="zoom:50%;" />
+
+有了cookie，下次发送请求时会自动携带cookie，服务器通过`cookie`中的`session_id`的值确定用户的身份。
+
+<img src="./images/image-20251115101151110.png" alt="image-20251115101151110" style="zoom:50%;" />
+
+### 17.4 session 和 cookie 的区别
+
+cookie 和 session 的区别主要有如下几点：
+
+1. 存在的位置
+
+   - cookie：浏览器端
+
+   - session：服务端
+
+2. 安全性
+
+   - cookie是以明文的方式存放在客户端的，安全性相对较低
+
+   - session存放于服务器中，所以安全性`相对`较好
+
+3. 网络传输量
+
+   - cookie设置内容过多会增大报文体积，会影响传输效率。
+   - session数据存储在服务器，只是通过cookie传递id，所以不影响传输效率
+
+4. 存储限制
+
+   - 浏览器限制单个cookie保存的数据不能超过`4K`，且单个域名下的存储数量也有限制
+
+   - session数据存储在服务器中，所以没有这些限制
+
+### 17.5 token
+
+#### 17.5.1 token是什么
+
+`token`是服务端生成并返回给HTTP客户端的一串加密字符串，`token`中保存着`用户信息`。
+
+#### 17.5.2 token的作用
+
+`实现会话控制`，可以识别用户的身份，主要用于移动端APP。
+
+#### 17.5.3 token的工作流程
+
+填写账号和密码校验身份，校验通过后响应token，token一般是在响应体中返回给客户端的。
+
+<img src="./images/image-20251117124053197.png" alt="image-20251117124053197" style="zoom:50%;" />
+
+后续发送请求时，需要手动将token添加在请求报文中，一般是放在请求头中。
+
+<img src="./images/image-20251117124245204.png" alt="image-20251117124245204" style="zoom:50%;" />
+
+#### 17.5.34token的特点
+
+- 服务端压力更小
+  - 数据存储在客户端
+- 相对更安全
+  - 数据加密
+  - 可以避免CSRF（跨站请求伪造）
+- 扩展性更强
+  - 服务间可以共享
+  - 增加服务节点更简单
+
+#### 17.5.5 JWT
+
+JWT（JSON Web Token）是目前最流行的跨域认证解决方案，可用于基于`token`的身份验证。
+
+JWT使token的生成与校验更规范。
+
+我们可以使用`jsonwebtoken 包`来操作token。
+
+## 18 本地域名
+
+所谓本地域名就是`只能在本机使用的域名`，一般在开发阶段使用。
+
+### 18.1 操作流程
+
+编辑文件`C:\Windows\System32\drivers\etc\hosts`
+
+<span style="color:red;font-weight:bold;">如果修改失败，可以拷贝hosts文件并编辑，然后覆盖过去。</span>
+
 
 
 ## 99 WebStorm中对Node.js的提示支持
