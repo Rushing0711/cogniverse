@@ -33,6 +33,8 @@ export default defineConfig({
                         text: '前端框架', items: [
                             {text: 'React', link: '/frontend/new/React/00-引言'},
                             {text: 'Vue', link: '/frontend/new/Vue/00-引言'},
+                            {text: 'Bootstrap', link: '/frontend/new/Bootstrap/00-引言'},
+                            {text: 'Tailwind', link: '/frontend/new/Tailwind/00-引言'},
                         ]
                     }
                 ]
@@ -105,6 +107,8 @@ export default defineConfig({
             '/frontend/new/Vite/': autoGenSidebar('/frontend/new/Vite'),
             '/frontend/new/React/': autoGenSidebar('/frontend/new/React'),
             '/frontend/new/Vue/': autoGenSidebar('/frontend/new/Vue'),
+            '/frontend/new/Bootstrap/': autoGenSidebar('/frontend/new/Bootstrap'),
+            '/frontend/new/Tailwind/': autoGenSidebar('/frontend/new/Tailwind'),
             '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
             '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
             '/devops/new/Linux': autoGenSidebar('/devops/new/Linux'),
