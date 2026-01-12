@@ -8,7 +8,7 @@ Bootstrap是一个用于快速开发Web应用程序和网站的前端框架。Bo
 
 Bootstrap5目前是Bootstrap的最新版本，利用提供的Sass变量和大量mixin、响应式栅格系统、可扩展的预制组件、基于jQuery的强大的插件系统，能够快速为你的想法开发出原型或者构建整个app。
 
-**浏览器兼容性：**Bootstrap5兼容所有主流浏览器（Chrome、Firefox、Edge、Safari和opera）。如果您需要支持IE11及以下版本，请使用 Bootstrap4或者Bootstrap3.
+**浏览器兼容性：** Bootstrap5兼容所有主流浏览器（Chrome、Firefox、Edge、Safari和opera）。如果您需要支持IE11及以下版本，请使用 Bootstrap4或者Bootstrap3.
 
 ## 2 Bootstrap安装
 
@@ -1803,21 +1803,26 @@ Bootstrap 5提供了很多有用的类来帮助我们快速实现效果，不需
 
 ```html
 <div class="container">
-    <div class="clearfix bg-success">
-        <div class="float-sm-end">在小型屏幕或者更宽的屏幕上向右浮动</div>
-    </div>
-    <div class="clearfix bg-success">
-        <div class="float-md-end">在中型屏幕或者更宽的屏幕上向右浮动</div>
-    </div>
-    <div class="clearfix bg-success">
-        <div class="float-lg-end">在大型屏幕或者更宽的屏幕上向右浮动</div>
-    </div>
-    <div class="clearfix bg-success">
-        <div class="float-xl-end">在超大型屏幕或者更宽的屏幕上向右浮动</div>
-    </div>
-    <div class="clearfix bg-success">
-        <div class="float-xxl-end">在特大型屏幕或者更宽的屏幕上向右浮动</div>
-    </div>
+  <div class="clearfix bg-primary">
+    <span class="float-start">向左浮动</span>
+    <span class="float-end">向右浮动</span>
+  </div>
+
+  <div class="clearfix bg-success">
+    <div class="float-sm-end bg-primary">在小型屏幕或者更宽的屏幕上向右浮动</div>
+  </div>
+  <div class="clearfix bg-success">
+    <div class="float-md-end bg-primary">在中型屏幕或者更宽的屏幕上向右浮动</div>
+  </div>
+  <div class="clearfix bg-success">
+    <div class="float-lg-end bg-primary">在大型屏幕或者更宽的屏幕上向右浮动</div>
+  </div>
+  <div class="clearfix bg-success">
+    <div class="float-xl-end bg-primary">在超大型屏幕或者更宽的屏幕上向右浮动</div>
+  </div>
+  <div class="clearfix bg-success">
+    <div class="float-xxl-end bg-primary">在特大型屏幕或者更宽的屏幕上向右浮动</div>
+  </div>
 </div>
 ```
 
@@ -1850,6 +1855,1061 @@ Bootstrap 5提供了很多有用的类来帮助我们快速实现效果，不需
 | .fw-normal       | 将元素的字体设置为正常                     |
 | .fw-light        | 将元素的字体设置为细体                     |
 | .fw-lighter      | 将元素的字体粗细设置为更细（相对于父元素） |
+
+### 16.5 宽度和高度
+
+#### 16.5.1 宽度
+
+使用`w-*`类（`.w-25`，`.w-50`，`.w-75`，`.w-100`，`.mw-auto`,`.mw-100`）设置元素的宽度
+
+```html
+<div class="container">
+    <div class="w-25 bg-info">这个盒子的宽度是25%</div>
+    <div class="w-50 bg-info">这个盒子的宽度是50%</div>
+    <div class="w-75 bg-info">这个盒子的宽度是75%</div>
+    <div class="w-100 bg-info">这个盒子的宽度是100%</div>
+    <div class="w-auto bg-info">宽度自动</div>
+    <div class="mw-100 bg-info">最大宽度100%</div>
+    <div class="min-vw-100 bg-danger">最小宽度100vw，我太宽了</div>
+    <div class="vw-100 bg-warning">宽度100vw，我太宽了</div>
+    <div class="bg-info">默认盒子的宽度是100%</div>
+</div>
+```
+
+| 类名        | 作用          |
+| ----------- | ------------- |
+| .w-25       | 宽度25%       |
+| .w-50       | 宽度50%       |
+| .w-75       | 宽度75%       |
+| .w-100      | 宽度100%      |
+| .w-auto     | 宽度自动      |
+| .mw-100     | 最大宽度100%  |
+| .min-vw     | 最小宽度100vw |
+| .vw-100     | 宽度100vw     |
+| .h-25       | 高度25%       |
+| .h-50       | 高度50%       |
+| .h-75       | 高度75%       |
+| .h-100      | 高度100%      |
+| .h-auto     | 高度自动      |
+| .mh-100     | 最大高度100%  |
+| .min-vh-100 | 最小高度100vh |
+| .vh-100     | 高度100vh     |
+
+#### 16.5.2 高度
+
+使用`h-*`类（`.h-25`,`.h-50`,`.h-75`,`.h-100`,`.h-auto`,`.mh-auto`,`.mh-100`）设置元素的高度
+
+```html
+<div class="container">
+		<div class="bg-light" style="height: 100px">
+      <div class="h-25 bg-success">这个盒子的高度是25%</div>
+      <div class="h-50 bg-success">这个盒子的高度是50%</div>
+      <div class="h-75 bg-success">这个盒子的高度是75%</div>
+      <div class="h-100 bg-success">这个盒子的高度是100%</div>
+      <div class="h-auto bg-success">高度自动</div>
+      <div class="bg-success overflow-y-auto" style="height: 200px">
+        <div class="mh-100 bg-danger border border-5">
+          这个盒子的最大高度是100%（虽然我的父div设置了 overflow-y-auto，也不会出现滚动条）
+        </div>
+      </div>
+      <div class="bg-success overflow-y-auto" style="height: 200px">
+        <div class="min-vh-100 bg-warning border border-5">
+          这个盒子的最小高度是100vh（我的父div设置了 overflow-y-auto，所以会出现滚动条）
+        </div>
+      </div>
+      <div class="vh-100 bg-success">高度100vh</div>
+    </div>
+  </div>
+```
+
+### 16.6 间距
+
+在元素中涉及使用内间距或者外间距时，p-内间距，这个Clsss属性会设定padding值，外间距，这个Class属性会设定margin值。
+
+- `m`-用来设置`margin`
+- `p`-用来设置`padding`
+
+#### 16.6.1 间距的方向
+
+- `t`-用来设置margin-top或padding-top
+
+- `b`-用来设置margin-bottom或padding-bottom
+- `s`用来设置margin-left或padding-left
+- `e`-用来设置margin-right或padding-right
+- `x`-用来设置left和right
+- `y`-用来设置top和right
+
+- `blank`-用来设置元素在四个方向的margin或padding
+
+#### 16.6.2 间距的距离
+
+- `0`-把margin或padding设置为0
+- `1`-把margin或padding设置为.25rem
+- `2`-把margin或padding设置为.5rem
+- `3`-把margin或padding设置为1rem
+- `4`-把margin或padding设置为1.5rem
+- `5`-把margin或padding设置为3rem
+
+- `auto`-把margin设置为auto
+
+```html
+<div class="container">
+  <div class="pt-4 bg-warning">我只有上内边距（1.5rem）</div>
+  <div class="p-5 bg-success">我在所有边都有内边距（3rem）</div>
+  <div class="m-5 pb-5 bg-info">我在所有边都有外边距（3rem）和下内边距（3rem）</div>
+</div>
+```
+
+
+
+### 16.7 阴影
+
+可以使用shadow类为元素添加阴影
+
+| 类             | 说明                   |
+| -------------- | ---------------------- |
+| `.shadow`      | 为元素添加阴影。       |
+| `.shadow-sm`   | 为元素添加一个小阴影   |
+| `.shadow-lg`   | 为元素添加更大的阴影。 |
+| `.shadow-none` | 从元素中移除阴影。     |
+
+```html
+<div class="container">
+  <div class="shadow-sm p-4 mt-4">小阴影</div>
+  <div class="shadow p-4 mt-4">正常阴影</div>
+  <div class="shadow-lg p-4 mt-4">大阴影</div>
+  <div class="shadow-none shadow-lg p-4 mt-4 border">取消阴影（实际无阴影）</div>
+  <div class="shadow-lg shadow-none p-4 mt-4 border">取消阴影（实际无阴影）</div>
+</div>
+```
+
+## 17 Flex
+
+弹性盒子是CSS3的一种新的布局模式，更适合响应式的设计。
+
+### 17.1 创建一个弹性盒子容器
+
+使用`d-flex`类，创建`flexbox`容器并将直接子项转换为`flex`项。
+
+使用`d-inline-flex`类创建行内`flexbox`容器。
+
+```html
+<div class="container">
+  <div class="d-flex p-3 bg-info text-white">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+  <div class="d-inline-flex p-3 bg-info text-white">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.2 水平方向
+
+`.flex-row`可以设置弹性子元素水平显示，这是默认的。
+
+使用`.flex-row-reverse`类用于设置右对齐显示，即与`.flex-row`方向相反。
+
+```html
+<div class="container">
+  <div class="d-flex p-3 bg-info text-white flex-row">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 bg-info text-white flex-row-reverse">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.3 垂直方向
+
+使用`.flex-column`可以设置垂直显示`flex`项目（彼此堆叠），或使用`.flex-column-reverse`反转垂直方向。
+
+```html
+<div class="container">
+  <div class="d-flex p-3 bg-info text-white flex-column">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 bg-info text-white flex-column-reverse">
+    <div class="p-2 bg-success">弹性项目1</div>
+    <div class="p-2 bg-primary">弹性项目2</div>
+    <div class="p-2 bg-secondary">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.4 换行
+
+默认情况下，项目都排在一条线（又称“轴线”）上。flex-wrap属性定义，如果一条轴线排不下，如何换行。
+
+- `flex-nowrap`（默认）：不换行。
+- `flex-wrap`：换行，第一行在上方。
+- `flex-wrap-reverse`：换行，第一行在下方。
+
+```html
+<div class="container">
+  <div class="d-flex p-3 flex-wrap bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex p-3 flex-wrap-reverse bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+</div>
+```
+
+### 17.5 对齐内容
+
+使用`.justify-content-*`类可改变弹性项目的对齐方式。`*`好允许的值有。
+
+- start（默认）
+- end
+- center
+- between
+- around
+- evenly
+
+```html
+<div class="container">
+  <div class="d-flex p-3 justify-content-start bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 justify-content-end bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 justify-content-center bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 justify-content-between bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 justify-content-around bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex p-3 justify-content-evenly bg-info">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+</div>
+```
+
+使用`.align-item-*`类控制单行弹性项目的垂直对齐方式，`*`号允许的值有。
+
+- start
+- end
+- center
+- baseline
+- stretch（默认值）
+
+```html
+<div class="container">
+  <div class="d-flex align-items-stretch bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex align-items-start bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex align-items-center bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex align-items-end bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+  </div>
+  <div class="d-flex align-items-baseline bg-info" style="height: 300px">
+    <div class="p-2 bg-primary" style="font-size: 10px">Flex</div>
+    <div class="p-2 bg-success" style="font-size: 20px">Flex</div>
+    <div class="p-2 bg-secondary" style="font-size: 30px">Flex</div>
+  </div>
+</div>
+```
+
+使用`.align-content-*`用于控制多行项目的对齐方式，`*`号允许的值有。
+
+- start
+- end
+- center
+- between
+- around
+- stretch（默认值）
+
+```html
+<div class="container">
+  <div class="d-flex flex-wrap align-content-stretch bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex flex-wrap align-content-start bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex flex-wrap align-content-end bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex flex-wrap align-content-center bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex flex-wrap align-content-between bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+  <div class="d-flex flex-wrap align-content-around bg-info" style="height: 300px">
+    <div class="p-2 bg-primary w-25">弹性项目1</div>
+    <div class="p-2 bg-success w-25">弹性项目2</div>
+    <div class="p-2 bg-secondary w-25">弹性项目3</div>
+    <div class="p-2 bg-warning w-25">弹性项目4</div>
+    <div class="p-2 bg-danger w-25">弹性项目5</div>
+  </div>
+</div>
+```
+
+### 17.6 顺序
+
+使用`.order`类可更改特定flex项的视觉顺序，其中最低的数字具有最高的优先级（order-1显示在order-2之前，以此类推）默认为0。
+
+```html
+<div class="container">
+  <div class="d-flex">
+    <div class="p-2 bg-secondary">弹性项目1</div>
+    <div class="p-2 bg-warning order-3">弹性项目2</div>
+    <div class="p-2 bg-primary order-1">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.7 等宽
+
+在flex项目上使用`.flex-fill`可强制它们等宽。
+
+```html
+<div class="container">
+  <div class="d-flex">
+    <div class="p-2 bg-secondary flex-fill">弹性项目1</div>
+    <div class="p-2 bg-warning flex-fill">弹性项目2</div>
+    <div class="p-2 bg-primary flex-fill">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.8 伸展
+
+在flex项目上使用`.flex-grow-1`可占用多余的空间。
+
+```html
+<div class="container">
+  <div class="d-flex">
+    <div class="p-2 bg-secondary">弹性项目1</div>
+    <div class="p-2 bg-warning">弹性项目2</div>
+    <div class="p-2 bg-primary flex-grow-1">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.9 指定子元素对齐
+
+要设置指定子元素对齐可以使用`.align-self-*`类来控制，`align-self-*`属性允许单个项目有与其他项目不一样的对齐方式。
+
+- start
+- end
+- center
+- baseline
+- stretch(默认值)
+
+```html
+<div class="container">
+  <div class="d-flex" style="width:400px;height: 300px;">
+    <div class="p-2 bg-secondary align-self-end">弹性项目1</div>
+    <div class="p-2 bg-warning align-self-center">弹性项目2</div>
+    <div class="p-2 bg-primary align-self-start">弹性项目3</div>
+  </div>
+</div>
+```
+
+### 17.10 响应式flex类
+
+可以根据不同的设备设置flex类，从而实现页面响应式布局，`*`号可以的值有：`sm`,`md`,`lg`以及`xl`，对应的分别是小型设备、中型设备、大型设备、超大型设备。
+
+| 类                         | 实例                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| 弹性容器                   |                                                              |
+| .d-*-flex                  | 根据不同的屏幕设备创建弹性盒子容器                           |
+| .d-*-inline-flex           | 根据不同的屏幕设备创建行内弹性盒子容器                       |
+| 方向                       |                                                              |
+| .flex-*-row                | 根据不同的屏幕设备在水平方向显示弹性子元素                   |
+| .flex-*-row-reverse        | 根据不同的屏幕设备在水平方向显示弹性子元素，且右对齐         |
+| .flex-*-column             | 根据不同的屏幕设备在垂直方向显示弹性子元素                   |
+| .flex-*-column-reverse     | 根据不同的屏幕设备在垂直方向显示弹性子元素，且方向相反       |
+| 内容对齐                   |                                                              |
+| .justify-content-*-start   | 根据不同屏幕设备在开始位置显示弹性子元素（左对齐）           |
+| .justify-content-*-end     | 根据不同屏幕设备在尾部位置显示弹性子元素（右对齐）           |
+| .justify-content-*-center  | 根据不同屏幕设备在居中位置显示弹性子元素（居中对齐）         |
+| .justify-content-*-between | 根据不同屏幕设备使用 between 均匀分布，两端对齐（最常用）。  |
+| .justify-content-*-around  | 根据不同屏幕设备使用 around 均匀分布，两端距离是中间距离的一半。 |
+| .justify-content-*-evenly  | 根据不同屏幕设备使用 evenly 均匀分布，两端距离与中间距离一致。 |
+| 等宽                       |                                                              |
+| .flex-*-fill               | 根据不同的屏幕设备强制等宽                                   |
+| 扩展                       |                                                              |
+| .flex-*-grow-0             | 不同的屏幕设备不设置扩展                                     |
+| .flex-*-grow-1             | 不同的屏幕设备设置扩展                                       |
+
+```html
+<div class="container">
+  <div class="d-sm-flex bg-primary">
+    <div class="bg-danger">弹性盒子1</div>
+    <div class="bg-warning">弹性盒子2</div>
+    <div class="bg-info">弹性盒子3</div>
+  </div>
+</div>
+```
+
+## 18 字体图标
+
+字体图标是在Web项目中使用的图标字体
+
+使用字体图标的好处是，可以通过应用 CSS color 属性来创建任何颜色的图标。此外，要更改图标的大小，只需要使用 CSS font-size 属性即可。
+
+**如何获取字体图标**
+
+在网页中包含 Bootstrap5 图标的最简单方法是使用 CDN 链接。此CDN链接基本上指向一个远程CSS文件，其中包含生成字体图标所需的所有类。
+
+我们可以在 Bootstrap 模板以及简单的网页中包含 Bootstrap 5 图标，而无需使用 Bootstrap 框架。利用提供的公共CDN服务并将图标字体的样式表添加到网站的`<head>`标签内。
+
+- 步骤一：在HTML文档的`<head>`部分包含下面的 Bootstrap CDN 链接。
+
+:::code-group
+
+```html [CDN]
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+```
+
+```bash [NPM]
+$ npm i bootstrap-icons
+```
+
+:::
+
+- 步骤二：引入图标
+```js
+import 'bootstrap-icons/font/bootstrap-icons.css';
+```
+- 步骤三：要将图标放置到网页中，使用语法`<i class="bi-*"></i>`其中`*`代表特定图标的类名。
+
+```html
+<i class="bi bi-yelp"></i>
+```
+
+```html
+<div class="container">
+  <i class="bi bi-yelp"></i>
+  <hr>
+  <button type="button" class="btn btn-primary">
+    <i class="bi bi-person-fill" style="font-size: 20px; color:red;text-shadow:3px 3px 5px black"></i>
+    登录
+  </button>
+  <hr>
+  <div class="btn-group">
+    <button type="button" class="btn btn-success">
+      <i class="bi bi-1-circle"></i>
+      按钮1
+    </button>
+    <button type="button" class="btn btn-warning">
+      <i class="bi bi-2-circle"></i>
+      按钮2
+    </button>
+    <button type="button" class="btn btn-danger">
+      <i class="bi bi-3-circle"></i>
+      按钮3
+    </button>
+  </div>
+</div>
+```
+
+## 19 导航
+
+Bootstrap5 提供了一种简单快捷的方法来创建基本导航，它提供了非常灵活和优雅的选项卡和Pills等组件。
+
+Bootstrap5的所有导航组件，包括选项卡和Pills，都通过基本的`.nav`类共享相同的基本标记和样式。
+
+### 19.1 创建基本导航
+
+要创建简单的水平菜单，可以将`.nav`类添加到`<ul>`元素，然后为每个`<li>`元素添加`.nav-item`并将`.nav-link`类添加到他们的链接元素。
+```html
+<div class="container">
+  <ul class="nav">
+    <li class="nav-item"><a href="#" class="nav-link">首页</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">学习</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">前端</a></li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+</div>
+```
+
+### 19.2 导航对齐
+
+默认情况下，导航是左对齐的，可以使用`flexbox`实用程序添加`.justify-content-center`类使导航居中，添加`.justify-content-end`类使导航右对齐。
+
+```html
+<div class="container">
+  <ul class="nav justify-content-center">
+    <li class="nav-item"><a href="#" class="nav-link">首页</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">学习</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">前端</a></li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+</div>
+```
+
+### 19.5 垂直导航栏
+
+```html
+<div class="container">
+  <ul class="nav flex-column">
+    <li class="nav-item"><a href="#" class="nav-link">首页</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">学习</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">前端</a></li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+</div>
+```
+
+### 19.4 选项卡
+
+使用类`.nav-tabs`添加到基本导航来生成选项卡式的导航，并将`.active`类添加到活动/当前链接。
+
+```html
+<div class="container">
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><a href="#" class="nav-link active">
+      <i class="bi bi-house-door-fill"></i> 首页</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-book-fill"></i> 学习</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-bookmark-star-fill"></i> 前端</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+</div>
+```
+
+### 19.5 创建 Pills 导航
+
+可以通过在基本导航上添加类`.nav-pills`来创建基于Pills的导航。
+
+```html
+<div class="container">
+  <ul class="nav nav-pills">
+    <li class="nav-item"><a href="#" class="nav-link active">
+      <i class="bi bi-house-door-fill"></i> 首页</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-book-fill"></i> 学习</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-bookmark-star-fill"></i> 前端</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">工具</a></li>
+  </ul>
+</div>
+```
+
+### 19.6 等宽的选项卡
+
+使用`.nav-justified`类（等宽）对齐标签/胶囊，让标签式或胶囊式导航菜单与父元素等宽。
+
+```html
+<div class="container">
+  <ul class="nav nav-pills nav-justified">
+    <li class="nav-item"><a href="#" class="nav-link active">
+      <i class="bi bi-house-door-fill"></i> 首页</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-book-fill"></i> 学习</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-bookmark-star-fill"></i> 前端</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">工具</a></li>
+  </ul>
+</div>
+```
+
+## 20 导航栏
+
+Bootstrap5导航栏组件为网站或应用程序创建响应式导航标题。这些响应式导航栏在手机登小视口的设备上回折叠，但当用户单击切换按钮时会展开。但是，它在中型和大型设备（例如笔记本电脑或台式机）上将正常显示未水平。
+
+### 20.1 基础的导航栏
+
+通过类`.navbar`可以创建一个标准的导航栏，若要创建响应式的导航栏，可以在类`.navbar`的基础上添加类`.navbar-expand-xxl|xl|lg|md|sm`来创建（大屏幕水平铺开，小屏幕垂直堆叠）。
+
+导航栏上的选项可以使用`<ul>`元素并添加class=“navbar-nav”类。然后在`<li>`元素上添加`.nav-item`类，`<a>`元素上使用`.nav-link`类。
+
+```html
+<div class="container">
+  <nav class="navbar navbar-expand-sm">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a href="#" class="nav-link">链接1</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接2</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接3</a></li>
+    </ul>
+  </nav>
+</div>
+```
+
+### 20.2 垂直导航栏
+
+删除`.navbar-expand-*`类可创建始终垂直的导航栏：
+
+```html
+<div class="container">
+  <nav class="navbar">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a href="#" class="nav-link">链接1</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接2</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接3</a></li>
+    </ul>
+  </nav>
+</div>
+```
+
+### 20.3 彩色导航栏
+
+可以使用`.bg-color`类来更改导航栏的背景颜色，`.navbar-dark`类为导航栏中的所有链接添加白色文本颜色，或使用`.navbar-light`类添加黑色文本颜色。
+
+```html
+<div class="container">
+  <nav class="navbar bg-light navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a href="#" class="nav-link">链接1</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接2</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接3</a></li>
+    </ul>
+  </nav>
+</div>
+```
+
+### 20.4 品牌/标志
+
+`.navbar-brand`类用于突出显示页面的品牌/标志/项目名称。
+
+```html
+<div class="container">
+  <nav class="navbar bg-light navbar-light">
+    <ul class="navbar-nav">
+      <li class="nav-item"><a href="#" class="nav-link navbar-brand">链接1</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接2</a></li>
+      <li class="nav-item"><a href="#" class="nav-link">链接3</a></li>
+    </ul>
+  </nav>
+</div>
+```
+
+### 20.5 固定导航栏
+
+导航栏也可以固定在页面的顶部或底部。固定导航栏会在独立于页面滚动的固定位置（顶部或底部）保持可见。
+
+`.fixed-top`类使导航栏固定在页面的顶部。
+
+`.fixed-bottom`类把导航栏停留在页面底部。
+
+```html
+<div class="container">
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top">
+    <div class="container-fluid"><a href="#" class="navbar-brand">Logo</a></div>
+  </nav>
+  <hr>
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-bottom">
+    <div class="container-fluid"><a href="#" class="navbar-brand">Logo</a></div>
+  </nav>
+</div>
+```
+
+### 20.6 导航栏粘在顶部
+
+使用`.navbar`元素上的`.sticky-top`类来创建随页面滚动直到到达顶部然后停留在那里的粘性顶部导航栏。
+
+```html
+<div class="container">
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top opacity-25">
+    <div class="container-fluid"><a href="#" class="navbar-brand">Logo固定在顶部</a></div>
+  </nav>
+  <hr>
+  <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-bottom opacity-25">
+    <div class="container-fluid"><a href="#" class="navbar-brand">Logo固定在底部</a></div>
+  </nav>
+  <hr>
+  <nav class="navbar navbar-expand-sm bg-primary navbar-dark sticky-top">
+    <div class="container-fluid" style="height: 50px"><a href="#" class="navbar-brand">Logo粘在顶部</a></div>
+  </nav>
+</div>
+```
+
+## 21 下拉菜单
+
+下拉菜单通常用于导航标题内，在用户鼠标悬停或单击触发元素时显示相关链接列表。
+
+### 21.1 基础的下拉列表
+
+```html
+<div class="container">
+  <div class="dropdown">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">下拉按钮</button>
+    <ul class="dropdown-menu">
+      <li><a class="dropdown-item" href="#">菜单项1</a></li>
+      <li><a class="dropdown-item" href="#">菜单项2</a></li>
+      <li><a class="dropdown-item" href="#">菜单项3</a></li>
+    </ul>
+  </div>
+</div>
+```
+
+Bootstrap下拉菜单基本上有两个组件——下拉触发元素（可以是超链接或按钮）和下拉菜单本身。
+
+`.dropdown`类指示下拉菜单。
+
+如需打开下拉菜单，使用设置`.dropdown-toggle`类。`.dropdown-toggle`类定义了触发器元素，而触发器元素上需要属性`data-bs-toggle="dropdown"`来切换下拉菜单。
+
+带有`.dropdown-menu`类的`<div>`元素可构建下拉菜单。然后将`.dropdown-item`类添加到下拉菜单中的每个元素（链接或按钮）。
+
+### 21.2 下拉列表分割线
+
+`.dropdown-divider`类用于通过水平细边框分隔下拉菜单中的链接。
+
+`.dropdown-header`向下拉菜单的标签区域添加标题。
+
+```html
+<div class="container">
+  <div class="dropdown">
+    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">下拉按钮</button>
+    <ul class="dropdown-menu">
+      <li class="dropdown-header">下拉菜单标题</li>
+      <li><a class="dropdown-item" href="#">菜单项1</a></li>
+      <li><a class="dropdown-item" href="#">菜单项2</a></li>
+      <li><a class="dropdown-item" href="#">菜单项3</a></li>
+      <li class="dropdown-divider"></li>
+      <li class="dropdown-header">下拉菜单标题</li>
+      <li><a href="#" class="dropdown-item">分离的链接</a></li>
+    </ul>
+  </div>
+</div>
+```
+
+### 21.3 导航、按钮组等的下拉
+
+```html
+<div class="container">
+  <ul class="nav">
+    <li class="nav-item"><a href="#" class="nav-link">首页</a></li>
+    <li class="nav-item"><a href="#" class="nav-link">学习</a></li>
+    <li class="nav-item dropdown">
+      <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">前端</a>
+      <ul class="dropdown-menu">
+        <li class="dropdown-header">下拉菜单标题</li>
+        <li><a class="dropdown-item" href="#">菜单项1</a></li>
+        <li><a class="dropdown-item" href="#">菜单项2</a></li>
+        <li><a class="dropdown-item" href="#">菜单项3</a></li>
+        <li class="dropdown-divider"></li>
+        <li class="dropdown-header">下拉菜单标题</li>
+        <li><a href="#" class="dropdown-item">分离的链接</a></li>
+      </ul>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+  <hr>
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><a href="#" class="nav-link active">
+      <i class="bi bi-house-door-fill"></i> 首页</a>
+    </li>
+    <li class="nav-item dropdown"><a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+      <i class="bi bi-book-fill"></i> 学习</a>
+      <ul class="dropdown-menu">
+        <li class="dropdown-header">下拉菜单标题</li>
+        <li><a class="dropdown-item" href="#">菜单项1</a></li>
+        <li><a class="dropdown-item" href="#">菜单项2</a></li>
+        <li><a class="dropdown-item" href="#">菜单项3</a></li>
+        <li class="dropdown-divider"></li>
+        <li class="dropdown-header">下拉菜单标题</li>
+        <li><a href="#" class="dropdown-item">分离的链接</a></li>
+      </ul>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link">
+      <i class="bi bi-bookmark-star-fill"></i> 前端</a>
+    </li>
+    <li class="nav-item"><a href="#" class="nav-link disabled">禁用</a></li>
+  </ul>
+  <hr>
+  <div class="btn-group dropdown">
+    <button type="button" class="btn btn-success active">按钮1</button>
+    <button type="button" class="btn btn-warning">按钮2</button>
+    <button type="button" class="btn bg-danger dropdown-toggle" data-bs-toggle="dropdown">按钮3</button>
+    <ul class="dropdown-menu">
+      <li class="dropdown-header">下拉菜单标题</li>
+      <li><a class="dropdown-item" href="#">菜单项1</a></li>
+      <li><a class="dropdown-item" href="#">菜单项2</a></li>
+      <li><a class="dropdown-item" href="#">菜单项3</a></li>
+      <li class="dropdown-divider"></li>
+      <li class="dropdown-header">下拉菜单标题</li>
+      <li><a href="#" class="dropdown-item">分离的链接</a></li>
+    </ul>
+  </div>
+</div>
+```
+
+## 22 表单
+
+HTML表单是网页和应用程序不可或缺的一部分。Bootstrap通过预定义的类极大地简化了表单控件（如标签、输入字段、选择框、文本区域、按钮等）的样式设置和对齐过程。
+
+Bootstrap5提供了三种不同类型的表单布局：
+
+- 垂直表单（默认）
+- 水平表单
+- 内联表单
+
+### 22.1 创建垂直表单布局
+
+基本的表单结构是Bootstrap自带的，个别的表单控件自动接收一些全局样式。
+
+把标签和控件放在一个带有 class `.form-group` 的`<div>`中。这是获取最佳间距所必需的。
+
+`label`元素添加了`.form-label`类以确保正确的填充。
+
+向所有的文本元素`<input>`、`<textarea>`添加class=`form-control`
+
+```html
+<div class="container">
+  <form class="form">
+    <div class="form-group mt-1">
+      <input type="text" class="form-control" placeholder="请输入名称">
+    </div>
+    <div class="form-group mt-1">
+      <input type="email" class="form-control" placeholder="Email">
+    </div>
+    <button type="submit" class="btn btn-primary mt-1">提交</button>
+  </form>
+</div>
+```
+
+### 22.2 创建内联表单
+
+表单元素并排显示，可以使用`.row`和`.col`
+
+```html
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <input type="text" class="form-control" placeholder="请输入名称">
+    </div>
+    <div class="col">
+      <input type="password" class="form-control" placeholder="请输入密码">
+    </div>
+  </div>
+</div>
+```
+
+### 22.3 表单控件尺寸
+
+`.form-control-lg`或`.form-control-sm`更改`.form-control`输入控件的大小。
+
+```html
+<div class="container">
+  <input type="text" class="form-control form-control-lg" placeholder="大型输入控件">
+  <input type="text" class="form-control mt-1" placeholder="普通输入控件">
+  <input type="text" class="form-control form-control-sm mt-1" placeholder="小型输入控件">
+</div>
+```
+
+### 22.3 向表单控件添加帮助文本
+
+```html
+<div class="container">
+  <div class="row align-items-center">
+    <div class="col-auto"><label class="col-form-label" for="inputPassword">Password</label></div>
+    <div class="col-auto"><input type="password" class="form-control"></div>
+    <div class="col-auto"><span class="form-text">必须 8-20 个字符长</span></div>
+  </div>
+</div>
+```
+
+### 22.4 选择菜单
+
+Bootstrap5中设置选择菜单的样式，将`.form-select`类添加到`<select>`元素
+
+```html
+<div class="container">
+  <select name="" id="" class="form-select form-select-lg mt-1" multiple>
+    <option value="1">选项1</option>
+    <option value="2">选项2</option>
+    <option value="3">选项3</option>
+    <option value="4">选项4</option>
+    <option value="5">选项5</option>
+  </select>
+  <select name="" id="" class="form-select mt-1">
+    <option value="1">选项1</option>
+    <option value="2">选项2</option>
+    <option value="3">选项3</option>
+    <option value="4">选项4</option>
+    <option value="5">选项5</option>
+  </select>
+  <select name="" id="" class="form-select form-select-sm mt-1">
+    <option value="1">选项1</option>
+    <option value="2">选项2</option>
+    <option value="3">选项3</option>
+    <option value="4">选项4</option>
+    <option value="5">选项5</option>
+  </select>
+</div>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
