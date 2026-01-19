@@ -1406,11 +1406,12 @@ $ docker rm -v $(docker ps -a|grep es-node-|awk '{print $1}')
 ```bash
 # /usr/local/dockerv/mongo 目录会自动创建
 $ docker run --name mongo \
+--ulimit nofile=64000:64000 \
 -e MONGO_INITDB_ROOT_USERNAME=root \
 -e MONGO_INITDB_ROOT_PASSWORD=root123 \
 -v /usr/local/dockerv/mongo/data/:/data/db \
 -p 27017:27017 \
--d mongo:8.2.1
+-d mongo:8.2.3
 
 # 验证服务是否启动成功
 $ docker exec -it mongo mongosh mongodb://root:root123@localhost:27017/admin?authSource=admin
@@ -1433,7 +1434,61 @@ $ docker run --name mongo-express \
 
 用户名/密码：admin/express123
 
+- 问题
 
+  - 问题1
+
+  ```bash
+  To help improve our products, anonymous usage data is collected and sent to MongoDB periodically (https://www.mongodb.com/legal/privacy-policy).
+  You can opt-out by running the disableTelemetry() command.
+  
+  ------
+     The server generated these startup warnings when booting
+     2026-01-18T13:43:53.943+00:00: Soft rlimits for open file descriptors too low
+     2026-01-18T13:43:53.943+00:00: For customers running the current memory allocator, we suggest changing the contents of the following sysfsFile
+     2026-01-18T13:43:53.943+00:00: We suggest setting the contents of sysfsFile to 0.
+     2026-01-18T13:43:53.943+00:00: We suggest setting swappiness to 0 or 1, as swapping can cause performance problems.
+  ------
+  ```
+
+  - 解决
+
+  ```bash
+  # MongoDB 建议提高 打开文件描述符限制（open file descriptors）。
+  $ sudo tee -a /etc/security/limits.conf <<EOF
+  # MongoDB recommended limits
+  * soft nofile 64000
+  * hard nofile 64000
+  EOF
+  ```
+
+  ```bash
+  # 创建 systemd 服务文件，永久禁用 THP（特殊说明：目前 For customers ... 无法消除）
+  $ sudo tee /etc/systemd/system/disable-thp.service <<'EOF'
+  [Unit]
+  Description=Disable Transparent Huge Pages (THP)
+  DefaultDependencies=no
+  After=sysinit.target local-fs.target
+  
+  [Service]
+  Type=oneshot
+  ExecStart=/bin/sh -c 'echo never > /sys/kernel/mm/transparent_hugepage/enabled && echo never > /sys/kernel/mm/transparent_hugepage/defrag'
+  RemainAfterExit=yes
+  
+  [Install]
+  WantedBy=multi-user.target
+  EOF
+  
+  # 启用服务
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now disable-thp.service
+  ```
+
+  ```bash
+  # vm.swappiness 控制 Linux 内核将内存页换出到 swap 的倾向。
+  $ echo "vm.swappiness=1" | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p  # 重载配置
+  ```
 
 ## 90.9 JFrog Artifactory
 

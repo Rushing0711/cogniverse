@@ -237,33 +237,54 @@ Docker Compose version v2.35.1
         
         - live-restore: 是否启用“实时恢复”功能，允许Docker在更新或重启时不终止运行中的容器。
         - debug：开启调试，若启动失败，可以在 /var/log/messages 查看原因
+        
+        :::code-group 
+        
+        ```bash [docker-ce-20.10.24]
+        # // overlay2.override_kernel_check=true 解决新内核兼容问题
+        $ sudo tee /etc/docker/daemon.json <<-'EOF'
+        {
+          "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+          	"max-size": "100m",
+          	"max-file": "5",
+          	"compress": "true"
+          },
+          "storage-driver": "overlay2",
+          "storage-opts": [
+          	"overlay2.override_kernel_check=true"
+          ],
+          "insecure-registries": ["repo.emon.remote:5080"]
+        }
+        EOF
+        ```
+        
+        ```bash [docker-ce-29.1.5]
+        $ sudo tee /etc/docker/daemon.json <<-'EOF'
+        {
+          "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+                "max-size": "100m",
+                "max-file": "5",
+                "compress": "true"
+          },
+          "storage-driver": "overlay2",
+          "insecure-registries": ["repo.emon.remote:5080"]
+        }
+        EOF
+        ```
+        
+        :::
+        
+        说明：
+        
+            1. `"registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],` 阿里云加速器
+            2. `"exec-opts": ["native.cgroupdriver=systemd"],`  // 关键：必须与 kubelet 一致
   
-  ```bash {3,4,13}
-  $ sudo tee /etc/docker/daemon.json <<-'EOF'
-  {
-    "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],
-    "exec-opts": ["native.cgroupdriver=systemd"],
-    "log-driver": "json-file",
-    "log-opts": {
-    	"max-size": "100m",
-    	"max-file": "5",
-    	"compress": "true"
-    },
-    "storage-driver": "overlay2",
-    "storage-opts": [
-    	"overlay2.override_kernel_check=true"
-    ],
-    "insecure-registries": ["emon:5080"]
-  }
-  EOF
-  ```
-  
-
-说明：
-
-  1. `  "registry-mirrors": ["https://pyk8pf3k.mirror.aliyuncs.com"],` 阿里云加速器
-  2. `  "exec-opts": ["native.cgroupdriver=systemd"],`  // 关键：必须与 kubelet 一致
-  3. `  	"overlay2.override_kernel_check=true"` // 解决新内核兼容问题
 
 - 查看
 
@@ -286,7 +307,7 @@ $ sudo systemctl restart docker
 - 配置Docker代理
 
 ```bash
-$ mkdir -p /etc/systemd/system/docker.service.d
+$ sudo mkdir -p /etc/systemd/system/docker.service.d
 ```
 
 ```bash
@@ -294,7 +315,7 @@ $ sudo tee /etc/systemd/system/docker.service.d/proxy.conf <<-'EOF'
 [Service]
 Environment="HTTP_PROXY=http://192.168.200.1:7890"
 Environment="HTTPS_PROXY=http://192.168.200.1:7890"
-Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon"
+Environment="NO_PROXY=127.0.0.1,localhost,192.168.200.119,repo.emon.remote"
 EOF
 ```
 
@@ -316,38 +337,43 @@ $ systemctl show --property=Environment docker
 ```
 
 ```bash
-Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.116,emon
+Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=127.0.0.1,localhost,192.168.200.119,repo.emon.remote
 ```
 
 ## 4 配置Docker服务
 
 ### 4.1 推荐通过配置sudo的方式：
 
-不推荐docker服务启动后，修改/var/run/docker.sock文件所属组为dockerroot，然后为某个user添加附加组dockerroot方式，使得docker命令在user登录后可以执行。
-
-```shell
-$ sudo visudo
+```bash
+$ docker ps
+permission denied while trying to connect to the docker API at unix:///var/run/docker.sock
+# 将用户加入 docker 组后重新登录
+$ sudo usermod -aG docker emon
+$ docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
 ```
-
-	找到`## Allow root to run any commands anywhere`这样的标识，在下方配置：
-
-```shell
-# 备注：如果已经赋予了ALL的操作权限，就没必要配置如下了
-emon    ALL=(ALL)       PASSWD:/usr/bin/docker
-```
-
-
 
 ### 4.2 配置alias
 
 配置永久的alias：
 
 ```shell
-# 如果是root用户安装的，不需要带sudo命令
-$ vim ~/.bashrc
-alias docker="sudo /usr/bin/docker"
-alias dockerps="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Status}}\t{{.Names}}\""
-alias dockerpsf="sudo /usr/bin/docker ps --format \"table{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.RunningFor}}\t{{.Ports}}\""
+$ if ! grep -q "^alias dps=" ~/.bashrc; then
+  tee -a ~/.bashrc > /dev/null <<-'EOF'
+
+# 简洁版 docker ps
+alias dps='docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"'
+# 查看所有容器（含退出）
+alias dpsa='docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"'
+# 只看容器名（用于 stop/rm）
+alias dn='docker ps --format "{{.Names}}"'
+# 只看容器名（含退出）
+alias dna='docker ps -a --format "{{.Names}}"'
+EOF
+  echo "✅ Docker aliases added to ～/.bashrc"
+else
+  echo "ℹ️  Docker aliases already exist in ～/.bashrc (skipped)"
+fi
 ```
 
 使之生效：
@@ -360,11 +386,8 @@ $ source ~/.bashrc
 
 ```shell
 $ docker images
-[sudo] emon 的密码：
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
 ```
-
-
 
 ## 5 升级Docker
 
@@ -384,13 +407,13 @@ docker-ce-20.10.24-3.el9.aarch64
 - 查看已安装镜像
 
 ```bash
-$ sudo docker images
+$ docker images
 ```
 
 - 查看镜像存放路径
 
 ```bash
-$ sudo docker inspect <image_name>|grep HostsPath
+$ docker inspect <image_name>|grep HostsPath
 ```
 
 > Linux系统下，Docker默认存储路径是`/var/lib/docker`
@@ -398,14 +421,14 @@ $ sudo docker inspect <image_name>|grep HostsPath
 - 卸载 Docker Engine、CLI、containerd 和 Docker Compose 软件包
 
 ```bash [Rocky9]
-$ sudo dnf remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
+$ dnf remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras
 ```
 
 - 镜像、容器、卷或自定义配置文件在您的宿主机上不会被自动删除。要删除所有镜像、容器和卷
 
 ```bash
-$ sudo rm -rf /var/lib/docker
-$ sudo rm -rf /var/lib/containerd
+$ rm -rf /var/lib/docker
+$ rm -rf /var/lib/containerd
 ```
 
 ::: tip
@@ -419,8 +442,8 @@ $ sudo rm -rf /var/lib/containerd
 ### 5.2 安装高版本Docker
 
 ```bash
-$ sudo dnf install -y docker-ce-20.10.24
-$ sudo systemctl enable docker && systemctl start docker
+$ dnf install -y docker-ce-20.10.24
+$ systemctl enable docker && systemctl start docker
 ```
 
 
@@ -454,13 +477,13 @@ $ sudo systemctl enable docker
 - 查看docker概要信息
 
 ```bash
-$ sudo docker info
+$ docker info
 ```
 
 - 查看docker版本信息
 
 ```bash
-$ sudo docker version
+$ docker version
 ```
 
 - 查看docker帮助文档
