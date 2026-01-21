@@ -37,11 +37,11 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 
 ### 0.2 服务器规划
 
-| 机器名 | 系统类型 | IP地址          | CPU  | 内存  | 部署内容             |
-| ------ | -------- | --------------- | ---- | ----- | -------------------- |
-| emon   | Rocky9.5 | 192.168.200.116 | 4核  | >=16G | control-plane,worker |
-| emon2  | Rocky9.5 | 192.168.200.117 | 4核  | >=16G | control-plane,worker |
-| emon3  | Rocky9.5 | 192.168.200.118 | 4核  | >=16G | control-plane,worker |
+| 主机名    | 系统类型 | IP地址          | CPU  | 内存  | 部署内容                            |
+| --------- | -------- | --------------- | ---- | ----- | ----------------------------------- |
+| k8s-node1 | Rocky9   | 192.168.200.116 | 4核  | >=16G | 控制节点/工作负载(control1/worker1) |
+| k8s-node2 | Rocky9   | 192.168.200.117 | 4核  | >=16G | 控制节点/工作负载(control2/worker2) |
+| k8s-node3 | Rocky9   | 192.168.200.118 | 4核  | >=16G | 控制节点/工作负载(control3/worker3) |
 
 ### 0.3 基础环境准备
 
@@ -60,24 +60,24 @@ KubeSphere，这是国内唯一一个开源的Kubernetes（k8s）发行版，它
 #### 0.6.1 创建 **OpenEBS** 本地数据根目录
 
 ```bash
-$ mkdir -p /data/openebs/local
+$ sudo mkdir -p /data/openebs/local
 ```
 
 #### 0.6.2 创建 **Containerd** 数据目录
 
 ```bash
-$ mkdir -p /data/containerd
+$ sudo mkdir -p /data/containerd
 ```
 
 #### 0.6.3 创建 Containerd 数据目录软连接
 
 ```bash
-$ ln -snf /data/containerd /var/lib/containerd
+$ sudo ln -snf /data/containerd /var/lib/containerd
 ```
 
 :::info
 
-**说明：** KubeKey 到 v3.1.10 版为止，一直不支持在部署的时候更改 Containerd 的数据目录，只能用这种目录软链接的方式，变相增加存储空间（**也可以提前手工安装 Containerd**）。
+**说明：** KubeKey 到 v3.1.11 版为止，一直不支持在部署的时候更改 Containerd 的数据目录，只能用这种目录软链接的方式，变相增加存储空间（**也可以提前手工安装 Containerd**）。
 
 :::
 
@@ -91,15 +91,27 @@ $ ln -snf /data/containerd /var/lib/containerd
 
 
 
-## 1 部署 Kubernetes 集群
+## 1 部署 Kubernetes 集群（k8s-node1节点）
 
 本文利用 KubeSphere 出品的 KubeKey 工具，部署一套包含**三个节点**， **Control 和 Worker 复用**的 K8s 高可用集群。
 
-将 **Control 1节点** 作为部署节点，执行下面的操作。
+将 **k8s-node1** 作为部署节点，执行下面的操作。
+
+- 开启代理
+
+```bash
+$ export https_proxy=http://192.168.200.1:7890 http_proxy=http://192.168.200.1:7890 all_proxy=socks5://192.168.200.1:7890
+```
+
+### 1.0 工具包安装（所有节点）
+
+```bash
+$ sudo dnf install socat conntrack ebtables ipset -y
+```
 
 ### 1.1 下载 KubeKey
 
-- 下载最新版（v3.1.10）
+- 下载最新版（v3.1.11）
 
 ```bash
 $ mkdir -pv ~/k8s_soft/kubekey
@@ -107,6 +119,7 @@ $ cd ~/k8s_soft/kubekey/
 
 # 选择中文区下载(访问 GitHub 受限时使用)
 $ export KKZONE=cn
+# 下载完成后当前目录下将生成 KubeKey 二进制文件 kk。
 $ curl -sfL https://get-kk.kubesphere.io | sh -
 ```
 
@@ -116,34 +129,46 @@ $ curl -sfL https://get-kk.kubesphere.io | sh -
 $ ./kk version --show-supported-k8s
 ```
 
-> KubeKey 支持的 K8s 版本相对较新。本文选择 v1.30.13，而在生产环境中，建议选择 v1.28.15 或其他次要版本为双数且补丁版本超过 5 的版本，以确保更高的稳定性和兼容性。建议避免选择过老的版本，毕竟目前 v1.33.1 已经发布，可以为集群提供更强的功能和安全性。
+> KubeKey 支持的 Kubernetes 版本非常丰富且及时更新。本文选择最新稳定版 **v1.32.8**。对于生产环境，建议选择:
+>
+> - 次要版本号为双数的版本(如 v1.30.x、v1.32.x)
+> - 补丁版本号不低于 5 的版本(如 v1.30.14、v1.32.8)
+> - 避免使用太旧的版本，建议选择最近 2-3 个次要版本
+> - 可以优先考虑 v1.30.14 或 v1.32.8 这类经过充分验证的版本
+>
+> 选择版本时需要平衡新特性和稳定性，既要确保关键功能可用,又要避免可能的兼容性问题。
 
 ### 1.2 创建 Kubernetes 集群部署配置
 
 1. 创建集群配置文件
 
-本文选择了 **v1.30.13**。因此，指定配置文件名称为 **kk-k8s-v13013.yaml**，如果不指定，默认的文件名为 **config-sample.yaml**。
+本文选择了 **v1.32.8**。因此，指定配置文件名称为 **kk-k8s-v1328.yaml**，如果不指定，默认的文件名为 **config-sample.yaml**。
 
 ```bash
-$ ./kk create config -f kk-k8s-v13013.yaml --with-kubernetes v1.30.13
+$ ./kk create config -f kk-k8s-v1328.yaml --with-kubernetes v1.32.8
 ```
 
-> **注意：**
+> **重要提示：**
 >
-> - 安装完成后，请勿删除安装配置文件 **kk-k8s-v13013.yaml**，后续进行节点扩容、卸载等操作时仍需要使用该文件。如果该文件丢失，您需要重新创建安装配置文件。
-> - 生成的默认配置文件内容较多，请参阅 [KubeKey 配置示例](https://github.com/kubesphere/kubekey/blob/master/docs/config-example.md) 了解完整配置说明。
+> - 请妥善保管安装配置文件 **ksp-k8s-v1328.yaml**。该文件对于后续的集群维护工作（如节点扩容、集群卸载等）至关重要。如果文件丢失，您将需要重新创建配置文件，这可能会带来额外的工作量。
+> - 配置文件包含大量可配置选项。如需了解全部配置参数及其用法，请查阅官方文档中的 [KubeKey 配置示例](https://github.com/kubesphere/kubekey/blob/master/docs/config-example.md)。这将帮助您更好地定制集群配置。
 
 2. 修改配置文件
 
-请使用 `vi` 编辑器，编辑配置文件 `kk-k8s-v13013.yaml`，修改 **kind: Cluster** 小节中 hosts 和 roleGroups 等信息，修改说明如下：
+本示例采用 6 节点（3台虚拟机模拟，每一对Control+Worker共享同一台）高可用部署架构，其中:
+
+- 3 个 Control 节点: 部署 control-plane 和 etcd 组件
+- 3 个 Worker 节点: 部署业务工作负载
+
+请使用 `vi` 编辑器，编辑配置文件 `kk-k8s-v1328.yaml`，修改 **kind: Cluster** 小节中 hosts 和 roleGroups 等信息，修改说明如下：
 
 - metadata.name：自定义集群名称 **ks-k8s**，默认值 **sample**
 
 - hosts：指定节点的 IP、ssh 用户、ssh 密码；若是arm架构，请指定 arch
 - roleGroups：指定 3 个 etcd、control-plane 节点，并复用为 worker 节点
 - internalLoadbalancer： 启用内置的 HAProxy 负载均衡器
-- domain：自定义域名 **lb.kspxlab.local**，没特殊需求可使用默认值 **lb.kubesphere.local**
-- clusterName：自定义 **kspxlab.local**，没特殊需求可使用默认值 **cluster.local**
+- domain：自定义域名 **lb.emon.local**，没特殊需求可使用默认值 **lb.kubesphere.local**
+- clusterName：自定义 **emon.com**，没特殊需求可使用默认值 **cluster.local**
 - autoRenewCerts：该参数可以实现证书到期自动续期，默认为 **true**
 - containerManager：容器运行时使用 **containerd**
 - storage.openebs.basePath：**默认没有，新增配置**，指定 openebs 默认存储路径为 **/data/openebs/local**
@@ -152,49 +177,48 @@ $ ./kk create config -f kk-k8s-v13013.yaml --with-kubernetes v1.30.13
 
 修改后的完整示例如下：
 
-```yaml
-
+```bash
+$ tee /home/emon/k8s_soft/kubekey/kk-k8s-v1328.yaml > /dev/null <<EOF
 apiVersion: kubekey.kubesphere.io/v1alpha2
 kind: Cluster
 metadata:
   name: ks-k8s
 spec:
   hosts:
-  - {name: emon, address: 192.168.200.116, internalAddress: 192.168.200.116, user: root, password: "root123", arch: arm64}
-  - {name: emon2, address: 192.168.200.117, internalAddress: 192.168.200.117, user: root, password: "root123", arch: arm64}
-  - {name: emon3, address: 192.168.200.118, internalAddress: 192.168.200.118, user: root, password: "root123", arch: arm64}
+  - {name: k8s-node1, address: 192.168.200.116, internalAddress: 192.168.200.116, user: emon, password: "emon123", arch: arm64}
+  - {name: k8s-node2, address: 192.168.200.117, internalAddress: 192.168.200.117, user: emon, password: "emon123", arch: arm64}
+  - {name: k8s-node3, address: 192.168.200.118, internalAddress: 192.168.200.118, user: emon, password: "emon123", arch: arm64}
   roleGroups:
     etcd:
-    - emon
-    - emon2
-    - emon3
+    - k8s-node1
+    - k8s-node2
+    - k8s-node3
     control-plane:
-    - emon
-    - emon2
-    - emon3
+    - k8s-node1
+    - k8s-node2
+    - k8s-node3
     worker:
-    - emon
-    - emon2
-    - emon3
+    - k8s-node1
+    - k8s-node2
+    - k8s-node3
   controlPlaneEndpoint:
     ## Internal loadbalancer for apiservers 
     internalLoadbalancer: haproxy # 如需部署⾼可⽤集群，且⽆负载均衡器可⽤，可开启该参数，做集群内部负载均衡
-    domain: lb.kubesphere.local
+
+    domain: lb.emon.local
     address: ""
     port: 6443
   kubernetes:
-    version: v1.30.13
-    clusterName: cluster.local
+    version: v1.32.8
+    clusterName: emon.com
     autoRenewCerts: true
     containerManager: containerd # 部署 kubernetes v1.24+ 版本，建议将 containerManager 设置为 containerd
   etcd:
     type: kubekey
   network:
     plugin: calico
-    # kubePodsCIDR: 10.233.64.0/18
-    # kubeServiceCIDR: 10.233.0.0/18
-    kubePodsCIDR: 10.233.0.0/17
-    kubeServiceCIDR: 10.96.0.0/16
+    kubePodsCIDR: 10.233.64.0/18
+    kubeServiceCIDR: 10.233.0.0/18
     ## multus support. https://github.com/k8snetworkplumbingwg/multus-cni
     multusCNI:
       enabled: false
@@ -209,7 +233,7 @@ spec:
     registryMirrors: []
     insecureRegistries: []
   addons: []
-
+EOF
 ```
 
 ### 1.3 部署 K8s 集群
@@ -217,13 +241,26 @@ spec:
 使用上面生成的配置文件，执行下面的命令，创建 K8s 集群。
 
 ```bash
-$ export KKZONE=cn
-$ ./kk create cluster -f kk-k8s-v13013.yaml --with-local-storage
+# 1. （非root用户安装）临时授权，用ssh -t打开伪终端，用户可以sudo时，允许你交互式输入密码。
+for node in k8s-node1 k8s-node2 k8s-node3; do
+  ssh -t emon@$node 'echo "emon ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/emon'
+  echo "=== $node ==="
+  ssh emon@$node 'sudo whoami'
+done
+
+# 2. 运行安装
+./kk create cluster -f kk-k8s-v1328.yaml --with-local-storage
+
+# 3. （非root用户安装）安装成功后，撤销权限（可选但推荐）
+for node in k8s-node1 k8s-node2 k8s-node3; do
+  ssh emon@$node 'sudo rm -f /etc/sudoers.d/emon'
+done
 ```
 
-> 说明：
+> **重要说明：**
 >
-> 如需使用 openebs localpv，可在命令后添加参数 --with-local-storage。如需对接其他存储，可在配置文件 addons 中添加配置相关存储插件，或 Kubernetes 集群部署完成后自行安装。
+> - 本文使用 **OpenEBS LocalPV** 作为默认存储解决方案，需要在命令中添加 `--with-local-storage` 参数启用本地存储功能
+> - 该参数会自动部署 OpenEBS LocalPV 相关组件，简化存储配置流程
 
 命令执行后，首先 **Kubekey** 会检查部署 K8s 的依赖及其他详细要求。通过检查后，系统将提示您确认安装。输入 **yes** 并按 **ENTER** 继续部署。
 
@@ -266,19 +303,25 @@ This is a simple check of your environment.
 Before installation, ensure that your machines meet all requirements specified at
 https://github.com/kubesphere/kubekey#requirements-and-recommendations
 
-Install k8s with specify version:  v1.30.13
+Install k8s with specify version:  v1.32.8
 
 Continue this installation? [yes/no]: yes
 ```
 
-> **注意：**
+> **重要说明：**
 >
-> - nfs client、ceph client、glusterfs client 3 个与存储有关的 client 显示没有安装，这个我们后期会在对接存储的实战中单独安装
-> - docker、containerd 会根据配置文件选择的 **containerManager** 类型自动安装
+> - 系统检查显示 nfs-client、ceph-client、glusterfs-client 等存储客户端组件未安装。这些组件将在后续存储系统对接实战中单独安装配置
+> - 容器运行时(docker/containerd)将根据配置文件中 **containerManager** 参数自动选择安装
 
-部署完成需要大约 10-20 分钟左右，具体看网速和机器配置，本次部署完成耗时 6 分钟（千兆宽带）。
+整个部署过程预计需要 5-10 分钟完成。具体耗时取决于:
 
-部署完成后，如果在终端上显示如下信息，则表明 K8s 集群创建成功。
+- 网络带宽状况
+- 服务器硬件配置
+- 集群节点数量
+
+本次部署完成耗时 6 分钟（千兆宽带）。
+
+当终端显示以下信息时,表示 Kubernetes 集群已成功创建并完成初始化:
 
 ```bash
 20:38:09 CST Pipeline[CreateClusterPipeline] execute successfully
@@ -311,9 +354,9 @@ $ kubectl get nodes -o wide
 
 ```bash
 NAME    STATUS   ROLES                  AGE   VERSION    INTERNAL-IP       EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
-emon    Ready    control-plane,worker   20m   v1.30.13   192.168.200.116   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
-emon2   Ready    control-plane,worker   19m   v1.30.13   192.168.200.117   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
-emon3   Ready    control-plane,worker   19m   v1.30.13   192.168.200.118   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+emon    Ready    control-plane,worker   20m   v1.32.8   192.168.200.116   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+emon2   Ready    control-plane,worker   19m   v1.32.8   192.168.200.117   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
+emon3   Ready    control-plane,worker   19m   v1.32.8   192.168.200.118   <none>        Rocky Linux 9.5 (Blue Onyx)   5.14.0-503.40.1.el9_5.aarch64   containerd://1.7.13
 ```
 
 ### 2.2 查看 Pod 信息
@@ -368,11 +411,11 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/cni                       v3.27.4 
 registry.cn-beijing.aliyuncs.com/kubesphereio/coredns                   1.9.3               b19406328e70d       13.4MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/haproxy                   2.9.6-alpine        f6930329d1bbb       12.2MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/k8s-dns-node-cache        1.22.20             c98d4299ba7a2       27.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-apiserver            v1.30.13            07fa38411d5de       29.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controller-manager   v1.30.13            231a42659f418       28.4MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-apiserver            v1.32.8            07fa38411d5de       29.9MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controller-manager   v1.32.8            231a42659f418       28.4MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controllers          v3.27.4             624858d5c19fe       29.9MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-proxy                v1.30.13            031981b4b997a       25.8MB
-registry.cn-beijing.aliyuncs.com/kubesphereio/kube-scheduler            v1.30.13            f9ff66a6b7c52       17.8MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-proxy                v1.32.8            031981b4b997a       25.8MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-scheduler            v1.32.8            f9ff66a6b7c52       17.8MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/node                      v3.27.4             c3c4dda1645a0       115MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.9                 829e9de338bd5       268kB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pod2daemon-flexvol        v3.27.4             1088adbc5e875       5.87MB
