@@ -460,7 +460,7 @@ $ kubectl get svc
 
 ### 2.2 Ingress
 
-参考：[安装ingress-nginx](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_5-%E5%AE%89%E8%A3%85ingress-nginx-%E5%9C%A8master%E8%8A%82%E7%82%B9%E6%89%A7%E8%A1%8C)
+参考：[安装ingress-nginx](/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_5-%E5%AE%89%E8%A3%85ingress-nginx-%E5%9C%A8master%E8%8A%82%E7%82%B9%E6%89%A7%E8%A1%8C)
 
 #### 2.2.1 域名访问
 
@@ -769,7 +769,7 @@ $ kubectl delete -f ingress-limit.yaml
 
 ## 3 配置和存储
 
-参考：[安装NFS存储抽象](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1)
+参考：[安装NFS存储抽象](/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_7-%E5%AD%98%E5%82%A8%E6%8A%BD%E8%B1%A1)
 
 ### 3.1 Persisten Persistent Volume Claims 存储卷声明`N`
 
@@ -779,7 +779,7 @@ $ kubectl delete -f ingress-limit.yaml
 
 #### 3.1.1 创建PV池
 
-参考：[创建PV池](http://localhost:8751/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubernetes%E6%A0%B8%E5%BF%83%E5%AE%9E%E6%88%98.html#%E5%88%9B%E5%BB%BApv%E6%B1%A0)
+参考：[创建PV池](/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubernetes%E6%A0%B8%E5%BF%83%E5%AE%9E%E6%88%98.html#%E5%88%9B%E5%BB%BApv%E6%B1%A0)
 
 #### 3.1.2 PVC创建与绑定 `N`
 

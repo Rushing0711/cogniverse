@@ -8,13 +8,13 @@ Kubeadm是一个K8s部署工具，提供kubeadm init和kubeadm join，用于快�
 
 ## 1 基础环境准备
 
-[基础环境准备](http://localhost:8751/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87.html)
+[基础环境准备](/devops/new/Kubernetes/01-%E7%AC%AC1%E7%AB%A0%20%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87.html)
 
 ## 2 安装基础工具（所有节点）
 
 ### 2.1 安装Docker
 
-参考：[Docker的安装与配置.md](http://localhost:8751/devops/new/Docker/01-%E7%AC%AC1%E7%AB%A0%20Docker%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html)
+参考：[Docker的安装与配置.md](/devops/new/Docker/01-%E7%AC%AC1%E7%AB%A0%20Docker%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html)
 
 ### 2.2 安装kubeadm/kubelet/kubectl
 
@@ -435,7 +435,7 @@ $ nmcli device status
 - 永久unmanaged
 
 ```bash
-$ tee /etc/NetworkManager/conf.d/99-unmanaged-devices.conf << EOF
+$ sudo tee /etc/NetworkManager/conf.d/99-unmanaged-devices.conf << EOF
 [keyfile]
 unmanaged-devices=interface-name:docker*;interface-name:veth*;interface-name:br-*;interface-name:vmnet*;interface-name:vboxnet*;interface-name:cni0;interface-name:cali*;interface-name:flannel*;interface-name:tun*
 EOF
@@ -444,7 +444,7 @@ EOF
 - 重启NetworkManager
 
 ```bash
-$ systemctl restart NetworkManager
+$ sudo systemctl restart NetworkManager
 ```
 
 

@@ -1099,7 +1099,7 @@ echo http://$NODE_IP:$NODE_PORT
 http://192.168.200.116:30180
 ```
 
-2. 参照[登录 Jenkins 仪表板](http://localhost:8751/devops/new/KubeSphere/02-%E7%AC%AC2%E7%AB%A0%20KubeSphere%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8.html#_2-%E7%99%BB%E5%BD%95-jenkins-%E4%BB%AA%E8%A1%A8%E6%9D%BF)进行配置。
+2. 参照[登录 Jenkins 仪表板](/devops/new/KubeSphere/02-%E7%AC%AC2%E7%AB%A0%20KubeSphere%E6%89%A9%E5%B1%95%E7%BB%84%E4%BB%B6%E5%AE%89%E8%A3%85%E4%B8%8E%E4%BD%BF%E7%94%A8.html#_2-%E7%99%BB%E5%BD%95-jenkins-%E4%BB%AA%E8%A1%A8%E6%9D%BF)进行配置。
 
 3. 使用地址 [http://NodeIP:30180](http://nodeip:30180/) 访问 Jenkins。
 
@@ -1222,9 +1222,9 @@ Analyze "java-demo": **sqp_2e1db3bcb24cb8022b079aed60bb48e211a1df01**
 
 ## 3 安装 NFS 存储
 
-[部署NFS](http://localhost:5173/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-1-部署nfs)
+[部署NFS](/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-1-部署nfs)
 
-[安装Kubernetes NFS Subdir External Provisioner](http://localhost:5173/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-2-安装kubernetes-nfs-subdir-external-provisioner)
+[安装Kubernetes NFS Subdir External Provisioner](/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-2-安装kubernetes-nfs-subdir-external-provisioner)
 
 
 

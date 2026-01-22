@@ -56,7 +56,7 @@ WordPress 是一款基于 PHP 的免费、开源内容管理系统，您可以�
 
 ### 3.2 前提条件
 
-- 准备一个项目（例如 **demo-project**）和一个已邀请到该项目的用户（例如 **project-regular**）。该用户在项目中应具有 **operator** 角色。有关更多信息，请参阅[控制用户权限](http://localhost:8751/devops/new/KubeSphere/01-%E7%AC%AC1%E7%AB%A0%20KubeSphere%E5%AE%89%E8%A3%85.html#_9-%E5%A6%82%E4%BD%95%E6%8E%A7%E5%88%B6%E7%94%A8%E6%88%B7%E6%9D%83%E9%99%90-%E3%80%90%E5%BF%AB%E9%80%9F%E4%BA%86%E8%A7%A3%E3%80%91)。
+- 准备一个项目（例如 **demo-project**）和一个已邀请到该项目的用户（例如 **project-regular**）。该用户在项目中应具有 **operator** 角色。有关更多信息，请参阅[控制用户权限](/devops/new/KubeSphere/01-%E7%AC%AC1%E7%AB%A0%20KubeSphere%E5%AE%89%E8%A3%85.html#_9-%E5%A6%82%E4%BD%95%E6%8E%A7%E5%88%B6%E7%94%A8%E6%88%B7%E6%9D%83%E9%99%90-%E3%80%90%E5%BF%AB%E9%80%9F%E4%BA%86%E8%A7%A3%E3%80%91)。
 - KubeSphere 平台需要安装并启用 **KubeSphere 服务网格**扩展组件。
 
 ### 3.3 操作步骤
