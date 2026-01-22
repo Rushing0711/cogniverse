@@ -1,4 +1,5 @@
 import {defineConfig} from 'vitepress'
+import {visualizer} from 'rollup-plugin-visualizer'
 import {autoGenSidebar} from './auto-gen-sidebar.js'
 import {MermaidMarkdown, MermaidPlugin} from "vitepress-plugin-mermaid";
 
@@ -220,12 +221,42 @@ export default defineConfig({
         ssr: {
             noExternal: ['mermaid'],
         },
+        build: {
+            chunkSizeWarningLimit: 8000,
+            rollupOptions: {
+                plugins: [
+                    visualizer({
+                        open: true,           // 构建后自动打开浏览器
+                        filename: 'stats.html', // 报告文件名
+                        gzipSize: true        // 显示 gzip 后大小（更真实）
+                    })
+                ],
+                output: {
+                    manualChunks(id) {
+                        // 1. 核心框架（Vue + VitePress）
+                        // if (id.includes('node_modules/vue') || id.includes('node_modules/vitepress')) {
+                        //     return 'framework';
+                        // }
+
+                        // 2. 超大第三方库（按需添加）
+                        // if (id.includes('node_modules/echarts')) return 'echarts';
+
+                        // 3. 其他所有 node_modules
+                        // if (id.includes('node_modules')) {
+                        //     return 'vendor';
+                        // }
+                    }
+                }
+            }
+        }
     },
 
     ignoreDeadLinks: [
         // /^https?:\/\/暂不可用的域名/, // 正则忽略外部链接
         // '/optional-ignored-path/',     // 忽略特定内部路径
         // '#暂时未实现的锚点'            // 忽略锚点
-        /^http:\/\/localhost:/
+        /^http:\/\/localhost:/,
+        /^\/devops\//,
     ],
+
 })
