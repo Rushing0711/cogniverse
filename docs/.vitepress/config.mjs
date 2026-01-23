@@ -233,17 +233,17 @@ defineConfig({
                 output: {
                     manualChunks(id) {
                         // 1. 核心框架（Vue + VitePress）
-                        // if (id.includes('node_modules/vue') || id.includes('node_modules/vitepress')) {
-                        //     return 'framework';
-                        // }
+                        if (id.includes('node_modules/vue') || id.includes('node_modules/vitepress')) {
+                            return 'framework';
+                        }
 
                         // 2. 超大第三方库（按需添加）
-                        // if (id.includes('node_modules/echarts')) return 'echarts';
+                        if (id.includes('node_modules/mermaid')) return 'mermaid';
 
                         // 3. 其他所有 node_modules
-                        // if (id.includes('node_modules')) {
-                        //     return 'vendor';
-                        // }
+                        if (id.includes('node_modules')) {
+                            return 'vendor';
+                        }
                     }
                 }
             }
