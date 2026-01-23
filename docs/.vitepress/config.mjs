@@ -4,8 +4,7 @@ import {autoGenSidebar} from './auto-gen-sidebar.js'
 import {MermaidMarkdown, MermaidPlugin} from "vitepress-plugin-mermaid";
 
 // https://vitepress.dev/reference/site-config
-/*export default*/
-defineConfig({
+export default defineConfig({
     title: "认知宇宙-Cogniverse",
     description: "cogniverse『typora+vitepress』构建的知识库系统。涉及前端、后端、设计、运维、大数据、机器学习、大模型、AI等多个领域的知识库。",
     themeConfig: {
