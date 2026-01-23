@@ -229,7 +229,7 @@ export default defineConfig({
                         gzipSize: true        // 显示 gzip 后大小（更真实）
                     })
                 ],
-                output: {
+                /*output: {
                     manualChunks(id) {
                         // 1. 核心框架（Vue + VitePress）
                         if (id.includes('node_modules/vue') || id.includes('node_modules/vitepress')) {
@@ -244,7 +244,7 @@ export default defineConfig({
                             return 'vendor';
                         }
                     }
-                }
+                }*/
             }
         }
     },

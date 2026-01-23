@@ -435,6 +435,23 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/pod2daemon-flexvol        v3.27.4 
 
 完成 Kubernetes 集群部署后，我们将通过 Helm 安装 KubeSphere v4.1.3，为集群提供强大的可视化管理能力。
 
+### 3.0 关于集群ID
+
+#### 3.0.1 安装后如何查看集群ID？
+
+- 方法1
+
+```bash
+$ kubectl get ns kube-system -o jsonpath='{.metadata.uid}'
+33e9609d-76d7-40a8-b879-187072e005ef
+```
+
+- 方法2
+
+[即可体验](https://www.kubesphere.io/zh/news/kubesphere-community-edition-ga-announcement/#%E5%9B%9B%E5%A4%A7%E4%BC%98%E5%8A%BF%E8%AE%A9%E5%85%8D%E8%B4%B9%E4%B9%9F%E8%83%BD%E7%94%A8%E5%BE%97%E5%AE%89%E5%BF%83)
+
+完成 KubeSphere 安装后，打开 KubeSphere 容器管理平台，进入**组件坞 → 平台管理 → 许可证页面**，获取当前集群的集群 ID。
+
 ### 3.1 安装核心组件 KubeSphere Core（无需代理）
 
 KubeSphere Core (ks-core) 是 KubeSphere 的核心组件，为扩展组件提供基础的运行环境。KubeSphere Core 安装完成后，即可访问 KubeSphere Web 控制台。
@@ -451,7 +468,6 @@ KubeSphere Core (ks-core) 是 KubeSphere 的核心组件，为扩展组件提供
 ```bash
 $ helm upgrade --install -n kubesphere-system --create-namespace \
 		 ks-core oci://hub.kubesphere.com.cn/kse/ks-core \
-     --set extension.imageRegistry=swr.cn-north-9.myhuaweicloud.com/ks \
      --set ha.enabled=true \
      --set redisHA.enabled=true \
      --set multicluster.hostClusterName=emon-main \
@@ -530,26 +546,26 @@ $ kubectl get pods -n kubesphere-system -o wide
 **正确执行后，输出结果如下 :**
 
 ```
-NAME                                         READY   STATUS      RESTARTS        AGE     IP              NODE        NOMINATED NODE   READINESS GATES
-extensions-museum-966b486b-fh86s             1/1     Running     0               48m     10.233.76.24    k8s-node2   <none>           <none>
-helm-install-ks-console-embed-lc6z2m-2x6cm   0/1     Completed   0               4h38m   10.233.111.25   k8s-node3   <none>           <none>
-ks-apiserver-5b49b8b79c-brk82                1/1     Running     0               48m     10.233.111.35   k8s-node3   <none>           <none>
-ks-apiserver-5b49b8b79c-g7khx                1/1     Running     0               48m     10.233.81.24    k8s-node1   <none>           <none>
-ks-apiserver-5b49b8b79c-nc5bf                1/1     Running     0               48m     10.233.76.22    k8s-node2   <none>           <none>
-ks-console-5b6d6996c9-2772m                  1/1     Running     1 (3h41m ago)   4h38m   10.233.81.20    k8s-node1   <none>           <none>
-ks-console-5b6d6996c9-7l7t2                  1/1     Running     1 (3h6m ago)    4h38m   10.233.76.16    k8s-node2   <none>           <none>
-ks-console-5b6d6996c9-tgkdw                  1/1     Running     1 (3h23m ago)   4h38m   10.233.111.24   k8s-node3   <none>           <none>
-ks-console-embed-68b6bfc6dc-gp6dw            1/1     Running     2 (3h41m ago)   4h38m   10.233.81.19    k8s-node1   <none>           <none>
-ks-controller-manager-6c75f98797-8f6jw       1/1     Running     0               48m     10.233.81.25    k8s-node1   <none>           <none>
-ks-controller-manager-6c75f98797-bn4nb       1/1     Running     0               48m     10.233.111.36   k8s-node3   <none>           <none>
-ks-controller-manager-6c75f98797-db42g       1/1     Running     0               48m     10.233.76.23    k8s-node2   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-9xh6f      1/1     Running     3 (3h23m ago)   4h43m   10.233.111.21   k8s-node3   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-kc8td      1/1     Running     3 (3h6m ago)    4h43m   10.233.76.12    k8s-node2   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-nqr8r      1/1     Running     3 (3h41m ago)   4h43m   10.233.81.13    k8s-node1   <none>           <none>
-ks-core-redisha-server-0                     3/3     Running     0               4h43m   10.233.76.18    k8s-node2   <none>           <none>
-ks-core-redisha-server-1                     3/3     Running     1 (3h23m ago)   4h34m   10.233.111.27   k8s-node3   <none>           <none>
-ks-core-redisha-server-2                     3/3     Running     0               4h31m   10.233.81.23    k8s-node1   <none>           <none>
-ks-posthog-dc697467d-tlbj7                   1/1     Running     0               4h43m   10.233.81.15    k8s-node1   <none>           <none>
+NAME                                         READY   STATUS      RESTARTS   AGE     IP              NODE        NOMINATED NODE   READINESS GATES
+extensions-museum-5584dcddd6-dtm8b           1/1     Running     0          71s     10.233.111.19   k8s-node3   <none>           <none>
+helm-install-ks-console-embed-zdtrbl-64pnk   0/1     Completed   0          9m46s   10.233.81.14    k8s-node1   <none>           <none>
+ks-apiserver-7dcf498d97-52nst                1/1     Running     0          71s     10.233.111.21   k8s-node3   <none>           <none>
+ks-apiserver-7dcf498d97-845gd                1/1     Running     0          69s     10.233.81.18    k8s-node1   <none>           <none>
+ks-apiserver-7dcf498d97-pssv2                1/1     Running     0          68s     10.233.76.20    k8s-node2   <none>           <none>
+ks-console-5bdc8cdf4-2w2hw                   1/1     Running     0          9m14s   10.233.76.17    k8s-node2   <none>           <none>
+ks-console-5bdc8cdf4-9hk82                   1/1     Running     0          9m47s   10.233.81.13    k8s-node1   <none>           <none>
+ks-console-5bdc8cdf4-ss64p                   1/1     Running     0          9m15s   10.233.111.15   k8s-node3   <none>           <none>
+ks-console-embed-68b6bfc6dc-666lj            1/1     Running     0          5m44s   10.233.81.15    k8s-node1   <none>           <none>
+ks-controller-manager-7c6f55dcb5-5rpww       1/1     Running     0          68s     10.233.76.21    k8s-node2   <none>           <none>
+ks-controller-manager-7c6f55dcb5-fwqlx       1/1     Running     0          69s     10.233.81.19    k8s-node1   <none>           <none>
+ks-controller-manager-7c6f55dcb5-pw967       1/1     Running     0          71s     10.233.111.20   k8s-node3   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-mxvpd      1/1     Running     0          10m     10.233.76.12    k8s-node2   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-qrbdj      1/1     Running     0          10m     10.233.81.8     k8s-node1   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-sc6fc      1/1     Running     0          10m     10.233.111.14   k8s-node3   <none>           <none>
+ks-core-redisha-server-0                     3/3     Running     0          10m     10.233.111.16   k8s-node3   <none>           <none>
+ks-core-redisha-server-1                     3/3     Running     0          7m3s    10.233.76.19    k8s-node2   <none>           <none>
+ks-core-redisha-server-2                     3/3     Running     0          4m54s   10.233.81.17    k8s-node1   <none>           <none>
+ks-posthog-dc697467d-vqmrk                   1/1     Running     0          10m     10.233.76.11    k8s-node2   <none>           <none>
 ```
 
 分析 Pod 列表中的核心组件分布情况。
@@ -590,9 +606,9 @@ http://192.168.200.116:30880
 
 输入默认用户 **admin** 和默认密码 **P@88w0rd**，然后点击「登录」。
 
-登录后，系统会要求您更改 KubeSphere 默认用户 admin 的默认密码，输入新的密码并点击「提交」。
+登录后，系统会要求您更改 KubeSphere 默认用户 admin 的默认密码，输入新的密码，勾选同意协议并点击「提交」。
 
-![image-20250713225325640](images/image-20250713225325640.png)
+![image-20260123132324815](images/image-20260123132324815.png)
 
 提交完成后，系统会跳转到**新的风格**的 KubeSphere 用户工作台页面。
 
@@ -615,6 +631,14 @@ http://192.168.200.116:30880
 ![image-20260122222604262](images/image-20260122222604262.png)
 
 至此，我们完成了 KubeSphere Core 的安装部署。
+
+### 4.3 激活
+
+[[申请 KubeSphere 社区版的免费许可证](https://kubesphere.com.cn/apply-license/)](https://kubesphere.com.cn/apply-license/)
+
+激活后：
+
+![image-20260123223046321](images/image-20260123223046321.png)
 
 ## 5 通过域名访问 KubeSphere 控制台
 

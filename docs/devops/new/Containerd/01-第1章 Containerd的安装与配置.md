@@ -9,8 +9,16 @@
 ### 1.0 如何验证代理与地址是否匹配
 
 ```bash
-# 通过该命令验证代理与地址的匹配关系
+# 验证目标请求，在当前代理配置下能否被访问到
 $ sudo -E HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY="localhost,127.0.0.1,.svc,.cluster.local,10.233.64.0/18,10.233.0.0/18" curl -k -s --connect-timeout 3 https://10.233.0.1:443 >/dev/null && echo "✅ OK" || echo "❌ FAIL"
+
+# 验证目标请求，是否会跳过代理
+$ sudo -E HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY="localhost,127.0.0.1,.svc,.cluster.local,.aliyuncs.com" curl -k -s --connect-timeout 3 https://registry.cn-beijing.aliyuncs.com/v2/ -v
+
+$ sudo -E HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY="localhost,127.0.0.1,.svc,.cluster.local,.myhuaweicloud.com" curl -k -s --connect-timeout 3 https://swr.cn-north-9.myhuaweicloud.com/v2/ -v
+
+# 验证目标请求，是否能通过代理访问到
+$ curl -x http://192.168.200.1:7890 https://swr.cn-north-9.myhuaweicloud.com/v2/ -v
 ```
 
 ### 1.1 通过环境变量配置代理（推荐）
@@ -30,9 +38,11 @@ $ sudo tee /etc/systemd/system/containerd.service.d/proxy.conf <<-'EOF'
 [Service]
 Environment="HTTP_PROXY=http://192.168.200.1:7890"
 Environment="HTTPS_PROXY=http://192.168.200.1:7890"
-Environment="NO_PROXY=localhost,127.0.0.1,k8s-node1,k8s-node2,k8s-node3,192.168.200.116,192.168.200.117,192.168.200.118,lb.emon.local,.svc,.cluster.local,10.233.64.0/18,10.233.0.0/18,repo.emon.remote"
+Environment="NO_PROXY=localhost,127.0.0.1,k8s-node1,k8s-node2,k8s-node3,192.168.200.116,192.168.200.117,192.168.200.118,lb.emon.local,.svc,.cluster.local,10.233.64.0/18,10.233.0.0/18,repo.emon.remote,.aliyuncs.com,.myhuaweicloud.com"
 EOF
 ```
+
+::: details 详解
 
 > NO_PROXY应该包含的地址：
 >
@@ -93,6 +103,8 @@ EOF
 >   ```
 >
 
+:::
+
 - 重载并重启服务并查看代理配置情况
 
 ```bash
@@ -105,7 +117,7 @@ $ sudo systemctl show --property=Environment containerd | grep -E 'PROXY|NO_PROX
 > ![image-20260122133721591](images/image-20260122133721591.png)
 
 ```bash
-Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=localhost,127.0.0.1,k8s-node1,k8s-node2,k8s-node3,192.168.200.116,192.168.200.117,192.168.200.118,lb.emon.local,.svc,.cluster.local,10.233.64.0/18,10.233.0.0/18,repo.emon.remote
+Environment=HTTP_PROXY=http://192.168.200.1:7890 HTTPS_PROXY=http://192.168.200.1:7890 NO_PROXY=localhost,127.0.0.1,k8s-node1,k8s-node2,k8s-node3,192.168.200.116,192.168.200.117,192.168.200.118,lb.emon.local,.svc,.cluster.local,10.233.64.0/18,10.233.0.0/18,repo.emon.remote,.cluster.local,.myhuaweicloud.com
 ```
 
 - 拉取镜像测试
