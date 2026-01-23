@@ -26,3 +26,4 @@ dist-ssr
 # ===自定义===
 docs/.vitepress/dist
 docs/.vitepress/cache
+stats.html
