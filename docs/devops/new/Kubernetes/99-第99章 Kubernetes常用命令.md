@@ -237,15 +237,14 @@ $ docker manifest inspect quay.io/argoproj/argocd-applicationset:v0.4.1 | grep "
 | `crictl images` | `k8s.io`     | 查看 Kubernetes 集群镜像 |
 | `nerdctl`       | `default`    | 运行非 Kubernetes 容器   |
 
+3. 查看ctr所有的命名空间
 
-
-
-
-
-
-
-
-
+```bash
+$ sudo ctr ns ls
+NAME    LABELS 
+default        
+k8s.io   
+```
 
 
 

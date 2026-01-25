@@ -757,17 +757,17 @@ $ kubectl delete -f nginx-ds.yaml
 #### 4.1.1 安装 NFS 服务端软件包（所有节点）
 
 ```bash
-$ dnf install -y nfs-utils
+$ sudo dnf install -y nfs-utils
 ```
 
-#### 4.1.2 创建共享数据根目录（在master节点执行）
+#### 4.1.2 创建共享数据根目录（在NFS服务节点执行）
 
 ```bash
-$ mkdir -pv /data/nfs/local
-$ chown nobody:nobody /data/nfs/local
+$ sudo mkdir -pv /data/nfs/local
+$ sudo chown nobody:nobody /data/nfs/local
 ```
 
-#### 4.1.3 编辑服务配置文件（在master节点执行）
+#### 4.1.3 编辑服务配置文件（在NFS服务节点执行）
 
 配置 NFS 服务器数据导出目录及访问 NFS 服务器的客户端机器权限。
 
@@ -775,7 +775,7 @@ $ chown nobody:nobody /data/nfs/local
 
 ```bash
 # nfs服务端
-$ echo "/data/nfs/local 192.168.200.0/24(rw,sync,all_squash,anonuid=65534,anongid=65534,no_subtree_check)" > /etc/exports
+$ echo "/data/nfs/local 192.168.200.0/24(rw,sync,all_squash,anonuid=65534,anongid=65534,no_subtree_check)" | sudo tee /etc/exports
 ```
 
 - /data/nfs/local：NFS 导出的共享数据目录
@@ -787,18 +787,21 @@ $ echo "/data/nfs/local 192.168.200.0/24(rw,sync,all_squash,anonuid=65534,anongi
 - anongid：转换后的组权限 ID，对应的操作系统的 nobody 组
 - no_subtree_check：不检查客户端请求的子目录是否在共享目录的子树范围内，也就是说即使输出目录是一个子目录，NFS 服务器也不检查其父目录的权限，这样可以提高效率。
 
-#### 4.1.4 启动服务并设置开机自启（在master节点执行）
+#### 4.1.4 启动服务并设置开机自启（在NFS服务节点执行）
 
 ```bash
-$ systemctl enable --now rpcbind && systemctl enable --now nfs-server
-# 重新加载 NFS 共享配置（无需重启服务）
-$ exportfs -r
+$ sudo systemctl enable --now rpcbind && sudo systemctl enable --now nfs-server
+# 重新加载 NFS 共享配置（热加载 /etc/expots 配置而无需重启服务，每次涉及到该配置文件修改后都建议执行一下）
+$ sudo exportfs -r
 # 查看共享目录导出情况
-$ exportfs -v
+$ sudo exportfs -v
 /data/nfs/local       192.168.200.0/24(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,all_squash)
 # 验证
-$ exportfs
+$ sudo exportfs
 /data/nfs/local       192.168.200.0/24
+# 查看NFS版本
+$ sudo cat /proc/fs/nfsd/versions
++3 +4 +4.1 +4.2
 ```
 
 > **分解说明**：
@@ -808,7 +811,15 @@ $ exportfs
 > | `exportfs` | NFS 共享管理工具                  |
 > | `-r`       | 重新导出所有共享（re-export all） |
 
-#### 4.1.5 配置NFS从节点（仅worker节点）
+#### 4.1.5 配置NFS从节点（仅NFS客户端节点）
+
+- 查看NFS版本
+
+```bash
+$ mount |grep nfs
+sunrpc on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw,relatime)
+192.168.200.116:/data/nfs/local on /data/nfs/local type nfs4 (rw,relatime,vers=4.2,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.200.117,local_lock=none,addr=192.168.200.116)
+```
 
 - 查看可以挂载的目录
 
@@ -818,20 +829,20 @@ $ showmount -e 192.168.200.116
 
 ```bash
 Export list for 192.168.200.116:
-/data/nfs/local *
+/data/nfs/local 192.168.200.0/24
 ```
 
 - 执行以下命令挂载nfs服务器上的共享目录到本机路径 /data/nfs/local
 
 ```bash
-$ mkdir -p /data/nfs/local && mount -t nfs 192.168.200.116:/data/nfs/local /data/nfs/local
+$ sudo mkdir -p /data/nfs/local && sudo mount -t nfs 192.168.200.116:/data/nfs/local /data/nfs/local
 ```
 
 - 写入一个测试文件（在NFS服务端）
 
 ```bash
 # 执行完成后，查看NFS从节点同步目录，已经生成了 test.txt 文件
-$ echo "hello nfs server" > /data/nfs/local/test.txt
+$ echo "hello from nfs server" | sudo tee -a /data/nfs/local/test.txt
 ```
 
 #### 4.1.6 原生方式数据挂载
@@ -898,7 +909,12 @@ $ kubectl delete -f nfs-test.yaml
 
 
 
-### 4.2 安装Kubernetes NFS Subdir External Provisioner
+### 4.2 安装Kubernetes NFS Subdir External Provisioner（过时）
+
+| 项目                                                         | 类型                        | 状态               | 推荐度           |
+| ------------------------------------------------------------ | --------------------------- | ------------------ | ---------------- |
+| [`kubernetes-sigs/nfs-subdir-external-provisioner`](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner) | Legacy External Provisioner | 维护中，功能冻结   | ⚠️ 仅限简单场景   |
+| [`kubernetes-csi/csi-driver-nfs`](https://github.com/kubernetes-csi/csi-driver-nfs) | CSI Driver（标准）          | 活跃维护，持续更新 | ✅ 推荐用于新集群 |
 
 https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
 
@@ -1051,9 +1067,125 @@ nfs-storage   k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Imme
 $ kubectl logs -n nfs-system deploy/nfs-client-provisioner
 ```
 
-### 4.3 部署OpenEBS（推荐）
+### 4.3 NFS CSI Driver（v4.3+）
 
-#### 4.3.0 OpenEBS 存储方案
+https://github.com/kubernetes-csi/csi-driver-nfs
+
+| 特性           | `nfs-subdir-external-provisioner`                            | NFS CSI Driver                                               |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 工作原理       | Controller 监听 PVC → 在 NFS server 上 `mkdir /share/pvc-<id>` → 创建 PV 指向该子目录 | CSI Node/Controller 插件，按需 mount NFS 路径                |
+| 动态供给       | ✅ 自动创建子目录                                             | ✅ 可挂载固定路径，或配合 `subdir` 动态生成子目录（需 v4.3+） |
+| 子目录隔离     | ✅ 每个 PVC 独立子目录                                        | ⚠️ 默认所有 PVC 共享同一路径（除非显式配置 `subdir`）         |
+| 删除行为       | 可配置 `onDelete: delete` 删除子目录                         | v4.3+ 支持 `onDelete: delete`（[PR #478](https://github.com/kubernetes-csi/csi-driver-nfs/pull/478)） |
+| K8s 版本兼容性 | v1.20 ～ v1.28（v1.29+ 可能有 RBAC 问题）                    | ✅ 官方支持 v1.20 ～ v1.32+                                   |
+| 架构标准       | Legacy external provisioner                                  | ✅ CSI（Kubernetes 存储未来标准）                             |
+| 多租户隔离     | 弱（靠目录名隔离）                                           | 同左                                                         |
+| volume 扩容    | ❌ 不支持                                                     | ❌ 不支持（NFS 协议限制）                                     |
+| 快照/克隆      | ❌                                                            | ❌                                                            |
+| ARM64 支持     | ✅（需自己构建镜像）                                          | ✅（官方镜像含 multi-arch）                                   |
+| Helm Chart     | 社区维护                                                     | ✅ 官方提供                                                   |
+
+#### 4.3.1 Helm安装 CSI Driver（无 SC）
+
+https://github.com/kubernetes-csi/csi-driver-nfs/tree/master/charts
+
+- 添加资源库
+
+```bash
+$ HTTP_PROXY=http://192.168.200.1:7890 \
+HTTPS_PROXY=http://192.168.200.1:7890 \
+helm repo add csi-driver-nfs https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+```
+
+- 查询所有可用版本
+
+```bash
+$ helm search repo -l csi-driver-nfs
+```
+
+- 安装
+
+```bash
+# 注意访问 lb.emon.local （控制面板域名） 不要使用代理
+$ HTTP_PROXY=http://192.168.200.1:7890 \
+HTTPS_PROXY=http://192.168.200.1:7890 \
+NO_PROXY="lb.emon.local" \
+helm install csi-driver-nfs csi-driver-nfs/csi-driver-nfs \
+  --namespace kube-system \
+  --version v4.12.1 \
+  -f <(cat <<'EOF'
+storageClasses:
+  - name: nfs-csi-delete
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "false"
+    parameters:
+      server: 192.168.200.116
+      share: /data/nfs/local
+      subdir: "" # 指定为空，或不指定该参数，都是自动生成nfs隔离文件
+    reclaimPolicy: Delete
+    volumeBindingMode: Immediate
+    mountOptions:
+      - nfsvers=4.2
+      - proto=tcp
+  - name: nfs-csi-retain
+    parameters:
+      server: 192.168.200.116
+      share: /data/nfs/local
+    reclaimPolicy: Retain
+    volumeBindingMode: Immediate
+    mountOptions:
+      - nfsvers=4.2
+      - proto=tcp
+EOF
+)
+```
+
+```bash
+# 执行结果，若错误（Error: INSTALLATION FAILED: Get "https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts/v4.12.1/csi-driver-nfs-4.12.1.tgz": EOF），请重试
+NAME: csi-driver-nfs
+LAST DEPLOYED: Sat Jan 24 23:22:50 2026
+NAMESPACE: kube-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The CSI NFS Driver is getting deployed to your cluster.
+
+To check CSI NFS Driver pods status, please run:
+
+  kubectl --namespace=kube-system get pods --selector="app.kubernetes.io/instance=csi-driver-nfs" --watch
+```
+
+- 查看 Pod 信息
+
+```bash
+$ kubectl --namespace=kube-system get pods --selector="app.kubernetes.io/instance=csi-driver-nfs" 
+NAME                                 READY   STATUS    RESTARTS   AGE
+csi-nfs-controller-94796c4b7-27xdl   5/5     Running   0          5h10m
+csi-nfs-node-bx4sk                   3/3     Running   0          5h10m
+csi-nfs-node-h2bjz                   3/3     Running   0          5h10m
+csi-nfs-node-mvsnm                   3/3     Running   0          5h10m
+# 查询controller
+$ kubectl -n kube-system get pod -o wide -l app=csi-nfs-controller
+# 查询node
+$ kubectl -n kube-system get pod -o wide -l app=csi-nfs-node
+# 查询sc
+$ kubectl get sc
+NAME              PROVISIONER        RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local (default)   openebs.io/local   Delete          WaitForFirstConsumer   false                  2d21h
+nfs-csi-delete    nfs.csi.k8s.io     Delete          Immediate              true                   2m59s
+nfs-csi-retain    nfs.csi.k8s.io     Retain          Immediate              true                   2m59s
+```
+
+#### 4.3.2 Helm卸载CSI驱动
+
+```bash
+$ helm uninstall csi-driver-nfs -n kube-system
+```
+
+### 4.4 部署OpenEBS（推荐）
+
+#### 4.4.0 OpenEBS 存储方案
 
 OpenEBS 是 CNCF 沙箱项目，提供 **容器原生存储**，支持多种后端引擎：
 
@@ -1089,7 +1221,7 @@ OpenEBS 是 CNCF 沙箱项目，提供 **容器原生存储**，支持多种后�
 - cStor/Jiva 有额外 CPU/内存开销
 - LocalPV **绑定节点**，Pod 迁移受限（需配合调度器策略）
 
-#### 4.3.1 安装
+#### 4.4.1 安装
 
 https://openebs.io/
 
@@ -1147,15 +1279,15 @@ openebs-device               openebs.io/local                              Delet
 openebs-hostpath (default)   openebs.io/local                              Delete          WaitForFirstConsumer   false                  30m
 ```
 
-### 4.4 CephFS
+### 4.5 CephFS
 
 暂无
 
-### 4.5 存储方案对比与选择
+### 4.6 存储方案对比与选择
 
 <span style="color:#32CD32;font-weight:bold;">**“OpenEBS 专注高性能 RWO 场景（如数据库），NFS 覆盖共享 RWX 需求（如 CMS），二者互补组成 Kubernetes 存储的黄金搭档。”**</span>
 
-#### 4.5.1 能力对比表
+#### 4.6.1 能力对比表
 
 | 维度         | NFS                | OpenEBS (cStor) | OpenEBS (LocalPV) | Longhorn     | CephFS                               |
 | ------------ | ------------------ | --------------- | ----------------- | ------------ | ------------------------------------ |
@@ -1168,7 +1300,7 @@ openebs-hostpath (default)   openebs.io/local                              Delet
 | 适用环境     | 混合云/私有云      | 私有云/边缘     | 高性能私有云      | 中小生产集群 | 大规模私有云、需要 RWX + 企业级能力  |
 | 是否开源免费 | 是（NFS 协议）     | 是              | 是                | 是           | 是（Ceph 完全开源）                  |
 
-#### 4.5.2 常见场景推荐表
+#### 4.6.2 常见场景推荐表
 
 - **Kubernetes 存储方案对比总结表**
 
@@ -1193,7 +1325,7 @@ openebs-hostpath (default)   openebs.io/local                              Delet
 
 > 📌 **注意**：Kubernetes 中 **ROX（ReadOnlyMany）** 实际使用较少，多数“只读共享”场景可通过 ConfigMap/Secret 或初始化容器实现。
 
-#### 4.5.4 **结论**
+#### 4.6.3 **结论**
 
 - 若需要 **RWX** → 优先考虑 **NFS**（简单）或 **CephFS**（大规模/高可用）。
 - 若追求 **极致性能或轻量化** → **OpenEBS LocalPV（RWO）** 是首选。

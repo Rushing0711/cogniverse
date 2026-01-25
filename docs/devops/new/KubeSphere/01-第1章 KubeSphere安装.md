@@ -347,6 +347,14 @@ Please check the result using the command:
 
 [配置Containerd代理服务器](/devops/new/Containerd/01-%E7%AC%AC1%E7%AB%A0%20Containerd%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.html#_1-%E9%85%8D%E7%BD%AEdocker%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8)
 
+### 1.6 安装 NFS 存储服务
+
+为了扩展Kubernetes（k8s）集群的存储能力，我们将快速对接 NFS 作为 OpenEBS 之外的另一种持久化存储。
+
+[安装NFS服务](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-1-%E9%83%A8%E7%BD%B2nfs)
+
+[安装NFS CSI Driver](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-3-nfs-csi-driver-v4-3)
+
 ## 2 验证 K8s 集群状态
 
 ### 2.1 查看集群节点信息
@@ -366,54 +374,17 @@ k8s-node2   Ready    control-plane,worker   20m   v1.32.8   192.168.200.117   <n
 k8s-node3   Ready    control-plane,worker   20m   v1.32.8   192.168.200.118   <none>        Rocky Linux 9.7 (Blue Onyx)   5.14.0-611.20.1.el9_7.aarch64   containerd://1.7.13
 ```
 
-### 2.2 查看 Pod 信息
-
-输入以下命令获取在 K8s 集群上运行的 Pod 列表。
-
-```bash
-$ kubectl get pods -A -o wide
-```
-
-输出结果符合预期，所有 Pod 的状态都是 **Running**。
-
-```bash
-NAMESPACE     NAME                                          READY   STATUS    RESTARTS   AGE   IP                NODE        NOMINATED NODE   READINESS GATES
-kube-system   calico-kube-controllers-678fc69664-bpwkf      1/1     Running   0          21m   10.233.76.2       k8s-node2   <none>           <none>
-kube-system   calico-node-6h4sm                             1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   calico-node-ghvwl                             1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   calico-node-sxtwp                             1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   coredns-7b9df87854-49nwc                      1/1     Running   0          12m   10.233.81.1       k8s-node1   <none>           <none>
-kube-system   coredns-7b9df87854-8n9h7                      1/1     Running   0          12m   10.233.111.1      k8s-node3   <none>           <none>
-kube-system   kube-apiserver-k8s-node1                      1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   kube-apiserver-k8s-node2                      1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   kube-apiserver-k8s-node3                      1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   kube-controller-manager-k8s-node1             1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   kube-controller-manager-k8s-node2             1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   kube-controller-manager-k8s-node3             1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   kube-proxy-jpkc4                              1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   kube-proxy-nzpcs                              1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   kube-proxy-t74df                              1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   kube-scheduler-k8s-node1                      1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   kube-scheduler-k8s-node2                      1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   kube-scheduler-k8s-node3                      1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   nodelocaldns-cxrj7                            1/1     Running   0          21m   192.168.200.116   k8s-node1   <none>           <none>
-kube-system   nodelocaldns-jgwz5                            1/1     Running   0          21m   192.168.200.118   k8s-node3   <none>           <none>
-kube-system   nodelocaldns-z4wrm                            1/1     Running   0          21m   192.168.200.117   k8s-node2   <none>           <none>
-kube-system   openebs-localpv-provisioner-9644bcfd5-267fz   1/1     Running   0          21m   10.233.76.3       k8s-node2   <none>           <none>
-```
-
-### 2.3 查看 Image 列表
+### 2.2 查看 Image 列表
 
 输入以下命令获取在 K8s 集群节点上已经下载的 Image 列表。
 
 ```bash
-$ sudo crictl images ls
+$ sudo crictl images
 ```
-
-输入以下命令获取在 K8s 集群节点上已经下载的 Image 列表。
 
 ```bash
 IMAGE                                                                   TAG                 IMAGE ID            SIZE
+docker.io/library/busybox                                               latest              cd9176cd36f99       1.91MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/cni                       v3.27.4             eaa2969f27e4f       81.3MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/coredns                   1.9.3               b19406328e70d       13.4MB
 registry.cn-beijing.aliyuncs.com/kubesphereio/haproxy                   2.9.6-alpine        f6930329d1bbb       12.2MB
@@ -427,9 +398,62 @@ registry.cn-beijing.aliyuncs.com/kubesphereio/node                      v3.27.4 
 registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.10                afb61768ce381       268kB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.9                 829e9de338bd5       268kB
 registry.cn-beijing.aliyuncs.com/kubesphereio/pod2daemon-flexvol        v3.27.4             1088adbc5e875       5.87MB
+registry.k8s.io/sig-storage/csi-node-driver-registrar                   v2.15.0             2708ce54f2837       14.3MB
+registry.k8s.io/sig-storage/livenessprobe                               v2.17.0             e9c27d807fa4d       14.4MB
+registry.k8s.io/sig-storage/nfsplugin                                   v4.12.1             3b1c18a72bb23       54.7MB
+```
+
+### 2.3 查看 Pod 信息
+
+输入以下命令获取在 K8s 集群上运行的 Pod 列表。
+
+```bash
+$ kubectl get pods -A -o wide
+```
+
+输出结果符合预期，所有 Pod 的状态都是 **Running**。
+
+```bash
+NAMESPACE     NAME                                          READY   STATUS    RESTARTS             AGE     IP                NODE        NOMINATED NODE   READINESS GATES
+kube-system   calico-kube-controllers-678fc69664-bpwkf      1/1     Running   5 (<invalid> ago)    3d16h   10.233.76.14      k8s-node2   <none>           <none>
+kube-system   calico-node-6h4sm                             1/1     Running   6 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   calico-node-ghvwl                             1/1     Running   6 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   calico-node-sxtwp                             1/1     Running   6 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   coredns-7b9df87854-49nwc                      1/1     Running   5 (<invalid> ago)    3d16h   10.233.81.9       k8s-node1   <none>           <none>
+kube-system   coredns-7b9df87854-8n9h7                      1/1     Running   5 (<invalid> ago)    3d16h   10.233.111.11     k8s-node3   <none>           <none>
+kube-system   csi-nfs-controller-6bcbd5cc86-27rb6           5/5     Running   5 (<invalid> ago)    3h17m   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   csi-nfs-node-64f9f                            3/3     Running   3 (<invalid> ago)    3h17m   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   csi-nfs-node-6xmjm                            3/3     Running   3 (<invalid> ago)    3h17m   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   csi-nfs-node-9pc2r                            3/3     Running   3 (<invalid> ago)    3h17m   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   kube-apiserver-k8s-node1                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   kube-apiserver-k8s-node2                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   kube-apiserver-k8s-node3                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   kube-controller-manager-k8s-node1             1/1     Running   6 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   kube-controller-manager-k8s-node2             1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   kube-controller-manager-k8s-node3             1/1     Running   6 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   kube-proxy-jpkc4                              1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   kube-proxy-nzpcs                              1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   kube-proxy-t74df                              1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   kube-scheduler-k8s-node1                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   kube-scheduler-k8s-node2                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   kube-scheduler-k8s-node3                      1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   nodelocaldns-cxrj7                            1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.116   k8s-node1   <none>           <none>
+kube-system   nodelocaldns-jgwz5                            1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.118   k8s-node3   <none>           <none>
+kube-system   nodelocaldns-z4wrm                            1/1     Running   5 (<invalid> ago)    3d16h   192.168.200.117   k8s-node2   <none>           <none>
+kube-system   openebs-localpv-provisioner-9644bcfd5-267fz   1/1     Running   10 (<invalid> ago)   3d16h   10.233.76.13      k8s-node2   <none>           <none>
 ```
 
 至此，我们已经完成了在三台服务器部署 Control 和 Worker 节点复用的高可用 Kubernetes 集群。
+
+### 2.4 查看 StorageClass 信息
+
+```bash
+$ kubectl get sc
+NAME              PROVISIONER        RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local (default)   openebs.io/local   Delete          WaitForFirstConsumer   false                  3d16h
+nfs-csi-delete    nfs.csi.k8s.io     Delete          Immediate              true                   3h7m
+nfs-csi-retain    nfs.csi.k8s.io     Retain          Immediate              true                   3h7m
+```
 
 ## 3 部署 KubeSphere
 
@@ -535,7 +559,47 @@ For additional information and details, please visit https://kubesphere.io.
 
 从成功信息中的 **Console**、**Account** 和 **Password** 参数分别获取 KubeSphere Web 控制台的 IP 地址、管理员用户名和管理员密码，并使用网页浏览器登录 KubeSphere Web 控制台
 
-### 3.2 命令行验证 KubeSphere Core 状态
+### 3.2 查看 Image 列表
+
+输入以下命令获取在 K8s 集群节点上已经下载的 Image 列表。
+
+```bash
+$ sudo crictl images
+```
+
+```bash
+IMAGE                                                                   TAG                 IMAGE ID            SIZE
+docker.io/library/busybox                                               latest              cd9176cd36f99       1.91MB
+registry.cn-beijing.aliyuncs.com/kse/ks-apiserver                       v4.2.0-20251118     7ec80dd9202fb       30.9MB
+registry.cn-beijing.aliyuncs.com/kse/ks-console-embed                   v4.2.0-20251118     4ba6494b1716e       36.1MB
+registry.cn-beijing.aliyuncs.com/kse/ks-console                         v4.2.0-20251118     6525e7b04a3e9       62.6MB
+registry.cn-beijing.aliyuncs.com/kse/ks-controller-manager              v4.2.0-20251118     d0268e5776bf4       28MB
+registry.cn-beijing.aliyuncs.com/kse/ks-posthog                         v2.0.0              5204c17401048       32.2MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/cni                       v3.27.4             eaa2969f27e4f       81.3MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/coredns                   1.9.3               b19406328e70d       13.4MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/haproxy                   2.9.6-alpine        f6930329d1bbb       12.2MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/haproxy                   3.0.8-alpine        49851f0f78aab       13.8MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/k8s-dns-node-cache        1.22.20             c98d4299ba7a2       27.9MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-apiserver            v1.32.8             61d628eec7e21       26.3MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controller-manager   v1.32.8             f17de36e40fc7       24.1MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-controllers          v3.27.4             624858d5c19fe       29.9MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-proxy                v1.32.8             2cf30e39f99f8       27.4MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kube-scheduler            v1.32.8             fe86d26bce3cc       19MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/kubectl                   v1.33.1             bdf2d4a87e08e       132MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/linux-utils               3.3.0               d06b9d3a552bc       27.3MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/node                      v3.27.4             c3c4dda1645a0       115MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.10                afb61768ce381       268kB
+registry.cn-beijing.aliyuncs.com/kubesphereio/pause                     3.9                 829e9de338bd5       268kB
+registry.cn-beijing.aliyuncs.com/kubesphereio/pod2daemon-flexvol        v3.27.4             1088adbc5e875       5.87MB
+registry.cn-beijing.aliyuncs.com/kubesphereio/redis                     7.2.8-alpine        deadfec5cc121       17.3MB
+registry.k8s.io/sig-storage/csi-node-driver-registrar                   v2.15.0             2708ce54f2837       14.3MB
+registry.k8s.io/sig-storage/livenessprobe                               v2.17.0             e9c27d807fa4d       14.4MB
+registry.k8s.io/sig-storage/nfsplugin                                   v4.12.1             3b1c18a72bb23       54.7MB
+```
+
+
+
+### 3.3 查看 Pod 信息验证 KubeSphere Core 状态
 
 1. 查看 Pod 列表
 
@@ -546,26 +610,26 @@ $ kubectl get pods -n kubesphere-system -o wide
 **正确执行后，输出结果如下 :**
 
 ```
-NAME                                         READY   STATUS      RESTARTS   AGE     IP              NODE        NOMINATED NODE   READINESS GATES
-extensions-museum-5584dcddd6-dtm8b           1/1     Running     0          71s     10.233.111.19   k8s-node3   <none>           <none>
-helm-install-ks-console-embed-zdtrbl-64pnk   0/1     Completed   0          9m46s   10.233.81.14    k8s-node1   <none>           <none>
-ks-apiserver-7dcf498d97-52nst                1/1     Running     0          71s     10.233.111.21   k8s-node3   <none>           <none>
-ks-apiserver-7dcf498d97-845gd                1/1     Running     0          69s     10.233.81.18    k8s-node1   <none>           <none>
-ks-apiserver-7dcf498d97-pssv2                1/1     Running     0          68s     10.233.76.20    k8s-node2   <none>           <none>
-ks-console-5bdc8cdf4-2w2hw                   1/1     Running     0          9m14s   10.233.76.17    k8s-node2   <none>           <none>
-ks-console-5bdc8cdf4-9hk82                   1/1     Running     0          9m47s   10.233.81.13    k8s-node1   <none>           <none>
-ks-console-5bdc8cdf4-ss64p                   1/1     Running     0          9m15s   10.233.111.15   k8s-node3   <none>           <none>
-ks-console-embed-68b6bfc6dc-666lj            1/1     Running     0          5m44s   10.233.81.15    k8s-node1   <none>           <none>
-ks-controller-manager-7c6f55dcb5-5rpww       1/1     Running     0          68s     10.233.76.21    k8s-node2   <none>           <none>
-ks-controller-manager-7c6f55dcb5-fwqlx       1/1     Running     0          69s     10.233.81.19    k8s-node1   <none>           <none>
-ks-controller-manager-7c6f55dcb5-pw967       1/1     Running     0          71s     10.233.111.20   k8s-node3   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-mxvpd      1/1     Running     0          10m     10.233.76.12    k8s-node2   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-qrbdj      1/1     Running     0          10m     10.233.81.8     k8s-node1   <none>           <none>
-ks-core-redisha-haproxy-944b499f4-sc6fc      1/1     Running     0          10m     10.233.111.14   k8s-node3   <none>           <none>
-ks-core-redisha-server-0                     3/3     Running     0          10m     10.233.111.16   k8s-node3   <none>           <none>
-ks-core-redisha-server-1                     3/3     Running     0          7m3s    10.233.76.19    k8s-node2   <none>           <none>
-ks-core-redisha-server-2                     3/3     Running     0          4m54s   10.233.81.17    k8s-node1   <none>           <none>
-ks-posthog-dc697467d-vqmrk                   1/1     Running     0          10m     10.233.76.11    k8s-node2   <none>           <none>
+NAME                                         READY   STATUS      RESTARTS   AGE   IP              NODE        NOMINATED NODE   READINESS GATES
+extensions-museum-589f8bc8d9-fdv5p           1/1     Running     0          10m   10.233.76.26    k8s-node2   <none>           <none>
+helm-install-ks-console-embed-7mb66g-k7q92   0/1     Completed   0          20m   10.233.81.16    k8s-node1   <none>           <none>
+ks-apiserver-6d86d4b46f-57v89                1/1     Running     0          10m   10.233.81.22    k8s-node1   <none>           <none>
+ks-apiserver-6d86d4b46f-xwvxs                1/1     Running     0          10m   10.233.111.22   k8s-node3   <none>           <none>
+ks-apiserver-6d86d4b46f-zmws8                1/1     Running     0          10m   10.233.76.28    k8s-node2   <none>           <none>
+ks-console-766874784-8hs4p                   1/1     Running     0          16m   10.233.111.21   k8s-node3   <none>           <none>
+ks-console-766874784-hkf2m                   1/1     Running     0          16m   10.233.76.23    k8s-node2   <none>           <none>
+ks-console-766874784-rdr5x                   1/1     Running     0          20m   10.233.81.17    k8s-node1   <none>           <none>
+ks-console-embed-68b6bfc6dc-ttmpr            1/1     Running     0          16m   10.233.81.18    k8s-node1   <none>           <none>
+ks-controller-manager-647f9f687c-gczk9       1/1     Running     0          10m   10.233.111.23   k8s-node3   <none>           <none>
+ks-controller-manager-647f9f687c-hp9g5       1/1     Running     0          10m   10.233.76.27    k8s-node2   <none>           <none>
+ks-controller-manager-647f9f687c-sk4s4       1/1     Running     0          10m   10.233.81.21    k8s-node1   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-gdhs7      1/1     Running     0          21m   10.233.111.15   k8s-node3   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-kcgq8      1/1     Running     0          21m   10.233.81.13    k8s-node1   <none>           <none>
+ks-core-redisha-haproxy-944b499f4-wqbrl      1/1     Running     0          21m   10.233.76.20    k8s-node2   <none>           <none>
+ks-core-redisha-server-0                     3/3     Running     0          21m   10.233.76.22    k8s-node2   <none>           <none>
+ks-core-redisha-server-1                     3/3     Running     0          17m   10.233.111.20   k8s-node3   <none>           <none>
+ks-core-redisha-server-2                     3/3     Running     0          15m   10.233.81.20    k8s-node1   <none>           <none>
+ks-posthog-dc697467d-gnclw                   1/1     Running     0          21m   10.233.81.14    k8s-node1   <none>           <none>
 ```
 
 分析 Pod 列表中的核心组件分布情况。
