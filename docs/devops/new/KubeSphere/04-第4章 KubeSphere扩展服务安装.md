@@ -891,67 +891,154 @@ $ kubectl -n kubesphere-controls-system get svc
 
 [SonarQube](https://www.sonarqube.org/) 是一种主流的代码质量持续检测工具，可用于代码库的静态和动态分析。
 
-### 2.1 安装
+### 2.1 安装：使用官方仓库安装
 
-#### 2.1.1 安装：使用kubesphere仓库
+[SonarQube官方安装](https://docs.sonarsource.com/sonarqube-server/server-installation/on-kubernetes-or-openshift/installing-helm-chart)
 
-- 通过heml安装
+[若非社区版，需要许可证](https://docs.sonarsource.com/sonarqube-server/instance-administration/license-administration)
 
-```bash
-$ helm repo add kubesphere https://charts.kubesphere.io/main
-$ helm repo update
-$ helm upgrade --install sonarqube kubesphere/sonarqube \
+- 安装postgresql（镜像：120M左右）
+
+:::code-group
+
+```bash [postgresql17.6.0]
+# 添加仓库
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+# 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
+$ helm repo update 
+# 下载Chart
+$ helm pull bitnami/postgresql --version 16.7.27 --untar
+# 查看可用版本
+$ helm search repo bitnami/postgresql -l
+
+# 安装（对应postgresql17.6.0版）
+$ helm install postgresql bitnami/postgresql --version 16.7.27 \
 -n kubesphere-devops-system --create-namespace \
---set service.type=NodePort --set service.nodePort=30681 \
---set image.tag=9.9.0-community \
---set postgresql.image.tag=11.19.0-debian-11-r32
+--set persistence.storageClass=local \
+--set primary.persistence.size=10Gi \
+--set auth.database=sonarqube \
+--set auth.username=sonar \
+--set auth.password=sonar123
 ```
 
+:::
+
+:::details 安装详情
+
 ```bash
-Release "sonarqube" does not exist. Installing it now.
-NAME: sonarqube
-LAST DEPLOYED: Tue Jul 22 12:56:14 2025
+NAME: postgresql
+LAST DEPLOYED: Thu Feb 26 09:03:57 2026
 NAMESPACE: kubesphere-devops-system
 STATUS: deployed
 REVISION: 1
+TEST SUITE: None
 NOTES:
-1. Get the application URL by running these commands:
-  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
-  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
+CHART NAME: postgresql
+CHART VERSION: 18.5.1
+APP VERSION: 18.3.0
+
+⚠ WARNING: Since August 28th, 2025, only a limited subset of images/charts are available for free.
+    Subscribe to Bitnami Secure Images to receive continued support and security updates.
+    More info at https://bitnami.com and https://github.com/bitnami/containers/issues/83267
+
+** Please be patient while the chart is being deployed **
+
+PostgreSQL can be accessed via port 5432 on the following DNS names from within your cluster:
+
+    postgresql.kubesphere-devops-system.svc.cluster.local - Read/Write connection
+
+To get the password for "postgres" run:
+
+    export POSTGRES_ADMIN_PASSWORD=$(kubectl get secret --namespace kubesphere-devops-system postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+
+To get the password for "sonar" run:
+
+    export POSTGRES_PASSWORD=$(kubectl get secret --namespace kubesphere-devops-system postgresql -o jsonpath="{.data.password}" | base64 -d)
+
+To connect to your database run the following command:
+
+    kubectl run postgresql-client --rm --tty -i --restart='Never' --namespace kubesphere-devops-system --image registry-1.docker.io/bitnami/postgresql:latest --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+      --command -- psql --host postgresql -U sonar -d sonarqube -p 5432
+
+    > NOTE: If you access the container using bash, make sure that you execute "/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash" in order to avoid the error "psql: local user with ID 1001} does not exist"
+
+To connect to your database from outside the cluster execute the following commands:
+
+    kubectl port-forward --namespace kubesphere-devops-system svc/postgresql 5432:5432 &
+    PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U sonar -d sonarqube -p 5432
+
+WARNING: The configured password will be ignored on new installation in case when previous PostgreSQL release was deleted through the helm command. In that case, old PVC will have an old password, and setting it through helm won't take effect. Deleting persistent volumes (PVs) will solve the issue.
+WARNING: Rolling tag detected (bitnami/postgresql:latest), please note that it is strongly recommended to avoid using rolling tags in a production environment.
++info https://techdocs.broadcom.com/us/en/vmware-tanzu/bitnami-secure-images/bitnami-secure-images/services/bsi-doc/apps-tutorials-understand-rolling-tags-containers-index.html
+WARNING: Rolling tag detected (bitnami/os-shell:latest), please note that it is strongly recommended to avoid using rolling tags in a production environment.
++info https://techdocs.broadcom.com/us/en/vmware-tanzu/bitnami-secure-images/bitnami-secure-images/services/bsi-doc/apps-tutorials-understand-rolling-tags-containers-index.html
+
+WARNING: There are "resources" sections in the chart not set. Using "resourcesPreset" is not recommended for production. For production installations, please set the following values according to your workload needs:
+  - primary.resources
+  - readReplicas.resources
++info https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 ```
 
-- 验证，确保所有 pod 都running
+:::
+
+**安装postgresql后，会自动生成保密字典，可以被sonarqube使用。**
 
 ```bash
-$ kubectl get po -n kubesphere-devops-system
+# 查看安装postgresql后，自动创建的保密字典
+$ kubectl describe secret -n kubesphere-devops-system postgresql | grep '===' -A 5
+Name:         postgresql
+Namespace:    kubesphere-devops-system
+Labels:       app.kubernetes.io/instance=postgresql
+              app.kubernetes.io/managed-by=Helm
+              app.kubernetes.io/name=postgresql
+              app.kubernetes.io/version=18.2.0
+              helm.sh/chart=postgresql-18.4.1
+Annotations:  meta.helm.sh/release-name: postgresql
+              meta.helm.sh/release-namespace: kubesphere-devops-system
+
+Type:  Opaque
+
+Data
+====
+password:           8 bytes
+postgres-password:  10 bytes
 ```
 
-- 卸载
+- 通过helm安装sonarqube（镜像：1G左右）
+
+[sonarqube2025.6.1对postgresql的版本依赖是13-17](https://docs.sonarsource.com/sonarqube-server/2025.6/server-installation/installing-the-database)
 
 ```bash
-$ helm uninstall sonarqube -n kubesphere-devops-system
-```
-
-#### 2.1.2 安装：使用官方仓库安装
-
-- 通过helm安装
-
-```bash
+# 添加仓库
 $ helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+# 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
 $ helm repo update
-$ export MONITORING_PASSCODE="yourPasscode"
-$ helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.4.0 \
+# 下载Chart
+$ helm pull sonarqube/sonarqube --version 2025.6.1 --untar
+# 查看可用版本
+$ helm search repo sonarqube/sonarqube -l
+
+# 安装（目前2026.1.0版本的社区版使用外部数据库时有问题，2025.6.1默认会安装postgresql，需主动关闭）
+$ export MONITORING_PASSCODE="yourPasscode" && \
+helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.6.1 \
 -n kubesphere-devops-system --create-namespace \
 --set service.type=NodePort --set service.nodePort=30681 \
---set postgresql.image.tag=11.19.0-debian-11-r32 \
---set edition=developer,monitoringPasscode=$MONITORING_PASSCODE
+--set community.enabled=true \
+--set monitoringPasscode=$MONITORING_PASSCODE \
+--set postgresql.enabled=false \
+--set jdbcOverwrite.enabled=true \
+--set jdbcOverwrite.jdbcUrl="jdbc:postgresql://postgresql:5432/sonarqube?sslmode=disable" \
+--set jdbcOverwrite.jdbcUsername=sonar \
+--set jdbcOverwrite.jdbcSecretName=postgresql \
+--set jdbcOverwrite.jdbcSecretPasswordKey=password
 ```
+
+:::details 安装详情
 
 ```bash
 Release "sonarqube" does not exist. Installing it now.
 NAME: sonarqube
-LAST DEPLOYED: Fri Aug  1 16:25:29 2025
+LAST DEPLOYED: Thu Feb 26 11:07:57 2026
 NAMESPACE: kubesphere-devops-system
 STATUS: deployed
 REVISION: 1
@@ -964,14 +1051,14 @@ WARNING:
          Please note that the SonarQube image runs with a non-root user (uid=1000) belonging to the root group (guid=0). In this way, the chart can support arbitrary user ids as recommended in OpenShift.
          Please visit https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images for more information.
 
-WARNING: The embedded PostgreSQL is intended for evaluation only, it is DEPRECATED, and it will be REMOVED in a future release.
-         Please visit https://artifacthub.io/packages/helm/sonarqube/sonarqube#production-use-case for more information.
 
 
 WARNING: Setting the deployment strategy type is deprecated and will be removed in a future release. It will be hard-coded to Recreate.
 
 WARNING: The deploymentType value is deprecated and won't be supported anymore. SonarQube will be deployed as a Deployment by default.
 ```
+
+:::
 
 - 验证，确保所有 pod 都running
 
@@ -990,9 +1077,9 @@ $ helm uninstall sonarqube -n kubesphere-devops-system
 1. 执行以下命令获取 SonarQube NodePort。
 
 ```bash
-export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
-export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
-echo http://$NODE_IP:$NODE_PORT
+  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
+  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
 ```
 
 2. 预期输出结果：（您的 NodeIP 和 NodePort 应该不同）
@@ -1007,15 +1094,18 @@ http://192.168.200.116:30681
 
 ```bash
 $ kubectl get pod -n kubesphere-devops-system
-NAME                                   READY   STATUS      RESTARTS            AGE
-devops-29219130-b7hcq                  0/1     Completed   0                   3h37m
-devops-29219310-vkj57                  0/1     Completed   0                   23m
-devops-29219340-z2pwl                  0/1     Completed   0                   7m10s
-devops-apiserver-5659d9c674-s7vj9      1/1     Running     4 (12m ago)         20h
-devops-controller-6c6978c674-vxnlt     1/1     Running     4 (12m ago)         5d6h
-devops-jenkins-7bf45c888-s2jmd         1/1     Running     2 (<invalid> ago)   20h
-sonarqube-postgresql-0                 1/1     Running     0                   10m
-sonarqube-sonarqube-6df784d857-kws2g   1/1     Running     0                   10m
+NAME                                     READY   STATUS      RESTARTS            AGE
+devops-29505990-8krmc                    0/1     Completed   0                   19d
+devops-29533770-2lq9b                    0/1     Completed   0                   19m
+devops-29533800-swfmq                    0/1     Completed   0                   14m
+devops-apiserver-7f9cdf88d6-jh4rw        1/1     Running     5 (19m ago)         19d
+devops-controller-b5cd8f767-n5n5s        1/1     Running     2 (<invalid> ago)   19d
+devops-frontend-77c689567f-f6qn9         1/1     Running     2 (<invalid> ago)   19d
+devops-jenkins-57ddc6c66b-lxttr          1/1     Running     2 (<invalid> ago)   19d
+helm-install-devops-agent-b8wzgq-sjlvj   0/1     Completed   0                   19d
+helm-install-devops-tx96kh-kk6db         0/1     Completed   0                   19d
+postgresql-0                             1/1     Running     0                   9m31s
+sonarqube-sonarqube-0                    1/1     Running     1 (4m47s ago)       5m53s
 ```
 
 2. 在浏览器中访问 SonarQube 控制台 [http://NodeIP:NodePort](http://nodeip:NodePort/)。
@@ -1219,12 +1309,6 @@ Analyze "java-demo": **sqp_2e1db3bcb24cb8022b079aed60bb48e211a1df01**
 ### 2.5 在 KubeSphere 控制台查看结果
 
 [使用 Jenkinsfile 创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/02-create-a-pipeline-using-jenkinsfile/)或[使用图形编辑面板创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/01-create-a-pipeline-using-graphical-editing-panel/)之后，即可查看代码质量分析的结果。
-
-## 3 安装 NFS 存储
-
-[部署NFS](/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-1-部署nfs)
-
-[安装Kubernetes NFS Subdir External Provisioner](/devops/new/Kubernetes/05-第5章 Kubernetes扩展安装.html#_4-2-安装kubernetes-nfs-subdir-external-provisioner)
 
 
 

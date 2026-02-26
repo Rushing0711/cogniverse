@@ -339,6 +339,24 @@ Please check the result using the command:
         kubectl get pod -A
 ```
 
+<span style="color:#9400D3;font-weight:bold;">查看安装的版本信息</span>
+
+https://lb.emon.local:6443/version
+
+```json
+{
+  "major": "1",
+  "minor": "32",
+  "gitVersion": "v1.32.8",
+  "gitCommit": "2e83bc4bf31e88b7de81d5341939d5ce2460f46f",
+  "gitTreeState": "clean",
+  "buildDate": "2025-08-13T14:21:22Z",
+  "goVersion": "go1.23.11",
+  "compiler": "gc",
+  "platform": "linux/arm64"
+}
+```
+
 ### 1.4 虚拟机挂起并恢复后k8s网络问题（所有节点）
 
 [虚拟机挂起并恢复后k8s网络问题（所有节点）](/devops/new/Kubernetes/02-%E7%AC%AC2%E7%AB%A0%20Kubeadmin%E5%AE%89%E8%A3%85K8S%20V1.23.html#_3-4-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%8C%82%E8%B5%B7%E5%B9%B6%E6%81%A2%E5%A4%8D%E5%90%8Ek8s%E7%BD%91%E7%BB%9C%E9%97%AE%E9%A2%98-%E6%89%80%E6%9C%89%E8%8A%82%E7%82%B9)
@@ -497,8 +515,9 @@ $ helm upgrade --install -n kubesphere-system --create-namespace \
      --set multicluster.hostClusterName=emon-main \
      --debug \
      --wait \
-     --version 1.2.3-20251118 \
-     --reset-values
+     --version 1.2.4 \
+     --reset-values \
+     --take-ownership
 ```
 
 > **重要配置说明：**
@@ -688,23 +707,23 @@ http://192.168.200.116:30880
 
 注意！ 集群名称**符合**我们自定义的 **emon-main**，默认名称 **host** 。
 
-点击「emon-main 」主集群，进入集群管理页面。新版本的集群管理菜单更加简洁，默认只有基本的 k8s 管理功能。
-
-- 集群概览
-
-![image-20260122222604262](images/image-20260122222604262.png)
-
 至此，我们完成了 KubeSphere Core 的安装部署。
 
 ### 4.3 激活
 
 [[申请 KubeSphere 社区版的免费许可证](https://kubesphere.com.cn/apply-license/)](https://kubesphere.com.cn/apply-license/)
 
-激活后：
+- 激活信息
 
 ![image-20260123223046321](images/image-20260123223046321.png)
 
-## 5 通过域名访问 KubeSphere 控制台
+- 集群概览
+
+点击「emon-main 」主集群，进入集群管理页面。新版本的集群管理菜单更加简洁，默认只有基本的 k8s 管理功能。
+
+![image-20260125182732553](images/image-20260125182732553.png)
+
+## 5 通过域名访问 KubeSphere 控制台（非必要）
 
 ### 5.1 前提条件
 
@@ -716,45 +735,168 @@ http://192.168.200.116:30880
 
 如果您尚未安装 [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)，请按照以下步骤安装。
 
+- 添加 ingress-nginx 仓库
+
 ```bash
-# 添加 ingress-nginx 仓库
-$ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+$ HTTP_PROXY=http://192.168.200.1:7890 \
+HTTPS_PROXY=http://192.168.200.1:7890 \
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+```
 
-# 更新仓库
-$ helm repo update
+- 更新仓库
 
-# 安装 ingress-nginx
+```bash
+$ HTTP_PROXY=http://192.168.200.1:7890 \
+HTTPS_PROXY=http://192.168.200.1:7890 \
+helm repo update
+```
+
+- 查看所有可用版本
+
+```bash
+$ helm search repo -l ingress-nginx
+```
+
+- 安装 ingress-nginx
+
+```bash
 $ helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace \
-  --version 4.2.5
+  --version 4.14.1
+```
 
-# 验证安装结果
-$ kubectl -n ingress-nginx get svc ingress-nginx-controller
+:::details 安装结果
+
+```bash
+NAME: ingress-nginx
+LAST DEPLOYED: Sun Jan 25 18:59:34 2026
+NAMESPACE: ingress-nginx
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The ingress-nginx controller has been installed.
+It may take a few minutes for the load balancer IP to be available.
+You can watch the status by running 'kubectl get service --namespace ingress-nginx ingress-nginx-controller --output wide --watch'
+
+An example Ingress that makes use of the controller:
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: example
+    namespace: foo
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: www.example.com
+        http:
+          paths:
+            - pathType: Prefix
+              backend:
+                service:
+                  name: exampleService
+                  port:
+                    number: 80
+              path: /
+    # This section is only required if TLS is to be enabled for the Ingress
+    tls:
+      - hosts:
+        - www.example.com
+        secretName: example-tls
+
+If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
+
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: example-tls
+    namespace: foo
+  data:
+    tls.crt: <base64 encoded cert>
+    tls.key: <base64 encoded key>
+  type: kubernetes.io/tls
+```
+
+:::
+
+- 验证安装结果
+
+```bash
+$ kubectl get service --namespace ingress-nginx ingress-nginx-controller --output wide --watch
 
 # 检查 IngressClass
-$ kubectl get ingressclass
+$ kubectl get ingressclass -n ingress-nginx
 ```
 
 ### 5.3 步骤 2：安装 cert-manager
 
 [cert-manager](https://cert-manager.io/docs/) 是一个 Kubernetes 原生的证书管理控制器，可以帮助您自动化 TLS 证书的管理和签发。
 
+- 添加 cert-manager 仓库
+
 ```bash
-# 添加 cert-manager 仓库
 $ helm repo add jetstack https://charts.jetstack.io
+```
 
-# 更新仓库
-$ helm repo update
+- 更新仓库
 
-# 安装 cert-manager
-$ helm install cert-manager jetstack/cert-manager \
+```bash
+$ HTTP_PROXY=http://192.168.200.1:7890 \
+HTTPS_PROXY=http://192.168.200.1:7890 \
+helm repo update
+```
+
+- 查看所有可用版本
+
+```bash
+$ helm search repo -l jetstack
+```
+
+- 安装 cert-manager
+
+```bash
+$ helm install \
+  cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
-  --version v1.12.0 \
-  --set installCRDs=true
+  --version v1.19.2 \
+  --set crds.enabled=true
+```
 
-# 验证安装结果
+```bash
+NAME: cert-manager
+LAST DEPLOYED: Sun Jan 25 22:40:30 2026
+NAMESPACE: cert-manager
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+⚠️  WARNING: New default private key rotation policy for Certificate resources.
+The default private key rotation policy for Certificate resources was
+changed to `Always` in cert-manager >= v1.18.0.
+Learn more in the [1.18 release notes](https://cert-manager.io/docs/releases/release-notes/release-notes-1.18).
+
+cert-manager v1.19.2 has been deployed successfully!
+
+In order to begin issuing certificates, you will need to set up a ClusterIssuer
+or Issuer resource (for example, by creating a 'letsencrypt-staging' issuer).
+
+More information on the different types of issuers and how to configure them
+can be found in our documentation:
+
+https://cert-manager.io/docs/configuration/
+
+For information on how to configure cert-manager to automatically provision
+Certificates for Ingress resources, take a look at the `ingress-shim`
+documentation:
+
+https://cert-manager.io/docs/usage/ingress/
+```
+
+- 验证安装结果
+
+```bash
 $ kubectl get pods -n cert-manager
 ```
 
@@ -765,15 +907,23 @@ $ kubectl get pods -n cert-manager
 如果您尚未安装 KubeSphere，可以在安装时配置 TLS。以下命令采用 cert-manager 生成自签证书。
 
 ```bash
-$ helm upgrade --install -n kubesphere-system --create-namespace ks-core https://charts.kubesphere.io/main/ks-core-1.1.4.tgz \
---set portal.hostname=k8s.flyin.com \   # 将 kubesphere.my.org 替换为您的自定义域名
---set portal.https.port=30880 \
---set ingress.enabled=true \
---set ingress.tls.source=generation \
---set ingress.ingressClassName=nginx
+$ helm upgrade --install -n kubesphere-system --create-namespace \
+  ks-core oci://hub.kubesphere.com.cn/kse/ks-core \
+  --version 1.2.3-20251118 \
+  --set ha.enabled=true \
+  --set redisHA.enabled=true \
+  --set multicluster.hostClusterName=emon-main \
+  --set portal.hostname=k8s.flyin.com \
+  --set portal.https.port=30880 \
+  --set ingress.enabled=true \
+  --set ingress.tls.source=generation \
+  --set ingress.ingressClassName=nginx \
+  --reset-values \
+  --debug \
+  --wait
 ```
 
-> 说明：以上参数的更多信息，请参阅 [KubeSphere Core 高级配置](https://kubesphere.io/zh/docs/v4.1/03-installation-and-upgrade/02-install-kubesphere/05-appendix/)。
+> 说明：以上参数的更多信息，请参阅 [KubeSphere Core 高级配置](https://docs.kubesphere.com.cn/v4.2.0/03-installation-and-upgrade/02-install-kubesphere/05-appendix/)。或[Chart Values](https://github.com/kubesphere/kubesphere/blob/master/config/ks-core/values.yaml)
 
 ##### 方法 2：安装 KubeSphere 后，手动配置自签名TLS
 
@@ -930,7 +1080,7 @@ $ echo https://k8s.flyin.com:$(kubectl -n ingress-nginx get svc ingress-nginx-co
 输出示例如下（您的访问地址可能不同）：
 
 ```bash
-https://k8s.flyin.com:31869
+https://k8s.flyin.com:30259
 ```
 
 - 获取节点 IP。
@@ -951,7 +1101,7 @@ vim /etc/hosts
 <Node IP> k8s.flyin.com
 ```
 
-- 如果一切配置正确，您将能够通过第 3 步获取的 https 访问地址，如 [https://k8s.flyin.com:31655](https://kubesphere.my.org:31655/) 访问 KubeSphere Web 控制台。
+- 如果一切配置正确，您将能够通过第 3 步获取的 https 访问地址，如 https://k8s.flyin.com:30259 访问 KubeSphere Web 控制台。
 
 
 
@@ -963,6 +1113,12 @@ vim /etc/hosts
 - 企业空间
 - 集群
 - 项目
+
+KubeSphere 是一个支持多租户的容器管理平台，与 Kubernetes 相同，它通过基于角色的访问控制（RBAC）对用户的权限加以控制，实现逻辑层面的资源隔离。
+
+KubeSphere 中的资源被划分为**平台、企业空间、集群、项目**四个层级，所有的资源都会归属到这四个资源层级之中，各层级可以通过角色来控制用户的资源访问权限。每个层级默认设有多个内置角色，您也可以创建拥有自定义权限的角色。
+
+企业空间作为<span style="color:red;font-weight:bold;">最小的租户单元</span>，提供跨集群的资源隔离能力。企业空间中的成员可以在授权集群中创建项目，并通过邀请用户的方式参与项目协同。
 
 ### 6.2 直观层级关系
 
@@ -1018,9 +1174,25 @@ KubeSphere 平台提供以下预置平台角色，您也可以创建角色以自
 
 | 参数                      | 描述                                                         |
 | :------------------------ | :----------------------------------------------------------- |
-| platform-admin            | 平台管理员，在 KubeSphere 平台具有所有权限，包括平台角色管理、用户管理、平台设置管理、安装和卸载扩展组件等。 |
-| platform-regular          | 平台普通用户，在平台级别只有应用查看权限。该角色一般授予不需要其他平台权限的企业空间成员。 |
+| platform-admin            | 平台管理员，在 KubeSphere 平台具有所有权限，包括平台角色管理、用户管理、集群和企业空间管理、扩展组件管理等。 |
+| platform-regular          | 平台普通用户，被邀请加入企业空间之前无法访问任何资源。该角色一般授予不需要其他平台权限的企业空间成员。 |
 | platform-self-provisioner | 创建企业空间并成为所创建的企业空间的管理员。                 |
+
+| 权限 / 操作                                    | `platform-admin` | `platform-regular`                  | `platform-self-provisioner`     |
+| ---------------------------------------------- | ---------------- | ----------------------------------- | ------------------------------- |
+| 访问平台控制台                                 | ✅                | ✅                                   | ✅                               |
+| 查看自己加入的企业空间                         | ✅                | ✅                                   | ✅                               |
+| 创建企业空间（Workspace）                      | ✅                | ❌                                   | ✅                               |
+| 查看所有企业空间列表（全局）                   | ✅                | ❌                                   | ❌                               |
+| 管理任意企业空间（如编辑、删除、配额、成员等） | ✅                | ❌                                   | ❌（仅能管理自己创建的）         |
+| 在自己创建的企业空间中担任初始管理员           | ✅                | ❌                                   | ✅                               |
+| 加入他人创建的企业空间（需邀请）               | ✅                | ✅                                   | ✅                               |
+| 管理平台用户账户（增删改查）                   | ✅                | ❌                                   | ❌                               |
+| 管理平台级设置（集群、网关、通知、OIDC 等）    | ✅                | ❌                                   | ❌                               |
+| 查看平台监控、日志、审计等全局视图             | ✅                | ❌                                   | ❌                               |
+| 默认分配给新注册用户？                         | ❌                | ✅（若未启用 self-provisioner 策略） | ✅（若平台启用了“自助服务”模式） |
+
+> ✅ = 有权限　　❌ = 无权限
 
 #### 6.4.2 企业空间角色
 
@@ -1033,6 +1205,23 @@ KubeSphere 平台提供以下预置企业空间角色：
 | workspace-viewer           | 企业空间观察员，可以查看企业空间内的所有资源。               |
 | workspace-regular          | 企业空间普通用户，在企业空间内只具有企业空间设置查看权限。该角色一般授予不需要其他企业空间权限的项目成员。 |
 
+| 权限 / 操作                            | `workspace-admin` | `workspace-self-provisioner` | `workspace-regular` | `workspace-viewer`              |
+| -------------------------------------- | ----------------- | ---------------------------- | ------------------- | ------------------------------- |
+| 查看企业空间基本信息                   | ✅                 | ✅                            | ✅                   | ✅                               |
+| 查看企业空间配额使用情况               | ✅                 | ✅                            | ✅                   | ✅                               |
+| 创建项目（Project）                    | ✅                 | ✅                            | ✅                   | ❌                               |
+| 创建 DevOps 项目                       | ✅                 | ✅                            | ✅                   | ❌                               |
+| 查看企业空间内所有项目列表             | ✅                 | ✅                            | ✅                   | ✅                               |
+| 访问项目内容（需项目内有权限）         | 取决于项目角色    | 取决于项目角色               | 取决于项目角色      | ❌（即使加入项目，也无自动权限） |
+| 邀请/移除企业空间成员                  | ✅                 | ❌                            | ❌                   | ❌                               |
+| 管理企业空间成员角色                   | ✅                 | ❌                            | ❌                   | ❌                               |
+| 编辑企业空间设置（如网关、日志收集等） | ✅                 | ❌                            | ❌                   | ❌                               |
+| 删除企业空间                           | ✅                 | ❌                            | ❌                   | ❌                               |
+| 查看企业空间审计日志                   | ✅                 | ❌                            | ❌                   | ❌                               |
+| 默认角色（当用户被邀请加入企业空间时） | —                 | —                            | ✅（默认）           | —                               |
+
+> ✅ = 有权限　　❌ = 无权限　　— = 不适用
+
 #### 6.4.3 集群角色
 
 KubeSphere 平台提供以下预置集群角色：
@@ -1041,6 +1230,23 @@ KubeSphere 平台提供以下预置集群角色：
 | :------------- | :------------------------------------------------------- |
 | cluster-admin  | 集群管理员，在集群内具有除创建和删除集群以外的所有权限。 |
 | cluster-viewer | 集群观察员，在集群内具有所有资源的查看权限。             |
+
+| 权限 / 操作                                                  | `cluster-admin` | `cluster-viewer`                            |
+| ------------------------------------------------------------ | --------------- | ------------------------------------------- |
+| 查看集群基本信息（节点、版本、资源总量等）                   | ✅               | ✅                                           |
+| 查看所有节点（Nodes）详情与状态                              | ✅               | ✅                                           |
+| 查看所有命名空间（Namespaces）列表                           | ✅               | ✅                                           |
+| 查看任意命名空间内的资源（Pods, Deployments, Services 等）   | ✅               | ✅                                           |
+| 创建/编辑/删除集群级资源（如 StorageClass, ClusterRole, CRD 等） | ✅               | ❌                                           |
+| 创建/管理命名空间（Namespace）                               | ✅               | ❌                                           |
+| 在任意命名空间中创建或修改工作负载、服务、配置等             | ✅               | ❌                                           |
+| 管理集群网络策略、网关、Ingress 控制器                       | ✅               | ❌                                           |
+| 查看集群监控、日志、事件、审计（全局视图）                   | ✅               | ✅（只读）                                   |
+| 执行 kubectl 操作（通过 Web Kubectl 或 kubeconfig）          | ✅（完全权限）   | ✅（仅限 `get`, `list`, `watch` 等只读命令） |
+| 访问所有企业空间和项目（穿透 RBAC）                          | ✅               | ✅（仅查看，不穿透项目权限限制）             |
+| 修改集群设置（如告警、通知、日志收集策略）                   | ✅               | ❌                                           |
+
+> ✅ = 有权限　　❌ = 无权限
 
 #### 6.4.4 项目角色
 
@@ -1051,6 +1257,25 @@ KubeSphere 提供以下预置项目角色：
 | admin    | 项目管理员，在项目中具有所有权限。                           |
 | operator | 项目操作员，在项目中具有除项目设置管理、角色管理、成员管理以外的权限。 |
 | viewer   | 项目观察员，在项目中具有资源查看权限。                       |
+
+| 权限 / 操作                                      | `admin` | `operator` | `viewer`                         |
+| ------------------------------------------------ | ------- | ---------- | -------------------------------- |
+| 查看项目基本信息、配额、资源使用                 | ✅       | ✅          | ✅                                |
+| 查看所有工作负载（Deployments, StatefulSets 等） | ✅       | ✅          | ✅                                |
+| 创建/编辑/删除工作负载                           | ✅       | ✅          | ❌                                |
+| 查看 Services / Ingress / 路由                   | ✅       | ✅          | ✅                                |
+| 创建/修改/删除 Services 或 Ingress               | ✅       | ✅          | ❌                                |
+| 管理配置（ConfigMaps, Secrets）                  | ✅       | ✅          | ❌                                |
+| 查看 Pod 日志、事件、终端（Exec）                | ✅       | ✅          | ✅（仅查看日志和事件，不能 Exec） |
+| 执行容器终端（kubectl exec / Web Terminal）      | ✅       | ✅          | ❌                                |
+| 管理存储卷（PersistentVolumeClaims）             | ✅       | ✅          | ❌                                |
+| 创建/管理 Helm 应用（应用仓库部署）              | ✅       | ✅          | ❌                                |
+| 管理项目成员（邀请/移除用户、分配角色）          | ✅       | ❌          | ❌                                |
+| 编辑项目设置（如网关、日志收集、配额）           | ✅       | ❌          | ❌                                |
+| 删除整个项目                                     | ✅       | ❌          | ❌                                |
+| 查看监控指标（CPU/内存/网络）                    | ✅       | ✅          | ✅                                |
+
+> ✅ = 有权限　　❌ = 无权限
 
 ## 7  如何控制用户权限？【快速了解】
 
@@ -1085,18 +1310,15 @@ KubeSphere 提供以下预置项目角色：
 ### 7.3 创建企业空间
 
 1. 登录 KubeSphere Web 控制台。
-
 2. 点击**企业空间管理**，点击**创建**。
+3. 在**基本信息**页签，输入企业空间的名称（例如**demo-workspace**）、选择企业空间管理员（例如 **demo-user**），然后点击**下一步**。
+4. 在**集群设置**页签，选择授权给该企业空间的集群（可同时选择多个集群），点击**确定**。
 
-3. 在**创建企业空间**的**基本信息**页面，
+> 对于多集群环境，设置企业空间的基本信息后，点击**下一步**。在**集群设置**页面，选择企业空间需要使用的集群。
 
-  1. 输入企业空间的名称（例如 **demo-workspace**）。
-  2. 选择企业空间管理员（例如 **demo-user**）
-  3. 点击右下角下一步，选择集群。猩红<span style="color:red;font-weight:bold;">若这一步不选择集群，只能在集群设置=>集群可见性中授权企业空间了。</span>
+5. 点击右下角下一步，选择集群。<span style="color:red;font-weight:bold;">若这一步不选择集群，只能在集群设置=>集群可见性中授权企业空间了。</span>
 
-  > 对于多集群环境，设置企业空间的基本信息后，点击**下一步**。在**集群设置**页面，选择企业空间需要使用的集群。
-
-4. 点击**确定**。企业空间创建后将显示在企业空间列表中。
+6. 点击**确定**。企业空间创建完成后，将显示在企业空间列表中。
 
 ### 7.4 创建企业空间角色
 
@@ -1113,9 +1335,13 @@ KubeSphere 提供以下预置项目角色：
    | **workspace-regular**          | 企业空间普通成员，可以查看企业空间设置。                     |
    | **workspace-admin**            | 企业空间管理员，可以管理企业空间中的所有资源。               |
 
-   > 企业空间内置角色的名称以 <企业空间名称>-<角色名称> 格式显示。例如，在名称为 **demo-workspace** 的企业空间中，角色 **admin** 的实际角色名称为 **demo-workspace-admin**。
+   ::: tip
 
-3. 在企业空间角色列表页面，点击**创建**。
+   <span style="color:#1E90FF;font-weight:bold;">说明</span>：企业空间内置角色的名称以 <企业空间名称>-<角色名称> 格式显示。例如，在名称为 **demo-workspace** 的企业空间中，角色 **admin** 的实际角色名称为 **demo-workspace-admin**。
+
+   :::
+
+3. 在企业空间角色列表页面，点击**创建**。<span style="color:red;font-weight:bold;">注意：订阅授权无权限创建企业空间角色</span>
 
 4. 在**创建企业空间角色**对话框，输入**名称**（**demo-workspace-role**），然后点击**编辑权限**继续。
 
@@ -1136,9 +1362,9 @@ KubeSphere 提供以下预置项目角色：
 
 ### 7.6 创建项目
 
-1. 在左侧导航栏，选择**项目**。
+1. 在左侧导航栏，选择**项目管理 > 项目列表**。
 
-2. 在**项目**页签，点击**创建**。
+2. 点击**创建**。
 
 3. 在**创建项目**对话框，输入项目的**名称**（例如 **demo-project**）。
 
@@ -1148,9 +1374,9 @@ KubeSphere 提供以下预置项目角色：
 
 ### 7.7 创建项目角色
 
-1. 在**项目**页签，点击项目的名称 **demo-project** 进入该项目。
+1. 在左侧导航栏，选择**项目管理 > 项目角色**。
 
-2. 在左侧导航栏，选择**项目设置** > **项目角色**。
+2. 在页面左上角的下拉列表中选择**demo-project** 项目。
 
    项目角色页面默认列出以下三个内置角色。
 
@@ -1160,13 +1386,15 @@ KubeSphere 提供以下预置项目角色：
    | **operator** | 项目管理员，可以管理项目中除用户和角色之外的资源。 |
    | **admin**    | 项目管理员，可以管理项目中的所有资源。             |
 
-3. 在项目角色列表页面，点击**创建**。
+3. 在项目角色列表页面，点击**创建**。<span style="color:red;font-weight:bold;">注意：订阅授权无权限创建项目角色</span>
 
 4. 在**创建角色**对话框，输入**名称**（比如：**demo-project-role**），然后点击**编辑权限**继续。
 
 5. 在**编辑权限**对话框，权限归类在不同的**功能模块**下。
 
    在本示例中，点击**访问控制**，并为该角色选择<span style="color:blue;font-weight:bold;">**成员查看**和**角色查看**</span>。
+
+   > **依赖于**表示当前授权项依赖所列出的授权项，勾选该权限后系统会自动选上所有依赖权限。
 
 6. 点击**确定**。新创建的角色将显示在项目角色列表中。
 
@@ -1195,7 +1423,7 @@ http://192.168.200.116:30880
 
 ### FAQ1：如何重置用户密码
 
-https://www.kubesphere.io/zh/docs/v3.4/faq/access-control/forgot-password/
+https://docs.kubesphere.com.cn/v4.2.1/05-users-and-roles/01-users/07-reset-user-password/
 
 ### FAQ2：玩转kubesphere之cni网络插件异常问题
 

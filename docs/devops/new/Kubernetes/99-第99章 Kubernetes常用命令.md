@@ -6,26 +6,47 @@ https://kubernetes.io/zh-cn/docs/reference/kubectl/introduction/
 
 ### 1.1 资源类型
 
-| 资源                  | 简写    | 是否需指定命名空间 |
-| --------------------- | ------- | ------------------ |
-| namespaces            | ns      | false              |
-| nodes                 | node/no | false              |
-| service               | svc     | false              |
-| pods                  | pod/po  | true               |
-| deployments           | deploy  | true               |
-| replicaset            | rs      | true               |
-| ingress               | ing     | false              |
-| persistentvolume      | pv      | false              |
-| persistentVolumeClaim | pvc     | true               |
-| ConfigMap             | cm      | true               |
-| secret                | secret  | false              |
-| endpoints             | ep      | true               |
-| serviceaccount        | sa      | true               |
-| clusterrole           |         | true               |
-| clusterrolebinding    |         | true               |
-| daemonset             | ds      | true               |
+| 资源类型（Kind）                 | 简写                             | 是否需指定命名空间 |
+| -------------------------------- | -------------------------------- | ------------------ |
+| `ConfigMap`                      | `cm`                             | true               |
+| `DaemonSet`                      | `ds`                             | true               |
+| `Deployment`                     | `deploy`                         | true               |
+| `Endpoints`                      | `ep`                             | true               |
+| `Ingress`                        | `ing`                            | false              |
+| `Namespace`                      | `ns`                             | false              |
+| `Node`                           | `node/no`                        | false              |
+| `PersistentVolume`               | `pv`                             | false              |
+| `PersistentVolumeClaim`          | `pvc`                            | true               |
+| `Pod`                            | `pod/po`                         | true               |
+| `ReplicaSet`                     | `rs`                             | true               |
+| `Secret`                         | `secret`                         | false              |
+| `Service`                        | `svc`                            | false              |
+| `StatefulSet`                    | `sts`                            | true               |
+| `StorageClass`                   | `sc`                             | false              |
+| `ServiceAccount`                 | `sa`                             | true               |
+| `ClusterRole`                    | `clusterrole`                    | true               |
+| `ClusterRoleBinding`             | `clusterrolebinding`             | true               |
+| `CustomResourceDefinition`       | `crd`                            | false              |
+| `Job`                            | `job`                            | true               |
+| `CronJob`                        | `cronjob`                        | true               |
+| `HorizontalPodAutoscaler`        | `hpa`                            | true               |
+| `NetworkPolicy`                  | `netpol`                         | true               |
+| `PodDisruptionBudget`            | `pdb`                            | true               |
+| `ResourceQuota`                  | `rq`                             | true               |
+| `LimitRange`                     | `lr`                             | true               |
+| `Event`                          | `ev`                             | true               |
+| `MutatingWebhookConfiguration`   | `mutatingwebhookconfiguration`   | false              |
+| `ValidatingWebhookConfiguration` | `validatingwebhookconfiguration` | false              |
+| `PriorityClass`                  | `priorityclass`                  | false              |
+| `Role`                           | `role`                           | true               |
+| `RoleBinding`                    | `rolebinding`                    | true               |
+| `Lease`                          | `lease`                          | true               |
+| `ControllerRevision`             | `controllerrevision`             | true               |
+| `PodTemplate`                    | `podtemplate`                    | true               |
+| `ReplicaSet`                     | `rs`                             | true               |
+| `ReplicationController`          | `rc`                             | true               |
 
-## 1.2 版本
+### 1.2 版本
 
 - 查看客户端和服务器侧版本信息
 
@@ -39,7 +60,7 @@ $ kubectl version
 $ kubectl api-versions
 ```
 
-## 1.3 查看对象信息
+### 1.3 查看对象信息
 
 - 查看默认命名空间下所有资源
 
@@ -71,7 +92,7 @@ $ kubectl get pods -A
 $ kubectl get pods -n <namespace>
 ```
 
-## 1.4 资源处理
+### 1.4 资源处理
 
 - 配置资源
 
@@ -95,6 +116,27 @@ $ kubectl describe node emon3 | grep "Architecture"
 
 ```bash
 $ docker manifest inspect quay.io/argoproj/argocd-applicationset:v0.4.1 | grep "architecture"
+```
+
+### 1.7 查看context
+
+```bash
+$ kubectl config get-contexts
+CURRENT   NAME                        CLUSTER    AUTHINFO           NAMESPACE
+          kubernetes-admin@emon.com   emon.com   kubernetes-admin   
+*         orbstack                    orbstack   orbstack 
+```
+
+- 设置当前上下文的默认命名空间
+
+```bash
+$ kubectl config set-context --current --namespace=kubesphere-system
+```
+
+- 清空当前上下文的默认命名空间
+
+```bash
+$ kubectl config unset current-context.namespace
 ```
 
 ## 2 docker/ctr/crictl/nerdctl对比说明
@@ -244,6 +286,35 @@ $ sudo ctr ns ls
 NAME    LABELS 
 default        
 k8s.io   
+```
+
+## 3 K8s资源的层次关系
+
+```bash
+集群 (Cluster)
+├── 命名空间 (Namespace)
+│   ├── 工作负载 (Workloads)
+│   │   ├── Pod (容器组) ← 最基础单元
+│   │   ├── Deployment (部署) ← 管理无状态应用
+│   │   ├── StatefulSet (有状态副本集) ← 管理有状态应用
+│   │   ├── DaemonSet (守护进程集) ← 每个节点一个Pod
+│   │   ├── Job (任务) ← 一次性任务
+│   │   └── CronJob (定时任务) ← 定时执行任务
+│   ├── 服务发现 (Service Discovery)
+│   │   ├── Service (服务)
+│   │   └── Ingress (入口)
+│   ├── 存储 (Storage)
+│   │   ├── PersistentVolumeClaim (持久卷声明)
+│   │   └── ConfigMap/Secret (配置/密钥)
+│   └── 权限 (RBAC)
+│       ├── Role/RoleBinding (角色/角色绑定)
+│       └── ServiceAccount (服务账户)
+└── 集群级别资源
+    ├── Node (节点)
+    ├── PersistentVolume (持久卷)
+    ├── StorageClass (存储类)
+    ├── ClusterRole/ClusterRoleBinding (集群角色/集群角色绑定)
+    └── CustomResourceDefinition (自定义资源定义)
 ```
 
 
