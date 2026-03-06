@@ -212,18 +212,6 @@ nfs-csi-retain    nfs.csi.k8s.io     Retain          Immediate              true
 
 要将 SonarQube 集成到您的流水线，必须先安装 SonarQube 服务器。
 
-- 登录
-
-http://192.168.200.116:30712
-
-默认用户名密码：admin/admin
-
-修改密码为： admin/Sq@12345
-
-- 安装后资源概况
-
-![image-20240630105708229](images/image-20240630105708229.png)
-
 ### 10.3、将 Harbor 集成到流水线
 
 在应用商店安装Harbor

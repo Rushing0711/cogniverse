@@ -264,6 +264,31 @@ $ kubectl config unset current-context.namespace
 |              | 清理停止容器   | `docker container prune`            | ❌ 不支持                           | ❌ 不支持                            | `nerdctl container prune`            |
 |              | 清理悬空镜像   | `docker image prune`                | `ctr image prune`                  | ❌ 不支持                            | `nerdctl image prune`                |
 
+:::tip
+
+**docker login**和**nerdctl login** 登录后信息存储在用户目录下的 .docker/config.json
+
+```bash
+echo bgYGYaxhh6M4cZPjoI5rLv4pLwO3SKMC |nerdctl login -u robot\$ks-devops-harbor+robot-test 192.168.200.116:30002 --password-stdin --insecure-registry
+WARN[0000] skipping verifying HTTPS certs for "192.168.200.116:30002" 
+
+WARNING! Your credentials are stored unencrypted in '/home/emon/.docker/config.json'.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/go/credential-store/
+
+Login Succeeded
+$ cat .docker/config.json 
+{
+        "auths": {
+                "192.168.200.116:30002": {
+                        "auth": "cm9ib3Qka3MtZGV2b3BzLWhhcmJvcityb2JvdC10ZXN0OmJnWUdZYXhoaDZNNGNaUGpvSTVyTHY0cEx3TzNTS01D"
+                }
+        }
+}
+```
+
+:::
+
 ### 2.3 镜像操作时关键差异说明
 
 1. **镜像地址格式**：
