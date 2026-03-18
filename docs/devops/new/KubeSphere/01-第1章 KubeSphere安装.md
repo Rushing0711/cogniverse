@@ -1431,7 +1431,22 @@ https://docs.kubesphere.com.cn/v4.2.1/05-users-and-roles/01-users/07-reset-user-
 
 问题解决：https://blog.csdn.net/weixin_40807433/article/details/135240300
 
-简述：删除异常节点的容器组 calico-node，让它拉起重新同步数据即可修复。
+
+
+<span style="color:red;font-weight:bold;">虚拟机挂起恢复后重启 Calico Pods</span>
+
+> 报错信息：
+>
+> Failed to create pod sandbox: rpc error: code = Unknown desc = failed to setup network for sandbox "bddaf40fb8a078ee4d6f7ebb2eb2e0de9d293693af3a14422ec49faac214bffb": plugin type="calico" failed (add): error getting ClusterInformation: connection is unauthorized: Unauthorized
+>
+> 简述：有时重启 Calico 组件可以解决临时的认证问题，删除异常节点的容器组 calico-node，让它拉起重新同步数据即可修复。
+
+```bash
+kubectl delete pods -n kube-system -l k8s-app=calico-node
+kubectl delete pods -n kube-system -l k8s-app=calico-kube-controllers
+```
+
+
 
 ### FAQ3：KubeSphere 镜像构建器（S2I）服务证书过期(x509)问题
 
@@ -1440,3 +1455,12 @@ https://docs.kubesphere.com.cn/v4.2.1/05-users-and-roles/01-users/07-reset-user-
 问题解决：https://ask.kubesphere.io/forum/d/23239-kubesphere-jing-xiang-gou-jian-qi-s2ifu-wu-zheng-shu-guo-qi-x509wen-ti
 
 简述：这个是由于之前 DevOps S2I 内置的证书过期时间是 2024.02.14 ，现在只需要更新证书就可以了；
+
+### FAQ4: Kubesphere 企业空间日志收集系统的“末梢神经”Vector日志采集代理重建
+
+```bash
+kubectl delete pods -n kubesphere-logging-system -l app.kubernetes.io/instance=vector-agent
+```
+
+
+
