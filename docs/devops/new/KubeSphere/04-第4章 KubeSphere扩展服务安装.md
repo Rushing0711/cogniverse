@@ -1828,11 +1828,250 @@ staticMethod jenkins.model.Jenkins getInstance
 
 保存 Jenkinsfile 后，KubeSphere 会自动在图形编辑面板上创建所有阶段和步骤。点击**运行**来运行该流水线。如果一切运行正常，Jenkins 将推送镜像至您的 Harbor 仓库。
 
+## 4 Sonatype Nexus Repository仓库管理工具
 
+### 4.1 安装（镜像：310M左右）
+
+- 安装
+
+```bash
+# 添加仓库（如果还没添加）
+$ helm repo add sonatype https://sonatype.github.io/helm3-charts/
+# 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
+$ helm repo update sonatype
+# 查看可用版本
+$ helm search repo sonatype -l
+# 查看values.yaml
+$ helm show values sonatype/nexus-repository-manager > nexus-values.yaml
+
+# 安装（--set service.nodePort=30081不支持指定）
+$ helm upgrade --install nexus3 sonatype/nexus-repository-manager \
+  --version 64.2.0 \
+  --namespace kubesphere-devops-system \
+  --create-namespace \
+  --set persistence.enabled=true \
+  --set persistence.storageSize=20Gi \
+  --set persistence.storageClass="nfs-csi-retain" \
+  --set image.repository="klo2k/nexus3" \
+  --set image.tag="3.68.1-02" \
+  --set service.type=NodePort
+```
+
+:::details 安装详情
+
+```bash
+# 不指定 service.type=NodePort
+WARNING: This chart is deprecated
+NAME: nexus3
+LAST DEPLOYED: Fri Mar 20 21:01:36 2026
+NAMESPACE: kubesphere-devops-system
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace kubesphere-devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace kubesphere-devops-system port-forward $POD_NAME 8081:80
+  Your application is available at http://127.0.0.1
+  
+# 指定 service.type=NodePort
+WARNING: This chart is deprecated
+Release "nexus3" has been upgraded. Happy Helming!
+NAME: nexus3
+LAST DEPLOYED: Fri Mar 20 21:20:10 2026
+NAMESPACE: kubesphere-devops-system
+STATUS: deployed
+REVISION: 2
+NOTES:
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services nexus3-nexus-repository-manager)
+  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  Your application is available at http://$NODE_IP:$NODE_PORT
+```
+
+:::
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n kubesphere-devops-system
+```
+
+- 卸载
+
+```bash
+$ helm uninstall nexus3 -n kubesphere-devops-system
+```
+
+- 修改nodePort端口并获得访问地址
+
+由于无法指定nodePort的端口，若想使用 30081 端口，可以修改。
+
+```bash
+$ kubectl patch svc nexus3-nexus-repository-manager -n kubesphere-devops-system -p '{"spec":{"type":"NodePort","ports":[{"port":8081,"targetPort":8081,"nodePort":30081}]}}'
+```
+
+```bash
+# 获取访问地址
+export NODE_PORT=$(kubectl get svc --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" nexus3-nexus-repository-manager)
+export NODE_IP=$(kubectl get no --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+echo http://$NODE_IP:$NODE_PORT
+
+# 获取密码
+export POD_NAME=$(kubectl get pods --namespace kubesphere-devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
+kubectl exec -it -n kubesphere-devops-system $POD_NAME -- cat /nexus-data/admin.password
+# 输出密码，首次登录是会修改
+aa614da4-3aaf-4d5c-a5c3-83a6383329f3
+```
+
+http://192.168.200.116:30081
+
+### 4.2 配置
+
+#### 4.2.1 **基本信息**
+
+| 项目     | 信息                                             |
+| :------- | :----------------------------------------------- |
+| 访问地址 | `http://192.168.200.116:30081`                   |
+| 管理员   | `admin` / 你修改后的密码                         |
+| 部署位置 | Kubernetes namespace: `kubesphere-devops-system` |
+| 存储类   | `nfs-csi-retain` (20Gi)                          |
+
+------
+
+#### 4.2.2 **已完成的配置**
+
+1. 匿名访问
+
+- **路径**：Administration → Security → Anonymous Access
+- **状态**：已开启，允许匿名用户下载（上传仍需登录）
+
+2. Blob Store（存储后端）
+
+| 名称         | 用途             | 路径                         |
+| :----------- | :--------------- | :--------------------------- |
+| `default`    | 系统默认         | /nexus-data/blobs/default    |
+| `npm-blob`   | npm 包存储       | /nexus-data/blobs/npm-blob   |
+| `maven-blob` | Maven jar 包存储 | /nexus-data/blobs/maven-blob |
+
+3. 仓库配置
+
+**npm 仓库**
+
+| 配置项     | 值                                                     |
+| :--------- | :----------------------------------------------------- |
+| 名称       | `npm-private`                                          |
+| 类型       | npm (hosted)                                           |
+| Blob store | `npm-blob`                                             |
+| 部署策略   | Allow redeploy                                         |
+| 访问地址   | `http://192.168.200.116:30081/repository/npm-private/` |
+
+另外，再创建2个npm仓库，分别是 `npm-central` proxy类型 和 `npm-public` group类型。并把`npm-central`和`npm-private`假如`npm-public`中。其中proxy类型的代理地址是 https://registry.npmjs.org/ 。
+
+`npm-central`和`npm-public`的Blob 都是 `default`。
+
+**Maven 仓库**
+
+| 配置项         | 值                                                       |
+| :------------- | :------------------------------------------------------- |
+| 名称           | `maven-private`                                          |
+| 类型           | maven2 (hosted)                                          |
+| Version policy | `Mixed`（同时支持 SNAPSHOT 和 RELEASE）                  |
+| Layout policy  | `Permissive`                                             |
+| Blob store     | `maven-blob`                                             |
+| 部署策略       | Allow redeploy                                           |
+| 访问地址       | `http://192.168.200.116:30081/repository/maven-private/` |
+
+另外，`maven-private`需要加入`maven-public`中。
+
+------
+
+#### 4.2.3 **客户端配置** 
+
+**npm 配置**
+
+```bash
+# 设置 registry
+npm set registry http://192.168.200.116:30081/repository/npm-private/
+
+# 登录（上传时需要）
+npm login --registry=http://192.168.200.116:30081/repository/npm-private/
+
+# 发布包
+npm publish
+```
+
+**Maven 配置**
+
+编辑 `~/.m2/settings.xml`：
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>nexus</id>
+      <username>admin</username>
+      <password>你的密码</password>
+    </server>
+  </servers>
+
+  <mirrors>
+    <mirror>
+      <id>nexus-mirror</id>
+      <url>http://192.168.200.116:30081/repository/maven-private/</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
+```
+
+在项目的 `pom.xml` 中添加：
+
+```xml
+<distributionManagement>
+  <repository>
+    <id>nexus</id>
+    <url>http://192.168.200.116:30081/repository/maven-private/</url>
+  </repository>
+</distributionManagement>
+```
+
+发布命令：
+
+```bash
+mvn deploy
+```
+
+### 4.3 常用管理操作
+
+| 操作         | 方法                                               |
+| :----------- | :------------------------------------------------- |
+| 查看仓库列表 | 登录 Web → Repository → Repositories               |
+| 查看存储用量 | Repository → Blob Stores → 点击对应 Blob           |
+| 清理旧版本   | Repository → Cleanup Policies → 创建策略并关联仓库 |
+| 备份数据     | 备份 NFS 后端目录（路径见 PV）                     |
+
+### 4.4 快速验证
+
+**验证 npm 仓库：**
+
+```bash
+$ npm info lodash --registry=http://192.168.200.116:30081/repository/npm-public/
+```
+
+**验证 Maven 仓库：**
+
+```bash
+$ curl http://192.168.200.116:30081/repository/maven-public/
+```
+
+### 4.5 配置结果图
+
+![image-20260320230556039](images/image-20260320230556039.png)
 
 ## 99 扩展服务登录信息
 
-| 登录地址                     | 描述      | 用户名 | 密码         | 原密码      |
-| ---------------------------- | --------- | ------ | ------------ | ----------- |
-| http://192.168.200.116:30002 | Harbor    | admin  | Harbor12345  | Harbor12345 |
-| http://192.168.200.116:30681 | SonarQube | admin  | P@88word1234 | admin       |
+| 登录地址                     | 描述      | 用户名 | 密码         | 原密码                               |
+| ---------------------------- | --------- | ------ | ------------ | ------------------------------------ |
+| http://192.168.200.116:30002 | Harbor    | admin  | Harbor12345  | Harbor12345                          |
+| http://192.168.200.116:30681 | SonarQube | admin  | P@88word1234 | admin                                |
+| http://192.168.200.116:30081 | Nexus3    | admin  | P@88word1234 | aa614da4-3aaf-4d5c-a5c3-83a6383329f3 |

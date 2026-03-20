@@ -359,14 +359,14 @@ pip()
 
 :::
 
-| 环境变量名称    | 值                     | 描述信息                  |
-| :-------------- | ---------------------- | :------------------------ |
-| EMAIL_SMTP_HOST | smtp.163.com           | SMTP 服务器地址           |
-| EMAIL_SMTP_PORT | ‘456’                  | SMTP 服务器端口（如：25） |
-| EMAIL_FROM_ADDR | liming20110711@163.com | 电子邮件发件人地址        |
-| EMAIL_FROM_NAME | KubeSphere             | 电子邮件发件人姓名        |
-| EMAIL_FROM_PASS | - - -                  | 电子邮件发件人密码        |
-| EMAIL_USE_SSL   | ‘true’                 | 是否启用 SSL 配置         |
+| 环境变量名称    | 值           | 描述信息                  |
+| :-------------- | ------------ | :------------------------ |
+| EMAIL_SMTP_HOST | smtp.163.com | SMTP 服务器地址           |
+| EMAIL_SMTP_PORT | ‘456’        | SMTP 服务器端口（如：25） |
+| EMAIL_FROM_ADDR | xxx163.com   | 电子邮件发件人地址        |
+| EMAIL_FROM_NAME | KubeSphere   | 电子邮件发件人姓名        |
+| EMAIL_FROM_PASS | - - -        | 电子邮件发件人密码        |
+| EMAIL_USE_SSL   | ‘true’       | 是否启用 SSL 配置         |
 
 ## 7 工具集成
 
@@ -1851,7 +1851,7 @@ nerdctl push $REGISTRY/$DOCKERHUB_NAMESPACE/$APP_NAME:SNAPSHOT-$BUILD_NUMBER
 1. 点击 **Build and Push** 阶段右侧的加号图标添加一个新的阶段，以保存制品，将其命名为 **Artifacts**。本示例使用 JAR 文件包。
 2. 选中 **Artifacts** 阶段，点击**添加步骤**，选择**保存制品**。在弹出的对话框中输入 **target/\*.jar**，将其设置为 Jenkins 中制品的保存路径。点击**确定**完成操作。
 
-#### 12.1.7 阶段 6：部署至开发环境
+##### 12.1.6.6 阶段 6：部署至开发环境
 
 1. 点击 **Artifacts** 阶段右侧的加号图标添加最后一个阶段，将其命名为 **Deploy to Dev**。该阶段用于将资源部署至您的开发环境（即 **kubesphere-sample-dev** 项目）。
 2. 点击 **Deploy to Dev** 阶段下的**添加步骤**，在列表中选择**审核**，然后在**消息**字段中填入 **@project-admin**，即 **project-admin** 账户在流水线运行到该阶段时会进行审核。点击**确定**保存操作。
@@ -1897,7 +1897,7 @@ envsubst < deploy/no-branch-dev/devops-sample.yaml | kubectl apply -f -
 
 :::
 
-#### 12.1.8 步骤 5：运行流水线
+#### 12.1.7 步骤 5：运行流水线
 
 1. 使用图形编辑面板创建的流水线需要手动运行。点击**运行**，弹出的对话框会显示[步骤 3：创建流水线](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/03-pipelines/01-create-a-pipeline-using-graphical-editing-panel/#_步骤_3创建流水线)中已定义的三个字符串参数。点击**确定**来运行流水线。
 2. 在**运行记录**页签，查看流水线的运行状态，点击运行状态查看详情。
@@ -1910,22 +1910,22 @@ envsubst < deploy/no-branch-dev/devops-sample.yaml | kubectl apply -f -
 如果要同时运行多个不包含多分支的流水线，在流水线列表页面，全部选中这些流水线，然后点击运行来批量运行它们。
 :::
 
-#### 12.1.9 步骤 6：查看流水线详情
+#### 12.1.8 步骤 6：查看流水线详情
 
 1. 以 **project-regular** 用户登录 KubeSphere 控制台并进入您的企业空间。
 2. 在 **DevOps > 流水线**页面，选择项目后，点击 **graphical-pipeline** 流水线。
 3. 在**运行记录**页签下，点击**状态**下的记录，进入**运行记录**详情页。如果任务状态为**成功**，流水线所有阶段都会显示**成功**。
 4. 在**运行日志**页签下，点击每个阶段查看其详细日志。点击**查看完整日志**，根据日志排除故障和问题，也可以将日志下载到本地进行进一步分析。
 
-#### 12.1.10 步骤 7：下载制品
+#### 12.1.9 步骤 7：下载制品
 
 在**运行记录**详情页，点击**制品**页签，然后点击制品右侧的图标下载该制品。
 
-#### 12.1.11 步骤 8：查看代码分析结果
+#### 12.1.10 步骤 8：查看代码分析结果
 
 在**代码检查**页面，查看由 SonarQube 提供的本示例流水线的代码分析结果。如果没有事先配置 SonarQube，则该部分不可用。有关更多信息，请参阅[将 SonarQube 集成到流水线](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/10-how-to-integrate/01-sonarqube/)。
 
-#### 12.1.12 步骤 9：验证 Kubernetes 资源
+#### 12.1.11 步骤 9：验证 Kubernetes 资源
 
 如果流水线的每个阶段都成功运行，则会自动构建一个 Docker 镜像并推送至您的 Docker Hub 仓库。最终，流水线会在您事先设置的项目中自动创建一个部署和一个服务。
 
@@ -1940,20 +1940,740 @@ envsubst < deploy/no-branch-dev/devops-sample.yaml | kubectl apply -f -
 
 3. 流水线成功运行后，会推送一个镜像至 Docker Hub。登录 Docker Hub 查看结果。
 
-
+![image-20260318180514244](images/image-20260318180514244.png)
 
 4. 该应用名称为 **APP_NAME** 的值，本示例中即 **devops-sample**。Tag 为 **SNAPSHOT-$BUILD_NUMBER** 的值，**$BUILD_NUMBER** 即**运行记录**页签下记录的**运行 ID**。
-5. 如果您在[阶段 6：部署至开发环境](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/03-pipelines/01-create-a-pipeline-using-graphical-editing-panel/#_阶段_6部署至开发环境)配置了电子邮件服务器并添加了电子邮件信息，运行完成后还会收到邮件通知。
+5. 如果您在[阶段 6：部署至开发环境](/devops/new/KubeSphere/05-第5章%20DevOps实战.html#_12-1-7-阶段-6-部署至开发环境)配置了电子邮件服务器并添加了电子邮件信息，运行完成后还会收到邮件通知。
+
+![image-20260318212816515](images/image-20260318212816515.png)
+
+![image-20260318213014113](images/image-20260318213014113.png)
+
+![image-20260318212626299](images/image-20260318212626299.png)
 
 ### 12.2 使用 Jenkinsfile 创建流水线
 
+Jenkinsfile 是一个文本文件，包含 Jenkins 流水线的定义，并被检入源代码控制仓库。Jenkinsfile 将整个工作流存储为代码，因此它是代码审查和流水线迭代过程的基础。有关更多信息，请参阅 [Jenkins 官方文档](https://www.jenkins.io/zh/doc/book/pipeline/jenkinsfile/)。
+
+本文档演示如何基于 GitHub 仓库中的 Jenkinsfile 创建流水线，并使用该流水线将示例应用程序分别部署到可从外部访问的开发环境和生产环境。
+
+:::tip
+
+说明
+DevOps 支持创建两种类型的流水线：一种是本文档中介绍的基于 SCM 中 Jenkinsfile 创建的流水线，另一种是[通过图形编辑面板创建的流水线](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-1-%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%BC%96%E8%BE%91%E9%9D%A2%E6%9D%BF%E5%88%9B%E5%BB%BA%E6%B5%81%E6%B0%B4%E7%BA%BF)。
+
+Jenkinsfile in SCM 需要源代码管理 (SCM) 中有内置 Jenkinsfile，换句话说，Jenkinsfile 必须是 SCM 的一部分。DevOps 系统会根据代码仓库的现有 Jenkinsfile 自动构建 CI/CD 流水线。通过定义工作流，例如 stage 和 step 可以满足特定的构建、测试和部署要求。
+:::
+
+#### 12.2.1 前提条件
+
+- KubeSphere 平台需要安装并启用 **DevOps** 扩展组件。
+- 已有一个 [Docker Hub](https://hub.docker.com/) 账户和一个 [GitHub](https://github.com/) 账户。
+- 已创建一个企业空间、一个 DevOps 项目和一个用户（例如 **project-regular**），并已邀请该用户至 DevOps 项目且授予 **operator** 角色。请参阅[邀请用户加入 DevOps 项目](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/02-devops-project-mangement/03-project-members/01-invite-a-user-to-a-project/)。
+- 已创建一个用户（例如 **project-admin**），其在企业空间中具有**项目创建**权限。
+- 已设置 CI 专用节点用于运行流水线。请参阅[为流水线设置电子邮件服务器](/devops/new/KubeSphere/05-第5章%20DevOps实战.html#_6-为流水线设置电子邮件服务器)。
+- 已安装和配置 SonarQube（可选）。请参阅[将 SonarQube 集成到流水线](/devops/new/KubeSphere/04-第4章%20KubeSphere扩展服务安装.html#_2-sonarqube代码质量持续检测工具)。如果跳过这一部分，则没有下面的 **SonarQube 分析**阶段。
+
+#### 12.2.2 流水线概述
+
+本示例流水线包括以下阶段。
+
+:::tip
+
+
+说明
+阶段 1：Checkout SCM：从 GitHub 仓库检出源代码。
+
+阶段 2：单元测试：待该测试通过后才会进行下一阶段。
+
+阶段 3：SonarQube 分析：SonarQube 代码质量分析。
+
+阶段 4：构建并推送快照镜像：根据策略设置中选定的分支来构建镜像，并将 SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER 标签推送至 Docker Hub，其中 $BUILD_NUMBER 是流水线运行记录列表中的记录的运行 ID。
+
+阶段 5：推送最新镜像：将 v4.1.0-sonarqube 分支标记为 latest，并推送至 Docker Hub。
+
+阶段 6：部署至开发环境：将 v4.1.0-sonarqube 分支部署到开发环境，此阶段需要审核。
+
+阶段 7：带标签推送：生成标签并发布到 GitHub，该标签会推送到 Docker Hub。
+
+阶段 8：部署至生产环境：将已发布的标签部署到生产环境。
+:::
+
+#### 12.2.3 步骤 1：创建凭证
+
+1. 以 **project-regular** 用户登录 KubeSphere 控制台并进入您的企业空间。
+2. 在左侧导航栏选择 **DevOps > 凭证**。
+3. 在页面左上角的下拉列表中选择一个 DevOps 项目。
+4. 创建以下凭证。有关如何创建凭证的更多信息，请参阅[凭证](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_8-%E5%87%AD%E8%AF%81)。
+
+| 凭证 ID         | 类型                                | 用途       |
+| :-------------- | :---------------------------------- | :--------- |
+| dockerhub-id    | 用户名和密码                        | Docker Hub |
+| github-id       | 用户名和密码（密码填写classic令牌） | GitHub     |
+| demo-kubeconfig | kubeconfig                          | Kubernetes |
+
+:::warning
+
+注意
+自 2021 年 8 月起，GitHub 要求使用基于令牌的身份验证，此处需要输入令牌，而非 GitHub 密码。有关如何生成令牌，请参阅创建个人访问令牌。
+
+:::
+
+:::tip
+
+说明
+如果您的账户或密码中包含特殊字符，例如 @ 和 $，可能会因为无法识别而在流水线运行时导致错误。在这种情况下，您需要先在一些第三方网站（例如 urlencoder）上对账户或密码进行编码，然后将输出结果复制粘贴作为您的凭证信息。
+:::
+
+5. （可选）再为 SonarQube 创建一个凭证 (**sonar-token**)，用于上述的阶段 3（代码分析）。凭证类型选择**访问令牌**，在**令牌**字段输入 SonarQube 令牌，请参阅[为新项目创建 SonarQube Token](/devops/new/KubeSphere/04-第4章%20KubeSphere扩展服务安装.html#_2-4-为新项目创建-sonarqube-token)。点击**确定**完成操作。
+
+6. 您将在凭证页面看到已创建的凭证。
+
+#### 12.2.4 步骤 2：在 GitHub 仓库中修改 Jenkinsfile
+
+1. 登录 GitHub 并 Fork GitHub 仓库 [devops-maven-sample](https://github.com/kubesphere/devops-maven-sample) 的所有分支至您的 GitHub 个人账户。
+2. 在您自己的 GitHub 仓库 **devops-maven-sample** 中，切换到 v4.1.0-sonarqube 分支，点击根目录中的文件 **Jenkinsfile-online**。
+3. 点击右侧的编辑图标，编辑环境变量。
+
+| 条目                     | 值                  | 描述信息                                                     |
+| :----------------------- | :------------------ | :----------------------------------------------------------- |
+| DOCKER_CREDENTIAL_ID     | dockerhub-id        | 您在 KubeSphere 中为 Docker Hub 账户设置的**名称**。         |
+| GITHUB_CREDENTIAL_ID     | github-id           | 您在 KubeSphere 中为 GitHub 账户设置的**名称**，用于将标签推送至您的 GitHub 仓库。 |
+| KUBECONFIG_CREDENTIAL_ID | demo-kubeconfig     | 您在 KubeSphere 中为 kubeconfig 设置的**名称**，用于访问运行中的 Kubernetes 集群。 |
+| REGISTRY                 | docker.io           | 默认为 **docker.io**，用作推送镜像的地址。                   |
+| DOCKERHUB_NAMESPACE      | your-dockerhub-id   | 请替换为您的 Docker Hub 账户名，也可以替换为该账户下的 Organization 名称。 |
+| GITHUB_ACCOUNT           | your-github-id      | 请替换为您的 GitHub 账户名。例如，如果您的 GitHub 地址是 https://github.com/kubesphere/，则您的 GitHub 账户名为 **kubesphere**，也可以替换为该账户下的 Organization 名称。 |
+| APP_NAME                 | devops-maven-sample | 应用名称。                                                   |
+| SONAR_CREDENTIAL_ID      | sonar-token         | 您在 KubeSphere 中为 SonarQube 令牌设置的**名称**，用于代码质量检测。 |
+
+4. 编辑环境变量后，点击 **Commit changes**，更新 v4.1.0-sonarqube 分支中的文件。
+
+#### 12.2.5 步骤 3：创建项目
+
+创建两个项目，例如 **kubesphere-sample-dev** 和 **kubesphere-sample-prod**，分别代表开发环境和生产环境。待流水线成功运行，将在这两个项目中自动创建应用程序的相关部署 (Deployment) 和服务 (Service)。
+
+:::tip
+
+说明
+您需要提前创建 project-admin 账户，用作 CI/CD 流水线的审核者。
+
+:::
+
+以 **project-admin** 用户登录 KubeSphere，在创建 DevOps 项目的企业空间中创建以下两个项目。
+
+| 项目名称               | 别名                    |
+| :--------------------- | :---------------------- |
+| kubesphere-sample-dev  | development environment |
+| kubesphere-sample-prod | production environment  |
+
+2. 邀请 **project-regular** 账户至这两个项目，并赋予 **operator** 角色。
+
+#### 12.2.6 步骤 4：创建流水线
+
+1. 在 **DevOps > 流水线**页面点击**创建**。
+
+2. 在弹出的对话框中，将其命名为 **jenkinsfile-in-scm**。
+
+3. 在**流水线类别**下，选择**多分支流水线**。
+
+4. 在**代码仓库**下，选择一个代码仓库，点击**下一步**继续。
+
+   若没有可用的代码仓库，点击下方的**创建代码仓库**。有关更多信息，请参阅[导入代码仓库](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/06-code-repositories/01-import-code-repositories/)。
+
+   1. 在**导入代码仓库**对话框，输入代码仓库名称（自定义），点击选择代码仓库。
+   2. 在 **GitHub** 页签，从**凭证**的下拉菜单中选择 **github-id**，然后点击**确定**。
+   3. 在 GitHub 列表中，选择您的 GitHub 账户，与该令牌相关的所有仓库将在右侧列出。选择 **devops-maven-sample** 并点击**选择**。
+   4. 点击**确定**选择您的代码仓库。
+
+5. 在**高级设置**中，勾选**删除旧分支**。本教程中，建议**分支保留天数（天）**和**分支最大数量**使用默认值。
+
+   删除旧分支意味着您将一并丢弃分支记录。分支记录包括控制台输出、已归档制品以及特定分支相关的其他元数据。更少的分支意味着您可以节省 Jenkins 正在使用的磁盘空间。DevOps 提供两个选项来确定何时丢弃旧分支：
+
+   - 分支保留天数（天）：超过保留期限的分支将被删除。
+   - 分支最大数量：分支数量超过最大数量时，删除最旧的分支。
+
+:::tip
+
+说明
+分支保留天数（天）和分支最大数量可以同时应用于分支。只要某个分支满足其中一个字段所设置的条件，则会删除该分支。例如，如果您将保留天数和最大分支数分别指定为 2 和 3，待某个分支的保留天数超过 2 或者分支保留数量超过 3，则会删除该分支。DevOps 默认用 7 和 5 预填充这两个字段。
+
+:::
+
+6. 在**策略设置**中，DevOps 默认提供四种策略。本示例不会使用**从 Fork 仓库中发现 PR** 这条策略，因此您可以删除该策略。对于其他策略，无需修改设置，直接使用默认值即可。
+
+:::tip
+
+说明
+选择 GitHub 作为代码仓库，才能启用此处的策略设置设置。
+
+:::
+
+Jenkins 流水线运行时，开发者提交的 Pull Request (PR) 也将被视为一个单独的分支。
+
+**发现分支**
+
+- **排除已提交 PR 的分支**：不扫描源分支，例如源仓库的 master 分支。需要合并这些分支。
+- **只包括已提交 PR 的分支**：仅扫描 PR 分支。
+- **包括所有分支**：拉取源仓库中的所有分支。
+
+**从原仓库发现 PR**
+
+- **拉取 PR 合并后的代码**：PR 合并到目标分支后，基于源代码创建并运行流水线。
+- **拉取 PR 提交时的代码**：根据 PR 本身的源代码创建并运行流水线。
+- **分别创建两个流水线**：创建两个流水线，一个流水线使用 PR 与目标分支合并后的源代码版本，另一个使用 PR 本身的源代码版本。
+
+7. **正则过滤**
+
+```bash
+^v4\.1\.0-sonarqube$
+```
+
+8. 向下滚动到**脚本路径**，将其更改为 **Jenkinsfile-online**，这是示例仓库中位于根目录下的 Jenkinsfile 的文件名。该字段指定代码仓库中的 Jenkinsfile 路径。它表示仓库的根目录。如果文件位置变更，则脚本路径也需要更改。
+
+9. 在**扫描触发器**中，勾选**定时扫描**并设置时间间隔为 **5 分钟**。点击**创建**完成配置。
+
+:::tip
+
+说明
+设置特定的时间间隔让流水线扫描远程仓库，以便根据您在策略设置中设置的策略来检测代码更新或新的 PR。
+
+:::
+
+#### 12.2.7 步骤 5：运行流水线
+
+1. 流水线创建后，会展示在列表中。点击流水线名称查看其详情页。
+
+:::tip
+
+
+说明
+在流水线列表页面，点击该流水线右侧的more，选择复制来创建该流水线的副本。
+
+如果要同时运行多个不包含多分支的流水线，在流水线列表页面，全部选中这些流水线，然后点击运行来批量运行它们。
+
+流水线详情页面的同步状态，显示了 KubeSphere 和 Jenkins 之间的同步结果。若同步成功，将显示成功以及绿色的对号图标。
+
+:::
+
+2. 在**运行记录**页签下，正在扫描多个分支。点击右侧的**运行**，流水线将根据您设置的行为策略来运行。从下拉列表中选择 **v4.1.0-sonarqube** 分支，然后添加标签号，例如 **v0.0.2**。点击**确定**开始运行。
+
+:::tip
+
+
+说明
+如果您在此页面上未看到任何运行记录，则需要手动刷新浏览器或点击操作按钮中的扫描仓库。
+
+标签名称用于在 GitHub 和 Docker Hub 中指代新生成的发布版本和镜像。现有标签名称不能再次用于字段 TAG_NAME。否则，流水线将无法成功运行。
+:::
+
+3. 稍等片刻，点击运行记录查看详情。
+
+:::tip
+
+说明
+运行失败可能由不同因素所引起。本示例中，在上述步骤中编辑分支的环境变量时，仅更改了 v4.1.0-sonarqube 分支的 Jenkinsfile，而 v4.1.0 分支中的这些变量没有修改（使用了错误的 GitHub 和 Docker Hub 账户），若选择 v4.1.0 分支，则会运行失败。其他原因如网络问题、Jenkinsfile 中的编码不正确等也可能导致运行失败。
+
+在运行记录详情页的运行日志页签下，查看其日志的详细信息，根据日志排除故障和问题。
+:::
+
+4. 流水线如果运行成功，会在 **deploy to dev** 阶段暂停，需要具有审核权限的用户点击**继续**。
+
+   在 Jenkinsfile 中定义了三个阶段 **deploy to dev**、**push with tag** 和 **deploy to production**，每个阶段都需要审核。因此在运行到这些阶段时，流水线会暂停，等待审核。
+
+   在开发或生产环境中，可能需要具有更高权限的人员（例如版本管理员）来审核流水线、镜像以及代码分析结果。他们有权决定流水线是否能进入下一阶段。在 Jenkinsfile 中，支持使用 **input** 来指定审核流水线的用户。如果想指定一个用户（例如 **project-admin**）来审核，可以在 Jenkinsfile 中添加一个字段。如果有多个用户，则需要通过逗号进行分隔，如下所示：
+
+```bash
+input(id: 'release-image-with-tag', message: 'release image with tag?', submitter: 'project-admin,project-admin1')
+```
+
+5. 以具有流水线审核权限的用户登录 KubeSphere Web 控制台并进入您的企业空间，在 **DevOps > 流水线**页面，点击流水线名称进入详情页。在**运行记录**页签下，点击要审核的记录，点击**继续**以批准流水线。
+
+:::tip
+
+说明
+在 KubeSphere 中，如果不指定审核员，那么能够运行流水线的账户也能够继续或终止该流水线。此外，流水线创建者、拥有该项目管理员角色的用户或者您指定的账户也有权限继续或终止流水线。
+:::
+
+#### 12.2.8 步骤 6：检查流水线状态
+
+1. 在运行记录的**流水线**页签下，查看流水线的运行状态。流水线在刚创建时会初始化几分钟。
+2. 点击**运行日志**页签查看流水线运行日志。点击每个阶段查看其详细日志。点击**查看完整日志**，根据日志排除故障和问题，也可以将日志下载到本地进行进一步分析。
+
+#### 12.2.9 步骤 7：验证结果
+
+1. 流水线成功运行后，点击**代码检查**通过 SonarQube 查看结果。如果没有事先配置 SonarQube，则该部分不可用。
+2. 按照 Jenkinsfile 中的定义，通过流水线构建的 Docker 镜像也已成功推送到 Docker Hub。在 Docker Hub 中，您会看到带有标签 **v0.0.2** 的镜像，该标签在流水线运行之前已指定。
+3. 同时，GitHub 中会生成一个新标签和一个新发布版本。
+4. 示例应用程序将部署到 **kubesphere-sample-dev** 和 **kubesphere-sample-prod**，并创建相应的部署和服务。转到这两个项目，预期结果如下所示：
+
+| 环境     | URL                                                     | 命名空间               | 部署          | 服务          |
+| :------- | :------------------------------------------------------ | :--------------------- | :------------ | :------------ |
+| 开发环境 | [http://{$NodeIP}:{$30861}](http://{$nodeip}:{$30861}/) | kubesphere-sample-dev  | ks-sample-dev | ks-sample-dev |
+| 生产环境 | [http://{$NodeIP}:{$30961}](http://{$nodeip}:{$30961}/) | kubesphere-sample-prod | ks-sample     | ks-sample     |
+
+:::tip
+
+说明
+您可能需要在您的安全组中放行该端口，以便通过 URL 访问应用程序。
+
+:::
+
+#### 12.2.10 步骤 8：访问示例服务
+
+1. 以 **platform-admin** 用户登录 KubeSphere Web 控制台。
+2. 进入 **kubesphere-sample-dev** 项目，在**服务与网络 > 服务**中点击 **ks-sample-dev**。在详情页获取 Endpoint 用于访问该服务。
+3. 在右下角的**工具箱**中使用 **kubectl** 执行如下命令：
+
+```bash
+curl 10.233.36.0:8080
+```
+
+4. 预期输出:
+
+```bash
+Really appreciate your star, that's the power of our life.
+```
+
+:::tip
+
+说明
+使用 curl 访问 Endpoint，或者访问 {$Virtual IP}:{$Port} 或 {$Node IP}:{$NodePort}。
+:::
+
+5. 也可以在项目 **kubesphere-sample-prod** 中测试服务，您将看到相同的输出结果。
+
+```bash
+curl 10.233.36.0:8080
+Really appreciate your star, that's the power of our life.
+```
+
 ### 12.3 使用流水线模板创建流水线
+
+本文档演示如何在 KubeSphere 上使用流水线模板创建流水线。
+
+DevOps 提供图形编辑面板，支持通过交互式操作来定义 Jenkins 流水线的阶段和步骤。内置多个流水线模板，如 Node.js、Maven 以及 Golang，使用户能够快速创建对应模板的流水线。DevOps 还提供 CI 以及 CI & CD 流水线模板，但是这两个模板难以满足定制化需求，建议您采用其它内置模板或直接自定义流水线。
+
+- CI 流水线模板
+
+  CI 流水线模板包含两个阶段。**clone code** 阶段用于检出代码，**build & push** 阶段用于构建镜像并将镜像推送至 Docker Hub。先为代码仓库和 Docker Hub 仓库创建凭证，然后在相应的步骤中设置仓库的 URL 以及凭证。完成编辑后，流水线即可开始运行。
+
+- CI & CD 流水线模板
+
+  CI & CD 流水线模板包含六个阶段。有关每个阶段的更多信息，请参阅[使用 Jenkinsfile 创建流水线](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-2-%E4%BD%BF%E7%94%A8-jenkinsfile-%E5%88%9B%E5%BB%BA%E6%B5%81%E6%B0%B4%E7%BA%BF)。先为代码仓库、Docker Hub 仓库和集群的 kubeconfig 创建凭证，然后在相应的步骤中设置仓库的 URL 以及凭证。完成编辑后，流水线即可开始运行。
+
+#### 12.3.1 前提条件
+
+- KubeSphere 平台需要安装并启用 **DevOps** 扩展组件。
+- 已创建一个企业空间、一个 DevOps 项目和一个用户（例如 **project-regular**），并已邀请该用户至 DevOps 项目且授予 **operator** 角色。请参阅[邀请用户加入 DevOps 项目](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/02-devops-project-mangement/03-project-members/01-invite-a-user-to-a-project/)。
+
+#### 12.3.2 操作步骤
+
+下面以 Node.js 为例演示如何使用内置流水线模板。使用 Maven 以及 Golang 流水线模板的操作基本相同。
+
+1. 以 **project-regular** 用户登录 KubeSphere 控制台并进入您的企业空间。
+2. 在左侧导航栏选择 **DevOps > 流水线**。
+3. 在页面左上角的下拉列表中选择一个 DevOps 项目。
+4. 在页面点击**创建**。
+5. 在弹出的对话框中，输入流水线名称（如：**jenkinsfile-with-template**），点击**下一步**，然后点击**创建**。
+6. 点击已创建的流水线，在**流水线配置**页签下，点击**编辑流水线**。
+7. 在**创建流水线**对话框，点击 **Node.js**，然后点击**下一步**。
+8. 在**参数设置**页签，按照实际情况设置以下参数，点击**创建**。
+
+| 参数            | 默认值                                                  | 说明                         |
+| --------------- | ------------------------------------------------------- | ---------------------------- |
+| GitURL          | `https://github.com/Rushing0711/devops-javascript-demo` | 需要克隆的项目仓库的地址。   |
+| GitRevision     | `master`                                                | 需要检出的分支。             |
+| NodeDockerImage | `docker.io/kubesphere/builder-base:v4.2.1`              | Node.js 的 Docker 镜像版本， |
+| InstallScript   | `npm install`                                           | 安装依赖项的 Shell 脚本。    |
+| TestScript      | `npm run test`                                          | 项目测试的 Shell 脚本。      |
+| BuildScript     | `npm run build`                                         | 构建项目的 Sell 脚本。       |
+| ArtifactsPath   | `dist/`                                                 | 制品文件所在的路径。         |
+
+9. 在左侧的可视化编辑页面，系统默认已添加一系列步骤，点击**添加步骤**或**添加并行阶段**进行修改。
+10. 点击一个步骤，在页面右侧，您可以执行以下操作。编辑完成后，点击**确定**。
+    - 修改阶段名称。
+    - 删除阶段。
+    - 设置代理类型。
+    - 添加条件。
+    - 编辑或删除某一任务。
+    - 添加步骤或嵌套步骤。
+
+:::tip
+
+说明
+请参阅[使用图形编辑面板创建流水线](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-1-%E4%BD%BF%E7%94%A8%E5%9B%BE%E5%BD%A2%E7%BC%96%E8%BE%91%E9%9D%A2%E6%9D%BF%E5%88%9B%E5%BB%BA%E6%B5%81%E6%B0%B4%E7%BA%BF)，了解如何在流水线模板中自定义步骤和阶段。
+:::
+
+11. 在右侧的**代理**区域，选择代理类型，默认值为 **kubernetes**，点击**确定**。
+
+| 代理类型   | 说明                                                         |
+| :--------- | :----------------------------------------------------------- |
+| any        | 调用默认的 base pod 模板创建 Jenkins agent 运行流水线。      |
+| node       | 调用指定类型的 pod 模板创建 Jenkins agent 运行流水线，可配置的 label 标签为 base、java、nodejs、maven、go 等。 |
+| kubernetes | 通过 yaml 文件定义的标准 kubernetes pod 模板运行 agent，执行流水线任务。 |
+
+12. 查看已创建的流水线模板详情，点击**运行**即可运行该流水线。
 
 ### 12.4 使用 GitLab 创建多分支流水线
 
+[GitLab](https://gitlab.com/users/sign_in) 是一款基于 web 的 Git 仓库管理工具，支持公开和私有仓库，并提供了全面的 DevOps 功能，包括源代码管理、代码审查、问题跟踪、持续集成等。通过 GitLab，团队能够在一个平台上高效协作，完成从代码编写到部署的整个软件开发过程。
+
+KubeSphere 支持在 DevOps 项目中使用 GitLab 创建多分支流水线。本文档演示如何使用 GitLab 创建多分支流水线。
+
+#### 12.4.1 前提条件
+
+- KubeSphere 平台需要安装并启用 **DevOps** 扩展组件。
+- 已创建一个企业空间、一个 DevOps 项目和一个用户（例如 **project-regular**），并已邀请该用户至 DevOps 项目且授予 **operator** 角色。请参阅[邀请用户加入 DevOps 项目](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/02-devops-project-mangement/03-project-members/01-invite-a-user-to-a-project/)。
+- 已有一个 [GitLab](https://gitlab.com/users/sign_in) 账户以及一个 [Docker Hub](https://hub.docker.com/) 账户。
+
+#### 12.4.2 步骤 1：创建凭证
+
+1. 以 **project-regular** 用户登录 KubeSphere 控制台并进入您的企业空间。
+2. 在左侧导航栏选择 **DevOps > 凭证**。
+3. 在页面左上角的下拉列表中选择一个 DevOps 项目。
+4. 创建以下凭证。有关如何创建凭证的更多信息，请参阅[凭证](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_8-%E5%87%AD%E8%AF%81)。
+
+:::tip
+
+说明
+如果您的账户或密码中包含特殊字符，例如 @ 和 $，则可能会因为无法识别而在流水线运行时导致错误。在此情况下，您需要先在第三方网站（例如 urlencoder）上对账户或密码进行编码，然后将输出结果复制粘贴作为您的凭证信息。
+:::
+
+| 凭证 ID         | 类型                     | 用途       |
+| :-------------- | :----------------------- | :--------- |
+| dockerhub-id    | 用户名和密码             | Docker Hub |
+| gitlab-id       | 用户名和密码（访问令牌） | GitLab     |
+| demo-kubeconfig | kubeconfig               | Kubernetes |
+
+5. 创建完成后，您将在凭证页面看到已创建的凭证。
+
+#### 12.4.3 步骤 2：在 GitLab 仓库中编辑 Jenkinsfile
+
+1. 登录 GitLab 并创建一个公开项目。点击**新建项目 > 导入项目**，选择**从 URL 导入仓库**，输入 [devops-maven-sample](https://github.com/kubesphere/devops-maven-sample) 的 URL，可见性级别选择**公开**，然后点击**新建项目**。
+2. 在刚刚创建的项目中，从 **v4.1.0-sonarqube** 分支中创建一个新分支，命名为 **v4.1.0-sonarqube-gitlab**。
+3. 在 **v4.1.0-sonarqube-gitlab** 分支中，点击根目录中的 **Jenkinsfile-online** 文件。
+4. 点击**编辑**，分别将 **GITHUB_CREDENTIAL_ID**、**GITHUB_ACCOUNT** 以及 **@github.com** 更改为 **GITLAB_CREDENTIAL_ID**、**GITLAB_ACCOUNT** 以及 **@gitlab.com**，然后编辑下表所列条目。
+
+| 条目                 | 值                | 描述信息                                                     |
+| :------------------- | :---------------- | :----------------------------------------------------------- |
+| GITLAB_CREDENTIAL_ID | gitlab-id         | 您在 KubeSphere 中为自己的 GitLab 账户设置的**名称**，用于将标签推送至您的 GitLab 仓库。 |
+| DOCKERHUB_NAMESPACE  | your-dockerhub-id | 请替换为您的 Docker Hub 账户名，也可以替换为该账户下的 Organization 名称。 |
+| GITLAB_ACCOUNT       | your-gitlab-id    | 请替换为您的 GitLab 账户名，也可以使用该账户的用户组名称。   |
+
+:::tip
+
+说明
+有关 Jenkinsfile 中环境变量的更多信息，请参阅[使用 Jenkinsfile 创建流水线](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-2-%E4%BD%BF%E7%94%A8-jenkinsfile-%E5%88%9B%E5%BB%BA%E6%B5%81%E6%B0%B4%E7%BA%BF)。
+
+:::
+
+5. 点击 **Commit changes** 更新该文件。
+
+#### 12.4.4 步骤 3：创建项目
+
+创建两个项目，例如 **kubesphere-sample-dev** 和 **kubesphere-sample-prod**，分别代表开发环境和生产环境。待流水线成功运行，将在这两个项目中自动创建应用程序的相关部署 (Deployment) 和服务 (Service)。
+
+有关更多信息，请参阅[使用 Jenkinsfile 创建流水线](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-2-%E4%BD%BF%E7%94%A8-jenkinsfile-%E5%88%9B%E5%BB%BA%E6%B5%81%E6%B0%B4%E7%BA%BF)。
+
+#### 12.4.5 步骤 4：创建流水线
+
+1. 在 **DevOps > 流水线**页面点击**创建**。
+
+2. 在弹出的对话框中，将其命名为 **gitlab-multi-branch**。
+
+3. 在**流水线类别**下，选择**多分支流水线**。
+
+4. 在**代码仓库**下，选择一个代码仓库，点击**下一步**继续。
+
+   若没有可用的代码仓库，点击下方的**创建代码仓库**。有关更多信息，请参阅[导入代码仓库](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/06-code-repositories/01-import-code-repositories/)。
+
+   1. 在**导入代码仓库**对话框，输入代码仓库名称（自定义，比如：**devops-maven-sample-gitlab**），点击选择代码仓库。
+   2. 在 **GitLab** 页签下的 **GitLab 服务器地址**中选择默认选项 [https://gitlab.com](https://gitlab.com/)，在**项目组/所有者**中输入该 GitLab 项目所属组的名称，然后从**代码仓库**的下拉菜单中选择 **devops-maven-sample-gitlab** 仓库。点击右下角的<img src="./images/check-dark-3896227.svg" alt="check" style="width:25px;" />，然后点击**确定**。
+
+:::tip
+
+说明
+如需使用 GitLab 私有仓库，请参考以下步骤：
+
+在 GitLab 上前往用户设置 > 访问令牌，创建拥有 API 和 read_repository 权限的个人访问令牌。
+
+登录 Jenkins 仪表板，前往系统管理 > Manage Credentials，使用您的 GitLab 令牌创建 Jenkins 凭证，用于访问 GitLab。然后前往系统管理 > 系统配置，在 GitLab 服务中添加该凭证。
+
+在 DevOps 项目中，选择 DevOps 项目设置 > 凭证，使用您的 GitLab 令牌创建一个凭证。创建流水线时，在 GitLab 页签的凭证中指定该凭证，以便流水线能够从您的 GitLab 私有仓库中拉取代码。
+
+:::
+
+5. **正则过滤**
+
+```bash
+^v4\.1\.0-sonarqube-gitlab$
+```
+
+6. 在**高级设置**页签中，将**脚本路径**更改为 **Jenkinsfile-online** 然后点击**创建**。
+
+:::tip
+
+说明
+该字段指定代码仓库中的 Jenkinsfile 路径，它表示该仓库的根目录。如果文件位置变更，则脚本路径也需要更改。
+
+:::
+
+7. 在**扫描触发器**中，勾选**定时扫描**并设置时间间隔为 **5 分钟**。点击**创建**完成配置。
+
+
+
+#### 12.4.6 步骤 5：运行流水线
+
+1. 流水线创建后，会展示在列表中。点击流水线名称查看其详情页。
+2. 点击右侧的**运行**。在弹出的对话框中，从下拉菜单中选择 **gitlab-demo** 并添加一个标签号，比如 **v0.0.2**。点击**确定**来触发一个新运行。
+3. 稍等片刻，点击运行记录查看详情。
+4. 流水线如果运行成功，会在 **Deploy to Dev** 阶段暂停，需要具有审核权限的用户点击**继续**。
+
+:::tip
+
+说明
+在 Jenkinsfile 中定义了三个阶段 deploy to dev、push with tag 和 deploy to production，每个阶段都需要审核。因此在运行到这些阶段时，流水线会暂停，等待审核。
+:::
+
+#### 12.4.7 步骤 6：检查流水线状态
+
+1. 在运行记录的**流水线**页签下，查看流水线的运行状态。
+2. 点击**运行日志**页签查看流水线运行日志。点击每个阶段查看其详细日志。点击**查看完整日志**，根据日志排除故障和问题，也可以将日志下载到本地进行进一步分析。
+
+
+
+#### 12.4.8 步骤 7：验证结果
+
+1. 按照 Jenkinsfile 中的定义，通过流水线构建的 Docker 镜像也已成功推送到 Docker Hub。在 Docker Hub 中，您会看到带有标签 **v0.0.2** 的镜像，该标签在流水线运行之前已指定。
+2. 同时，GitLab 中也已生成一个新标签。
+3. 示例应用程序将部署到 **kubesphere-sample-dev** 和 **kubesphere-sample-prod**，并创建相应的部署和服务。转到这两个项目，预期结果如下所示：
+
+| 环境     | URL                                                     | 命名空间               | 部署          | 服务          |
+| :------- | :------------------------------------------------------ | :--------------------- | :------------ | :------------ |
+| 开发环境 | [http://{$NodeIP}:{$30861}](http://{$nodeip}:{$30861}/) | kubesphere-sample-dev  | ks-sample-dev | ks-sample-dev |
+| 生产环境 | [http://{$NodeIP}:{$30961}](http://{$nodeip}:{$30961}/) | kubesphere-sample-prod | ks-sample     | ks-sample     |
+
+:::tip
+
+说明
+您可能需要在安全组中打开端口，以便使用 URL 访问该应用。有关更多信息，请参阅[访问示例服务](/devops/new/KubeSphere/05-%E7%AC%AC5%E7%AB%A0%20DevOps%E5%AE%9E%E6%88%98.html#_12-2-10-%E6%AD%A5%E9%AA%A4-8-%E8%AE%BF%E9%97%AE%E7%A4%BA%E4%BE%8B%E6%9C%8D%E5%8A%A1)。
+
+:::
+
 ### 12.5 设置流水线
 
+创建流水线时，可以通过各种设置来自定义流水线配置。
+
+流水线创建后，进入流水线详情页，点击操作中的**编辑信息**和**编辑设置**，也可以编辑流水线的配置。
+
+本文档详细介绍如何设置流水线。
+
+#### 12.5.1 前提条件
+
+- KubeSphere 平台需要安装并启用 **DevOps** 扩展组件。
+- 已创建一个企业空间、一个 DevOps 项目和一个用户（例如 **project-regular**），并已邀请该用户至 DevOps 项目且授予 **operator** 角色。请参阅[邀请用户加入 DevOps 项目](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/02-devops-project-mangement/03-project-members/01-invite-a-user-to-a-project/)。
+
+#### 12.5.2 基本信息
+
+创建流水线时，在**基本信息**页签，您可以自定义以下信息：
+
+- **名称**：流水线的名称，同一个 DevOps 项目内的流水线不能重名。
+
+- **DevOps 项目**：流水线所属的 DevOps 项目。
+
+- **描述**：描述流水线的附加信息，描述信息不超过 256 个字符。
+
+- **流水线类别**：普通流水线或多分支流水线。若选择多分支流水线，则需要选择一个代码仓库。
+
+- **代码仓库（可选）**：选择一个代码仓库作为流水线的代码源，可选择 GitHub、GitLab、Bitbucket、以及 Git 作为代码源。
+
+  - GitHub
+
+    如果选择 **GitHub**，则必须指定用于访问 GitHub 的凭证。如果您已预先使用您的 GitHub 令牌创建了凭证，则从下拉菜单中选择已有凭证，或者点击**创建凭证**来创建新凭证。选择凭证后，点击**确定**，即可在右侧选择您的仓库。完成所有操作后，点击<img src="./images/check-dark-20260319175901502.svg" alt="check" style="width:25px;" />。
+
+  - GitLab
+
+    如果选择 **GitLab**，则必须指定 GitLab 服务器地址、项目组/所有者和代码仓库。如果访问代码仓库需要凭证，则需要指定一个凭证。完成所有操作后，点击<img src="./images/check-dark-20260319175901502.svg" alt="check" style="width:25px;" />。
+
+  - Bitbucket
+
+    如果选择 **Bitbucket**，则需要输入您的 Bitbucket 服务器地址。预先使用您的 Bitbucket 用户名和密码创建一个凭证，或者点击**创建凭证**来创建一个新凭证。输入信息后点击**确定**，即可在右侧选择您的仓库。完成所有操作后，点击<img src="./images/check-dark-20260319175901502.svg" alt="check" style="width:25px;" />。
+
+  - Git
+
+    如果选择 **Git**，则需要指定仓库 URL。如果访问代码仓库需要凭证，则需要指定一个凭证，或者点击**创建凭证**来添加新凭证。完成所有操作后，点击<img src="./images/check-dark-20260319175901502.svg" alt="check" style="width:25px;" />。
+
+#### 12.5.3 高级设置
+
+##### 指定代码仓库
+
+如果指定了一个代码仓库，则可以在**高级设置**页签上自定义以下配置：
+
+- 分支设置
+
+  **删除旧分支**：自动删除旧分支。分支记录将一起被删除。分支记录包括控制台输出、已归档制品以及特定分支相关的其他元数据。更少的分支意味着您可以节省 Jenkins 正在使用的磁盘空间。DevOps 提供两个选项来确定何时丢弃旧分支：
+
+  - **分支保留天数（天）**：超过保留期限的分支将被删除。
+  - **分支最大数量**：分支数量超过最大数量时，删除最旧的分支。
+
+
+:::tip
+
+说明
+分支保留天数（天）和分支最大数量可以同时应用于分支。只要某个分支满足其中一个字段所设置的条件，则会删除该分支。例如，如果您将保留天数和最大分支数分别指定为 2 和 3，待某个分支的保留天数超过 2 或者分支保留数量超过 3，则会删除该分支。DevOps 默认用 7 和 5 预填充这两个字段。
+:::
+
+- 策略设置
+
+  在**策略设置**中，DevOps 默认提供四种策略。Jenkins 流水线运行时，开发者提交的 PR (Pull Request) 也将被视为一个单独的分支。
+  
+  :::tip
+  
+  说明
+  选择 GitHub 作为代码仓库，才能启用此处的策略设置。
+  
+  :::
+  
+  **发现分支**
+  
+  - **排除已提交 PR 的分支**：已提交 PR 的分支将被排除。
+  - **只包括已提交 PR 的分支**：只拉取已提交 PR 的分支。
+  - **包括所有分支**：拉取源仓库中的所有分支。
+  
+  **发现标签**
+  
+  - **启用标签发现**：拥有指定标签的分支将被扫描。
+  - **禁用标签发现**：拥有指定标签的分支不会被扫描。
+  
+  **从原仓库发现 PR**
+  
+  - **拉取 PR 合并后的代码**：PR 合并到目标分支后，将基于源代码创建并运行流水线。
+  - **拉取 PR 提交时的代码**：根据 PR 本身的源代码创建并运行流水线。
+  - **分别创建两个流水线**：创建两个流水线，一个流水线使用 PR 与目标分支合并后的源代码版本，另一个使用 PR 本身的源代码版本。
+  
+  **从 Fork 仓库发现 PR**
+  
+  拉取策略：
+  
+  - **拉取 PR 合并后的代码**：PR 合并到目标分支后，将基于源代码创建并运行流水线。
+  - **拉取 PR 提交时的代码**：根据 PR 本身的源代码创建并运行流水线。
+  - **分别创建两个流水线**：创建两个流水线，一个流水线使用 PR 与目标分支合并后的源代码版本，另一个使用 PR 本身的源代码版本。
+  
+  受信用户：
+  
+  - **贡献者**：对 PR 做出贡献的用户。
+  - **所有人**：每个可以访问 PR 的用户。
+  - **具有管理员或有编辑权限的用户**：仅限于对 PR 具有管理员或编辑权限的用户。
+  - **无**：如果选择此选项，那么无论在**拉取策略**中选择了哪个选项，都不会发现 PR。
+  
+- 正则过滤
+
+  勾选选框以指定正则表达式来过滤分支、PR 和标签。
+  
+- 脚本路径
+
+  **脚本路径**参数指定代码仓库中的 Jenkinsfile 路径，它指代仓库的根目录。如果文件位置发生更改，则脚本路径也需要更改。
+
+- 扫描触发器
+
+  勾选**定时扫描**，并从下拉列表中设置扫描时间间隔。
+
+- 构建触发器
+
+  勾选**通过流水线事件触发**，从**创建流水线时触发**和**删除流水线时触发**的下拉列表中选择一个流水线，以便在创建新的流水线或删除流水线时自动触发指定流水线中的任务。
+
+- 克隆设置
+
+  - **启用浅克隆**：如果开启浅克隆，则克隆的代码不会包含标签。
+  - **克隆深度**：克隆时需要提取的 commit 数量。
+  - **克隆超时时间（min）**：完成克隆过程所需要的时长（以分钟为单位）。
+
+- Webhook
+
+  **Webhook** 能有效地让流水线发现远程代码仓库中的更改，并自动触发新一轮运行。Webhook 应成为触发 Jenkins 自动扫描 GitHub 和 Git（例如 GitLab）的主要方法。有关更多信息，请参阅[使用 Webhook 触发流水线](/devops/new/KubeSphere/05-第5章%20DevOps实战.html#_12-6-使用-webhook-触发流水线)。
+
+##### 不指定代码仓库
+
+如果不指定代码仓库，则可以在**高级设置**页签上自定义以下配置：
+
+- 构建设置
+
+  **删除过期构建记录**：指定何时删除分支下的构建记录。构建记录包括控制台输出、已归档制品以及与特定构建相关的其他元数据。保留较少的构建可以节省 Jenkins 所使用的磁盘空间。DevOps 提供两个选项来确定何时删除旧的构建：
+
+  - **构建记录保留期限（天）**：超过保留期限的构建记录将被删除。
+  - **构建记录最大数量**：当构建记录数量超过允许的最大数量，最早的构建记录将被删除。
+  
+  :::tip
+  
+  说明
+  构建记录保留期限（天）和构建记录最大数量可以同时应用于构建记录。只要某个构建记录满足其中一个字段所设置的条件，则会删除该构建记录。例如，如果您将保留期限和最大数量分别指定为 2 和 3，待某个构建记录的保留天数超过 2 或者最大数量超过 3，则会删除该构建记录。DevOps 默认用 7 和 10 预填充这两个字段。
+  
+  :::
+  
+  - **不允许并发构建**：如果勾选此选项，则不能并发运行多个构建。
+
+- 构建参数
+
+  参数化的构建过程允许在开始运行流水线时传入一个或多个参数。DevOps 默认提供五种参数类型，包括**字符串**、**多行字符串**、**布尔值**、**选项**以及**密码**。当参数化项目时，构建会被替换为参数化构建，其中将提示用户为每个定义的参数输入值。
+
+- 构建触发器
+
+  **定时构建**：允许定期执行构建。输入 CRON 表达式以设置定时计划。
+
+
+
 ### 12.6 使用 Webhook 触发流水线
+
+若要通过远程代码仓库创建基于 Jenkinsfile 的流水线，可以在远程仓库中配置 webhook，以便在远程仓库变更时，自动触发流水线。
+
+本文档演示如何在 GitHub 仓库中用 webhook 触发流水线。
+
+#### 12.6.1 前提条件
+
+- KubeSphere 平台需要安装并启用 **DevOps** 扩展组件。
+- 已创建一个企业空间、一个 DevOps 项目和一个用户（例如 **project-regular**），并已邀请该用户至 DevOps 项目且授予 **operator** 角色。请参阅[邀请用户加入 DevOps 项目](https://docs.kubesphere.com.cn/v4.2.1/11-use-extensions/02-devops/02-devops-project-mangement/03-project-members/01-invite-a-user-to-a-project/)。
+- 已通过远程代码仓库创建一个基于 Jenkinsfile 的流水线。有关更多信息，请参阅[使用 Jenkinsfile 创建流水线](/devops/new/KubeSphere/05-第5章%20DevOps实战.html#_12-2-使用-jenkinsfile-创建流水线)。
+
+#### 12.6.2 配置 Webhook
+
+##### 获取 webhook URL
+
+1. 以 **project-regular** 用户登录 KubeSphere 控制台并进入您的企业空间。
+2. 在左侧导航栏选择 **DevOps > 流水线**。
+3. 在页面左上角的下拉列表中选择一个 DevOps 项目。
+4. 在**流水线**页面，点击一个流水线（例如 **jenkins-in-scm**）以查看其详情页面。
+5. 点击**操作**，在下拉菜单中选择**编辑设置**。
+6. 在弹出的会话框中，滚动至 **Webhook** 以获得 Webhook push URL。
+
+##### 在 GitHub 仓库中设置 webhook
+
+1. 登录您的 GitHub，并进入 **devops-maven-sample** 仓库。
+2. 点击 **Settings** > **Webhooks**，然后点击 **Add webhook**。
+3. 在 **Payload URL** 中输入流水线中的 Webhook push URL，然后点击 **Add webhook**。 本教程选择默认的 **Just the push event**，请根据实际需要进行配置。有关更多信息，请参阅 [GitHub 文档](https://docs.github.com/en/developers/webhooks-and-events/webhooks/creating-webhooks)。
+4. 配置好的 webhook 会展示在 **Webhooks** 页面。
+
+
+
+#### 12.6.3 使用 Webhook 触发流水线
+
+##### 提交拉取请求到仓库
+
+1. 在 devops-maven-sample 仓库的 **Code** 页面，点击 **master** 然后选择 **v4.1.0-sonarqube** 分支。
+2. 转到 **/deploy/dev-ol** 然后点击文件 **devops-sample.yaml**。
+3. 点击<img src="./images/pen-light.svg" alt="pen-light" style="width:25px;" />编辑文件。 例如，将 **spec.replicas** 的值改变为 **3**。
+4. 点击 **Commit changes**。
+
+##### 检查 webhook 交付
+
+1. 在 devops-maven-sample 仓库的 **Settings** > **Webhooks** 页面，点击创建的 webhook。
+2. 点击 **Recent Deliveries**，然后点击一个具体交付记录查看详情。
+
+
+
+#### 12.6.4 检查流水线状态
+
+1. 在流水线详情页面的**运行记录**页签，检查提交到远程仓库 **v4.1.0-sonarqube** 分支的拉取请求是否触发了新的运行。
+2. 转到 **kubesphere-sample-dev** 项目的 **工作负载 > 容器组** 页面，检查 3 个 Pods 的状态。如果 3 个 Pods 为运行状态，表示流水线运行正常。
 
 
 
@@ -1970,6 +2690,7 @@ envsubst < deploy/no-branch-dev/devops-sample.yaml | kubectl apply -f -
 | gitee-token     | 访问令牌                                                     |
 | demo-kubeconfig | kubeconfig                                                   |
 | dockerhub-id    | 用户名和密码                                                 |
+| gitlab-id       | 用户名和密码（访问令牌）                                     |
 
 其中，github-id的创建方式：
 
