@@ -209,7 +209,7 @@ $ kubectl delete -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.5.
 
 > 💡 **组合策略**：大型企业可同时使用 Rancher（多集群治理） + KubeSphere（集群内应用平台），通过 Rancher 纳管部署了 KubeSphere 的集群。
 
-## 2 安装ingress-nginx（在master节点执行）
+## 2 ~~安装ingress-nginx（在master节点执行）~~<span style="color:red;font-weight:bold;">（已过时）</span>
 
 [ingress-nginx GitHub查看与K8S版本兼容性](https://github.com/kubernetes/ingress-nginx)
 
@@ -560,7 +560,174 @@ $ kubectl exec -n ingress-nginx -it <ingress-pod-name> -- cat /etc/nginx/nginx.c
 $ kubectl logs -n ingress-nginx <ingress-pod-name>
 ```
 
+## 2 安装traefik开源云原生应用代理
 
+[Traefix官方网站](https://traefik.io/)
+
+[官方文档地址](https://doc.traefik.io/traefik/)
+
+### 2.1 安装traefik
+
+- 安装
+
+```bash
+# 添加仓库
+$ helm repo add traefik https://traefik.github.io/charts
+$ helm repo update traefik
+# 查看可用版本
+$ helm search repo traefik -l
+# 查看values.yaml
+$ helm show values traefik/traefik > traefik-values.yaml
+# 拉取 Chart 到本地查看模板
+$ helm pull traefik/traefik --untar
+
+# 安装
+$ helm upgrade --install traefik traefik/traefik \
+  --version 39.0.6 \
+  --namespace traefik-system \
+  --set service.type=NodePort \
+  --set ports.web.nodePort=30080 \
+  --set ports.websecure.nodePort=30443 \
+  --set persistence.enabled=true \
+  --set persistence.size=1Gi \
+  --set persistence.storageClass=nfs-csi-retain \
+  --set persistence.path=/data \
+  --set podSecurityContext.fsGroup=65532 \
+  --set deployment.initContainers[0].name=volume-permissions \
+  --set deployment.initContainers[0].image=busybox:1.36 \
+  --set deployment.initContainers[0].securityContext.runAsUser=65532 \
+  --set deployment.initContainers[0].securityContext.runAsNonRoot=true \
+  --set deployment.initContainers[0].command[0]=sh \
+  --set deployment.initContainers[0].command[1]=-c \
+  --set deployment.initContainers[0].command[2]="touch /data/acme.json && chmod 600 /data/acme.json || true" \
+  --set deployment.initContainers[0].volumeMounts[0].name=data \
+  --set deployment.initContainers[0].volumeMounts[0].mountPath=/data
+```
+
+:::details安装详情
+
+```bash
+Release "traefik" does not exist. Installing it now.
+NAME: traefik
+LAST DEPLOYED: Sun Mar 22 09:45:32 2026
+NAMESPACE: traefik-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+traefik with docker.io/traefik:v3.6.11 has been deployed successfully on traefik-system namespace!
+```
+
+:::
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n traefik-system
+```
+
+- 卸载
+
+```bash
+$ helm uninstall traefik -n traefik-system
+$ kubectl delete pvc traefik -n traefik-system
+```
+
+- 修改nodePort端口并获得访问地址
+
+由于无法指定nodePort的端口，若想使用 30080/30443 端口，可以修改。
+
+```bash
+# 获取访问地址
+export NODE_PORT=$(kubectl get svc --namespace traefik-system -o jsonpath="{.spec.ports[0].nodePort}" traefik)
+export NODE_IP=$(kubectl get no --namespace traefik-system -o jsonpath="{.items[0].status.addresses[0].address}")
+echo http://$NODE_IP:$NODE_PORT
+```
+
+http://192.168.200.116:30080
+
+如果返回 `404 page not found`，说明 Traefik 正常运行，只是没有匹配的路由（这是正常的，因为我们还没装 YouTrack）。
+
+### 2.2 如何开启 Traefik 仪表盘？
+
+- 为仪表盘添加基础认证（安全加固）
+
+因为仪表盘会暴露内部信息，强烈建议加上密码保护。创建一个用于认证的 Secret 和 Middleware：
+
+Traefik 的 BasicAuth 中间件要求密码必须经过 MD5、SHA1 或 BCrypt 哈希处理，而 `htpasswd` 就是生成这种格式的工具。
+
+```bash
+# 1. 安装httpd-tools，并生成加密密码
+$ sudo dnf install httpd-tools
+# 生成用户名 admin，密码 yourpassword 的加密字符串
+# -n：不保存到文件，直接显示结果
+# -b：在命令行中直接输入密码（而不是交互式输入）
+$ htpasswd -nb admin yourpassword
+
+# 1. 创建包含用户名和密码的 Secret
+# 注意：密码需要进行 htpasswd 加密
+$ kubectl create secret generic traefik-dashboard-auth \
+  --namespace traefik-system \
+  --from-literal=users='admin:$apr1$fwenbY8N$zfpcKybVWmeW0H5QvmFGe/'  # 请用实际生成的密码替换
+
+# 2. 创建 Middleware 来使用这个 Secret
+$ cat <<EOF | kubectl apply -f -
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-auth
+  namespace: traefik-system
+spec:
+  basicAuth:
+    secret: traefik-dashboard-auth
+EOF
+```
+
+- 用 Helm 升级 Traefik，开启仪表盘功能并设置访问规则：
+
+```bash
+$ helm upgrade traefik traefik/traefik \
+  --namespace traefik-system \
+  --reuse-values \
+  --set api.dashboard=true \
+  --set api.insecure=false \
+  --set ingressRoute.dashboard.enabled=true \
+  --set ingressRoute.dashboard.entryPoints={web} \
+  --set ingressRoute.dashboard.matchRule="Host(\`traefik.flyin.devops\`) && (PathPrefix(\`/dashboard\`) || PathPrefix(\`/api\`))" \
+  --set 'ingressRoute.dashboard.middlewares[0].name=dashboard-auth' \
+  --set 'ingressRoute.dashboard.middlewares[0].namespace=traefik-system'
+```
+
+:::details
+
+```bash
+Release "traefik" has been upgraded. Happy Helming!
+NAME: traefik
+LAST DEPLOYED: Mon Mar 23 13:04:06 2026
+NAMESPACE: traefik-system
+STATUS: deployed
+REVISION: 3
+TEST SUITE: None
+NOTES:
+traefik with docker.io/traefik:v3.6.11 has been deployed successfully on traefik-system namespace!
+```
+
+:::
+
+- 配置本地 hosts 并访问
+
+最后，在你的电脑上配置 hosts 文件，然后就可以访问仪表盘了。
+
+```bash
+# 编辑 /etc/hosts 文件，添加一行：
+192.168.200.116 traefik.flyin.devops
+```
+
+浏览器访问 `http://traefik.flyin.devops:30080/dashboard/`，输入你设置的用户名和密码，即可看到 Traefik 仪表盘
+
+- 访问地址
+
+http://traefik.flyin.devops:30080/dashboard/
 
 ## 3 集群冒烟测试（在master节点执行）
 

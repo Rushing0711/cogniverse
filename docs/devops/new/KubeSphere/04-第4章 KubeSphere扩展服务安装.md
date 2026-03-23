@@ -922,7 +922,7 @@ $ HTTP_PROXY=http://192.168.200.1:7890 \
 HTTPS_PROXY=http://192.168.200.1:7890 \
 NO_PROXY=lb.emon.local \
 helm install postgresql bitnami/postgresql --version 18.5.1 \
--n kubesphere-devops-system --create-namespace \
+-n devops-system --create-namespace \
 --set persistence.storageClass=local \
 --set primary.persistence.size=10Gi \
 --set auth.database=sonarqube \
@@ -935,7 +935,7 @@ helm install postgresql bitnami/postgresql --version 18.5.1 \
 ```bash
 NAME: postgresql
 LAST DEPLOYED: Fri Feb 27 17:30:42 2026
-NAMESPACE: kubesphere-devops-system
+NAMESPACE: devops-system
 STATUS: deployed
 REVISION: 1
 TEST SUITE: None
@@ -952,26 +952,26 @@ APP VERSION: 18.3.0
 
 PostgreSQL can be accessed via port 5432 on the following DNS names from within your cluster:
 
-    postgresql.kubesphere-devops-system.svc.cluster.local - Read/Write connection
+    postgresql.devops-system.svc.cluster.local - Read/Write connection
 
 To get the password for "postgres" run:
 
-    export POSTGRES_ADMIN_PASSWORD=$(kubectl get secret --namespace kubesphere-devops-system postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+    export POSTGRES_ADMIN_PASSWORD=$(kubectl get secret --namespace devops-system postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
 
 To get the password for "sonar" run:
 
-    export POSTGRES_PASSWORD=$(kubectl get secret --namespace kubesphere-devops-system postgresql -o jsonpath="{.data.password}" | base64 -d)
+    export POSTGRES_PASSWORD=$(kubectl get secret --namespace devops-system postgresql -o jsonpath="{.data.password}" | base64 -d)
 
 To connect to your database run the following command:
 
-    kubectl run postgresql-client --rm --tty -i --restart='Never' --namespace kubesphere-devops-system --image registry-1.docker.io/bitnami/postgresql:latest --env="PGPASSWORD=$POSTGRES_PASSWORD" \
+    kubectl run postgresql-client --rm --tty -i --restart='Never' --namespace devops-system --image registry-1.docker.io/bitnami/postgresql:latest --env="PGPASSWORD=$POSTGRES_PASSWORD" \
       --command -- psql --host postgresql -U sonar -d sonarqube -p 5432
 
     > NOTE: If you access the container using bash, make sure that you execute "/opt/bitnami/scripts/postgresql/entrypoint.sh /bin/bash" in order to avoid the error "psql: local user with ID 1001} does not exist"
 
 To connect to your database from outside the cluster execute the following commands:
 
-    kubectl port-forward --namespace kubesphere-devops-system svc/postgresql 5432:5432 &
+    kubectl port-forward --namespace devops-system svc/postgresql 5432:5432 &
     PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U sonar -d sonarqube -p 5432
 
 WARNING: The configured password will be ignored on new installation in case when previous PostgreSQL release was deleted through the helm command. In that case, old PVC will have an old password, and setting it through helm won't take effect. Deleting persistent volumes (PVs) will solve the issue.
@@ -991,13 +991,13 @@ WARNING: There are "resources" sections in the chart not set. Using "resourcesPr
 - 验证，确保所有 pod 都running
 
 ```bash
-$ kubectl get po -n kubesphere-devops-system
+$ kubectl get po -n devops-system
 ```
 
 - 卸载
 
 ```bash
-$ helm uninstall postgresql -n kubesphere-devops-system
+$ helm uninstall postgresql -n devops-system
 ```
 
 
@@ -1006,16 +1006,16 @@ $ helm uninstall postgresql -n kubesphere-devops-system
 
 ```bash
 # 查看安装postgresql后，自动创建的保密字典
-$ kubectl describe secret -n kubesphere-devops-system postgresql
+$ kubectl describe secret -n devops-system postgresql
 Name:         postgresql
-Namespace:    kubesphere-devops-system
+Namespace:    devops-system
 Labels:       app.kubernetes.io/instance=postgresql
               app.kubernetes.io/managed-by=Helm
               app.kubernetes.io/name=postgresql
               app.kubernetes.io/version=18.2.0
               helm.sh/chart=postgresql-18.4.1
 Annotations:  meta.helm.sh/release-name: postgresql
-              meta.helm.sh/release-namespace: kubesphere-devops-system
+              meta.helm.sh/release-namespace: devops-system
 
 Type:  Opaque
 
@@ -1053,7 +1053,7 @@ HTTPS_PROXY=http://192.168.200.1:7890 \
 NO_PROXY=lb.emon.local \
 export MONITORING_PASSCODE="yourPasscode" && \
 helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.6.1 \
--n kubesphere-devops-system --create-namespace \
+-n devops-system --create-namespace \
 --set service.type=NodePort --set service.nodePort=30681 \
 --set community.enabled=true \
 --set monitoringPasscode=$MONITORING_PASSCODE \
@@ -1071,13 +1071,13 @@ helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.6.1 \
 Release "sonarqube" does not exist. Installing it now.
 NAME: sonarqube
 LAST DEPLOYED: Fri Feb 27 17:34:34 2026
-NAMESPACE: kubesphere-devops-system
+NAMESPACE: devops-system
 STATUS: deployed
 REVISION: 1
 NOTES:
 1. Get the application URL by running these commands:
-  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
-  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  export NODE_PORT=$(kubectl get --namespace devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
+  export NODE_IP=$(kubectl get nodes --namespace devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
 WARNING: 
          Please note that the SonarQube image runs with a non-root user (uid=1000) belonging to the root group (guid=0). In this way, the chart can support arbitrary user ids as recommended in OpenShift.
@@ -1095,13 +1095,13 @@ WARNING: The deploymentType value is deprecated and won't be supported anymore. 
 - 验证，确保所有 pod 都running
 
 ```bash
-$ kubectl get po -n kubesphere-devops-system
+$ kubectl get po -n devops-system
 ```
 
 - 卸载
 
 ```bash
-$ helm uninstall sonarqube -n kubesphere-devops-system
+$ helm uninstall sonarqube -n devops-system
 ```
 
 ### 2.2 获取 SonarQube 控制台地址
@@ -1109,8 +1109,8 @@ $ helm uninstall sonarqube -n kubesphere-devops-system
 1. 执行以下命令获取 SonarQube NodePort。
 
 ```bash
-  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
-  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  export NODE_PORT=$(kubectl get --namespace devops-system -o jsonpath="{.spec.ports[0].nodePort}" services sonarqube-sonarqube)
+  export NODE_IP=$(kubectl get nodes --namespace devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
 ```
 
@@ -1125,7 +1125,7 @@ http://192.168.200.116:30681
 1. 执行以下命令查看 SonarQube 的状态。注意，只有在 SonarQube 启动并运行后才能访问 SonarQube 控制台。
 
 ```bash
-$ kubectl get pod -n kubesphere-devops-system
+$ kubectl get pod -n devops-system
 NAME                                     READY   STATUS      RESTARTS            AGE
 devops-29536470-xt85n                    0/1     Completed   0                   127m
 devops-29536530-zmq82                    0/1     Completed   0                   111m
@@ -1429,7 +1429,7 @@ $ HTTP_PROXY=http://192.168.200.1:7890 \
 HTTPS_PROXY=http://192.168.200.1:7890 \
 NO_PROXY=lb.emon.local \
 helm install harbor harbor/harbor --version 1.18.2 \
--n kubesphere-devops-system --create-namespace \
+-n devops-system --create-namespace \
 --set expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false
 ```
 
@@ -1453,7 +1453,7 @@ For more details, please visit https://github.com/goharbor/harbor
 - 验证，确保所有 pod 都running
 
 ```bash
-$ kubectl get po -n kubesphere-devops-system
+$ kubectl get po -n devops-system
 ```
 
 访问： [http://192.168.200.116:30002](http://192.168.200.116:30002/)
@@ -1465,7 +1465,7 @@ $ kubectl get po -n kubesphere-devops-system
 - 卸载
 
 ```bash
-$ helm uninstall harbor -n kubesphere-devops-system
+$ helm uninstall harbor -n devops-system
 ```
 
 ### 3.2 安装`buildkit`支持`nerdctl build`
@@ -1847,7 +1847,7 @@ $ helm show values sonatype/nexus-repository-manager > nexus-values.yaml
 # 安装（--set service.nodePort=30081不支持指定）
 $ helm upgrade --install nexus3 sonatype/nexus-repository-manager \
   --version 64.2.0 \
-  --namespace kubesphere-devops-system \
+  --namespace devops-system \
   --create-namespace \
   --set persistence.enabled=true \
   --set persistence.storageSize=20Gi \
@@ -1864,13 +1864,13 @@ $ helm upgrade --install nexus3 sonatype/nexus-repository-manager \
 WARNING: This chart is deprecated
 NAME: nexus3
 LAST DEPLOYED: Fri Mar 20 21:01:36 2026
-NAMESPACE: kubesphere-devops-system
+NAMESPACE: devops-system
 STATUS: deployed
 REVISION: 1
 NOTES:
 1. Get the application URL by running these commands:
-  export POD_NAME=$(kubectl get pods --namespace kubesphere-devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
-  kubectl --namespace kubesphere-devops-system port-forward $POD_NAME 8081:80
+  export POD_NAME=$(kubectl get pods --namespace devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace devops-system port-forward $POD_NAME 8081:80
   Your application is available at http://127.0.0.1
   
 # 指定 service.type=NodePort
@@ -1878,13 +1878,13 @@ WARNING: This chart is deprecated
 Release "nexus3" has been upgraded. Happy Helming!
 NAME: nexus3
 LAST DEPLOYED: Fri Mar 20 21:20:10 2026
-NAMESPACE: kubesphere-devops-system
+NAMESPACE: devops-system
 STATUS: deployed
 REVISION: 2
 NOTES:
 1. Get the application URL by running these commands:
-  export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services nexus3-nexus-repository-manager)
-  export NODE_IP=$(kubectl get nodes --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+  export NODE_PORT=$(kubectl get --namespace devops-system -o jsonpath="{.spec.ports[0].nodePort}" services nexus3-nexus-repository-manager)
+  export NODE_IP=$(kubectl get nodes --namespace devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
   Your application is available at http://$NODE_IP:$NODE_PORT
 ```
 
@@ -1893,13 +1893,13 @@ NOTES:
 - 验证，确保所有 pod 都running
 
 ```bash
-$ kubectl get po -n kubesphere-devops-system
+$ kubectl get po -n devops-system
 ```
 
 - 卸载
 
 ```bash
-$ helm uninstall nexus3 -n kubesphere-devops-system
+$ helm uninstall nexus3 -n devops-system
 ```
 
 - 修改nodePort端口并获得访问地址
@@ -1907,18 +1907,18 @@ $ helm uninstall nexus3 -n kubesphere-devops-system
 由于无法指定nodePort的端口，若想使用 30081 端口，可以修改。
 
 ```bash
-$ kubectl patch svc nexus3-nexus-repository-manager -n kubesphere-devops-system -p '{"spec":{"type":"NodePort","ports":[{"port":8081,"targetPort":8081,"nodePort":30081}]}}'
+$ kubectl patch svc nexus3-nexus-repository-manager -n devops-system -p '{"spec":{"type":"NodePort","ports":[{"port":8081,"targetPort":8081,"nodePort":30081}]}}'
 ```
 
 ```bash
 # 获取访问地址
-export NODE_PORT=$(kubectl get svc --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" nexus3-nexus-repository-manager)
-export NODE_IP=$(kubectl get no --namespace kubesphere-devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
+export NODE_PORT=$(kubectl get svc --namespace devops-system -o jsonpath="{.spec.ports[0].nodePort}" nexus3-nexus-repository-manager)
+export NODE_IP=$(kubectl get no --namespace devops-system -o jsonpath="{.items[0].status.addresses[0].address}")
 echo http://$NODE_IP:$NODE_PORT
 
 # 获取密码
-export POD_NAME=$(kubectl get pods --namespace kubesphere-devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
-kubectl exec -it -n kubesphere-devops-system $POD_NAME -- cat /nexus-data/admin.password
+export POD_NAME=$(kubectl get pods --namespace devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
+kubectl exec -it -n devops-system $POD_NAME -- cat /nexus-data/admin.password
 # 输出密码，首次登录是会修改
 aa614da4-3aaf-4d5c-a5c3-83a6383329f3
 ```
@@ -1929,12 +1929,12 @@ http://192.168.200.116:30081
 
 #### 4.2.1 **基本信息**
 
-| 项目     | 信息                                             |
-| :------- | :----------------------------------------------- |
-| 访问地址 | `http://192.168.200.116:30081`                   |
-| 管理员   | `admin` / 你修改后的密码                         |
-| 部署位置 | Kubernetes namespace: `kubesphere-devops-system` |
-| 存储类   | `nfs-csi-retain` (20Gi)                          |
+| 项目     | 信息                                  |
+| :------- | :------------------------------------ |
+| 访问地址 | `http://192.168.200.116:30081`        |
+| 管理员   | `admin` / 你修改后的密码              |
+| 部署位置 | Kubernetes namespace: `devops-system` |
+| 存储类   | `nfs-csi-retain` (20Gi)               |
 
 ------
 
@@ -2068,10 +2068,124 @@ $ curl http://192.168.200.116:30081/repository/maven-public/
 
 ![image-20260320230556039](images/image-20260320230556039.png)
 
+## 5 YouTrack基于网页的项目管理与问题跟踪系统
+
+[Deploy YouTrack with Kubernetes](https://www.jetbrains.com/help/youtrack/server/deploy-youtrack-kubernetes.html) **twenty20 是 JetBrains 官方认证的咨询合作伙伴**
+
+[A Helm chart for deploying Youtrack on Kubernetes](https://artifacthub.io/packages/helm/twenty20-helm-charts/youtrack/) twenty20提供的Helm安装方式
+
+### 5.1 安装（镜像：1.98G）
+
+- 安装
+
+```bash
+# 添加仓库（如果还没添加）
+$ helm repo add twenty20-helm-charts https://twenty-20.github.io/helm-charts
+# 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
+$ helm repo update twenty20-helm-charts
+# 查看可用版本
+$ helm search repo twenty20-helm-charts -l
+# 查看values.yaml
+$ helm show values twenty20-helm-charts/youtrack > youtrack-values.yaml
+# 拉取 Chart 到本地查看模板
+$ helm pull twenty20-helm-charts/youtrack --untar
+
+# 安装（charts中的ingress强制开启tls，安装时禁用）
+$ helm upgrade --install youtrack twenty20-helm-charts/youtrack \
+  --version 1.1.30 \
+  --namespace devops-system --create-namespace \
+  --set persistence.data.storageClassName=nfs-csi-retain \
+  --set persistence.data.storageSize=20Gi \
+  --set persistence.logs.storageClassName=nfs-csi-retain \
+  --set persistence.logs.storageSize=5Gi \
+  --set persistence.conf.storageClassName=nfs-csi-retain \
+  --set persistence.conf.storageSize=1Gi \
+  --set persistence.temp.enabled=true \
+  --set persistence.temp.storageClassName=nfs-csi-retain \
+  --set persistence.temp.storageSize=100Gi \
+  --set persistence.backups.backupType=volumeStorage \
+  --set persistence.backups.volumeStorage.storageClassName=nfs-csi-retain \
+  --set persistence.backups.volumeStorage.storageSize=20Gi \
+  --set config.baseUrl="http://youtrack.flyin.devops:30080" \
+  --set ingress.enabled=false \
+  --set service.name=youtrack
+# 单独安装ingress
+$ cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: youtrack-ingress
+  namespace: devops-system
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: youtrack.flyin.devops
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: youtrack
+            port:
+              number: 8080
+EOF
+```
+
+:::details安装详情
+
+```bash
+Release "youtrack" does not exist. Installing it now.
+NAME: youtrack
+LAST DEPLOYED: Sun Mar 22 22:36:07 2026
+NAMESPACE: devops-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+```
+
+:::
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n devops-system
+```
+
+- 卸载
+
+```bash
+$ helm uninstall youtrack -n devops-system
+$ kubectl delete pvc youtrack-backup youtrack-config youtrack-data youtrack-logs youtrack-temp -n devops-system
+```
+
+### 5.2 检索令牌并登录
+
+- 配置本地 hosts 并访问
+
+在你的电脑上配置 hosts 文件，然后就可以访问仪表盘了。
+
+```bash
+# 编辑 /etc/hosts 文件，添加一行：
+192.168.200.116 youtrack.flyin.devops
+```
+
+- 获取token
+
+```bash
+$ kubectl exec -n devops-system -it youtrack-0 -- cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt
+```
+
+http://youtrack.flyin.devops:30080/?wizard_token=R37wGenvE0MIVuNzW9aj
+
+
+
 ## 99 扩展服务登录信息
 
-| 登录地址                     | 描述      | 用户名 | 密码         | 原密码                               |
-| ---------------------------- | --------- | ------ | ------------ | ------------------------------------ |
-| http://192.168.200.116:30002 | Harbor    | admin  | Harbor12345  | Harbor12345                          |
-| http://192.168.200.116:30681 | SonarQube | admin  | P@88word1234 | admin                                |
-| http://192.168.200.116:30081 | Nexus3    | admin  | P@88word1234 | aa614da4-3aaf-4d5c-a5c3-83a6383329f3 |
+| 登录地址                           | 描述      | 用户名 | 密码         | 原密码                               |
+| ---------------------------------- | --------- | ------ | ------------ | ------------------------------------ |
+| http://192.168.200.116:30002       | Harbor    | admin  | Harbor12345  | Harbor12345                          |
+| http://192.168.200.116:30681       | SonarQube | admin  | P@88word1234 | admin                                |
+| http://192.168.200.116:30081       | Nexus3    | admin  | P@88word1234 | aa614da4-3aaf-4d5c-a5c3-83a6383329f3 |
+| http://traefik.flyin.devops:30080  | traefik   | admin  | P@88word1234 |                                      |
+| http://youtrack.flyin.devops:30080 | YouTrack  | admin  | P@88word1234 | - - -                                |
