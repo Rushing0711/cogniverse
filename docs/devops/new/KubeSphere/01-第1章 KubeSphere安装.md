@@ -373,6 +373,16 @@ https://lb.emon.local:6443/version
 
 [安装NFS CSI Driver](http://localhost:5173/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-3-nfs-csi-driver-v4-3)
 
+<span style="color:#32CD32;font-weight:bold;">[建议安装并使用OpenEBS的LocalPV-HostPath和LocalPV-LVM](/devops/new/Kubernetes/05-第5章%20Kubernetes扩展服务安装.html#_4-4-2-安装)</span>
+
+### 1.7 安装 OpenEBS 存储服务
+
+[安装OpenEBS](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-%E5%AE%89%E8%A3%85)
+
+### 1.8 安装 Traefik 开源云原生应用代理
+
+[安装Traefik](/devops/new/Kubernetes/05-第5章%20Kubernetes扩展服务安装.html#_2-安装traefik开源云原生应用代理)
+
 ## 2 验证 K8s 集群状态
 
 ### 2.1 查看集群节点信息
@@ -1446,9 +1456,19 @@ kubectl delete pods -n kube-system -l k8s-app=calico-node
 kubectl delete pods -n kube-system -l k8s-app=calico-kube-controllers
 ```
 
+### FAQ3：KubeSphere 企业空间日志收集系统的“末梢神经”Vector日志采集代理重建
 
+```bash
+kubectl delete pods -n kubesphere-logging-system -l app.kubernetes.io/instance=vector-agent
+```
 
-### FAQ3：KubeSphere 镜像构建器（S2I）服务证书过期(x509)问题
+### FAQ4：KubeSphere自动管理和清理日志索引
+
+```bash
+kubectl delete pods -n kubesphere-logging-system -l app=opensearch-curator
+```
+
+### FAQ5：KubeSphere 镜像构建器（S2I）服务证书过期(x509)问题
 
 问题描述：Internal error occurred: failed calling webhook "s2ibuilder.kb.io": failed to call webhook......x509: certificate has expired or is not yet valid
 
@@ -1456,11 +1476,11 @@ kubectl delete pods -n kube-system -l k8s-app=calico-kube-controllers
 
 简述：这个是由于之前 DevOps S2I 内置的证书过期时间是 2024.02.14 ，现在只需要更新证书就可以了；
 
-### FAQ4: Kubesphere 企业空间日志收集系统的“末梢神经”Vector日志采集代理重建
 
-```bash
-kubectl delete pods -n kubesphere-logging-system -l app.kubernetes.io/instance=vector-agent
-```
+
+
+
+
 
 
 

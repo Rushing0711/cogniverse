@@ -584,13 +584,13 @@ $ helm pull traefik/traefik --untar
 # 安装
 $ helm upgrade --install traefik traefik/traefik \
   --version 39.0.6 \
-  --namespace traefik-system \
+  --namespace traefik-system --create-namespace \
   --set service.type=NodePort \
   --set ports.web.nodePort=30080 \
   --set ports.websecure.nodePort=30443 \
   --set persistence.enabled=true \
   --set persistence.size=1Gi \
-  --set persistence.storageClass=nfs-csi-retain \
+  --set persistence.storageClass=openebs-lvm-retain \
   --set persistence.path=/data \
   --set podSecurityContext.fsGroup=65532 \
   --set deployment.initContainers[0].name=volume-permissions \
@@ -630,8 +630,9 @@ $ kubectl get po -n traefik-system
 
 ```bash
 $ helm uninstall traefik -n traefik-system
-$ kubectl delete pvc traefik -n traefik-system
 ```
+
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-5-%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4openebs-lvm-retain%E7%B1%BB%E5%9E%8B%E7%9A%84pv)
 
 - 修改nodePort端口并获得访问地址
 
@@ -668,7 +669,7 @@ $ htpasswd -nb admin yourpassword
 # 注意：密码需要进行 htpasswd 加密
 $ kubectl create secret generic traefik-dashboard-auth \
   --namespace traefik-system \
-  --from-literal=users='admin:$apr1$fwenbY8N$zfpcKybVWmeW0H5QvmFGe/'  # 请用实际生成的密码替换
+  --from-literal=users='admin:$apr1$67MUFgGz$oedxVDzGse50rznu5Rjsg0'  # 请用实际生成的密码替换
 
 # 2. 创建 Middleware 来使用这个 Secret
 $ cat <<EOF | kubectl apply -f -
@@ -1352,98 +1353,471 @@ $ helm uninstall csi-driver-nfs -n kube-system
 
 ### 4.4 部署OpenEBS（推荐）
 
-#### 4.4.0 OpenEBS 存储方案
+#### 4.4.1 OpenEBS 存储方案
+
+##### 4.4.1.1 OpenEBS 存储引擎
 
 OpenEBS 是 CNCF 沙箱项目，提供 **容器原生存储**，支持多种后端引擎：
 
-| 引擎类型       | 特点                                | 访问模式 | 适用场景                                   |
-| -------------- | ----------------------------------- | -------- | ------------------------------------------ |
-| cStor          | 块存储 + 快照 + 复制                | RWO      | 生产级有状态应用（MySQL、ETCD）            |
-| Jiva           | 基于 iSCSI 的轻量块存储             | RWO      | 小规模集群、边缘计算                       |
-| LocalPV        | 直接使用本地磁盘（HostPath 增强版） | RWO      | 高性能、低延迟场景（如 Kafka、ClickHouse） |
-| Mayastor（新） | 基于 SPDK/NVMe 的高性能引擎         | RWO      | 超低延迟、高 IOPS（金融交易、AI训练）      |
+OpenEBS 的存储引擎可分为 **Local PV 类**（节点本地存储）和 **Replicated PV 类**（分布式复制存储）两大阵营，以下是主流引擎的详细说明：
 
-**✅ 功能特点**
+| 引擎类型             | 核心引擎                                                     | 原生支持的访问模式 | 核心特点（含访问模式适配性）                                 | 典型适用场景                                                 | 部署难度 | 资源消耗 | 运维成本 |
+| :------------------- | :----------------------------------------------------------- | :----------------- | :----------------------------------------------------------- | :----------------------------------------------------------- | :------- | :------- | :------- |
+| **本地存储**         | LocalPV-HostPath                                             | RWO                | 基于节点本地目录的极简存储，零配置/零依赖；仅支持单节点读写，无冗余、无高级特性 | 开发/测试/演示环境、单实例非核心应用、临时/缓存数据存储      | 极低     | 极低     | 极低     |
+| **本地存储**         | <span style="color:red;font-weight:bold;">~~LocalPV-Device(3.5移除)~~</span> | RWO                | 基于节点本地块设备的存储，NDM 自动发现和管理设备；仅支持单节点读写，无跨节点冗余，性能接近裸盘 | 高性能数据库（MySQL/PostgreSQL）、需要独占磁盘的场景、无需在线扩容的生产应用 | 低       | 极低     | 低       |
+| **本地存储**         | <span style="color:#32CD32;font-weight:bold;">LocalPV-LVM</span> | RWO                | 本地 LVM 逻辑卷存储，零网络开销、性能极致；支持在线扩容、精确容量管理；仅支持单节点读写，严格绑定节点 | 生产环境数据库（需弹性扩容）、高性能中间件（ElasticSearch/Redis）、需容量配额的有状态应用 | 低       | 极低     | 低       |
+| **本地存储**         | LocalPV-ZFS                                                  | RWO, ROX           | 基于 ZFS 文件系统的本地存储，支持压缩/快照/数据校验；支持单节点读写、多节点只读，可做本地镜像冗余 | 日志存储、大容量数据存储、需本地快照/压缩的数据库、数据完整性要求高的场景 | 中       | 极低     | 中       |
+| **分布式复制块存储** | Jiva                                                         | RWO, ROX           | 轻量分布式块存储，零依赖、极简部署，支持 1/3 副本；性能较低，仅支持单节点读写、多节点只读 | 开发/测试环境、边缘计算、低配节点、非核心轻量业务            | 极低     | 极低     | 极低     |
+| **分布式复制块存储** | cStor                                                        | RWO, ROX           | 企业级分布式块存储，基于 ZFS，多副本（1/3/5）强一致，支持快照/克隆/扩容/QoS；性能劣于 Mayastor，仅支持单节点读写 | 生产环境数据库（性能要求不极致）、Kafka 消息队列、核心 StatefulSet 服务 | 中等     | 中等     | 中等     |
+| **新一代高性能存储** | <span style="color:#32CD32;font-weight:bold;">Mayastor</span> | RWO, ROX, RWX      | 基于 NVMe-oF + SPDK 的高性能存储，Rust 编写，用户态 IO 低延迟，支持快照/克隆；唯一原生支持多节点读写的 OpenEBS 引擎 | AI/ML 训练、高性能计算（HPC）、生产级数据库、低延迟交易系统、需 RWX 的场景 | 中高     | 中高     | 中高     |
 
-- **完全运行在 K8S 内部**（Operator + CSI 驱动）
-- 支持 **快照、克隆、QoS、监控**
-- cStor/Jiva 支持 **跨节点复制**（提升可用性）
-- LocalPV 性能接近裸金属
+##### 4.4.1.2 🎯 当前主力引擎（2026年）
 
-**📌 适用场景**
+| 引擎类型           | 核心引擎                              | 定位                 | 适用场景                                            |
+| :----------------- | :------------------------------------ | :------------------- | :-------------------------------------------------- |
+| **本地存储**       | **LocalPV (Hostpath/Device/LVM/ZFS)** | 高性能节点本地存储   | 分布式中间件（自带高可用）、缓存、日志、开发测试    |
+| **分布式复制存储** | **Mayastor**                          | 新一代高性能复制存储 | 生产数据库（需跨节点高可用）、AI/ML、低延迟交易系统 |
+| **分布式复制存储** | **cStor**                             | 企业级功能型存储     | 需要快照/克隆/ZFS特性、对性能要求不极致的场景       |
 
-- **数据库持久化**（MySQL、PostgreSQL、MongoDB）
-- **ETCD 集群**（推荐 LocalPV + SSD）
-- **边缘/私有云环境**（无云厂商依赖）
-- **需要快照与备份能力** 的业务
+##### 4.4.1.3 生产环境存储选型决策树
 
-**🔧 访问模式支持**
+```bash
+你的应用是否需要存储层高可用？
+├─ 是（单机数据库、主从模式、无自愈能力的应用）
+│   └─ ✅ Mayastor（首选，高性能+跨节点高可用）
+│   └─ 备选：cStor（如无法满足 Mayastor 硬件要求）
+│
+├─ 否（分布式中间件：Redis Cluster、ES、Kafka、MongoDB 副本集）
+│   └─ 你的存储需求？
+│       ├─ 需要在线扩容/容量管理 → ✅ LocalPV-LVM
+│       ├─ 极致性能 + 无需扩容 → ✅ LocalPV-Device
+│       ├─ 需要快照/压缩 → ✅ LocalPV-ZFS
+│       └─ 开发测试/简单场景 → ✅ LocalPV-Hostpath
+│
+└─ 应用需要共享存储（Harbor HA、Nexus HA）
+    └─ ✅ 对象存储 (S3/MinIO) 或 NFS（不使用 OpenEBS）
+```
 
-- **仅 RWO**（所有 OpenEBS 引擎均不支持 RWX）
-  - 因其本质是 **块存储** 或 **本地卷**
+##### 4.4.1.4 📊 中间件存储选型总结（LocalPV 场景）
 
-**⚠️ 局限性**
+| 中间件            | 模式        | 推荐存储               | 节点固定       | 前提条件 / 说明                                              |
+| :---------------- | :---------- | :--------------------- | :------------- | :----------------------------------------------------------- |
+| **MySQL**         | 单机        | LocalPV-LVM            | ✅ 必须固定     | 推荐 LVM，支持在线扩容；数据在单节点，漂移即丢失             |
+| **MySQL**         | 主从        | LocalPV-LVM            | ✅ 主从分别固定 | 主从各自独立存储，不共享；从库可读，主库故障需手动或自动切换 |
+| **PostgreSQL**    | 单机        | LocalPV-LVM            | ✅ 必须固定     | 推荐 LVM；单节点故障即服务不可用                             |
+| **PostgreSQL**    | 主从        | LocalPV-LVM            | ✅ 主从分别固定 | 主从各自独立存储，不共享                                     |
+| **Jenkins**       | 单机        | LocalPV-LVM            | ✅ 必须固定     | 无 HA 能力，必须绑定节点                                     |
+| **Harbor**        | 单机        | LocalPV-LVM            | ✅ 必须固定     | 单机可用本地存储                                             |
+| **Harbor**        | HA          | 对象存储 / NFS         | ❌ 不固定       | 必须使用共享存储（MinIO/S3/NFS），LocalPV 无法满足           |
+| **Nexus3**        | 单机        | LocalPV-LVM            | ✅ 必须固定     | 单机可用本地存储                                             |
+| **Nexus3**        | HA          | 共享存储               | ❌ 不固定       | 需多节点共享同一存储（NFS/S3），LocalPV 不支持               |
+| **Redis**         | 单机        | LocalPV-LVM / Hostpath | ✅ 必须固定     | 单机无高可用                                                 |
+| **Redis**         | 主从 / 哨兵 | LocalPV-LVM            | ✅ 主从分别固定 | 主从各自绑定节点，节点故障仍可能丢数据（无副本跨节点）       |
+| **Redis**         | Cluster     | LocalPV-LVM / Hostpath | ❌ 不需要固定   | 分片 + 副本机制，自动容错；单节点故障不影响整体              |
+| **Elasticsearch** | 单机        | LocalPV-LVM            | ✅ 必须固定     | 单机无高可用                                                 |
+| **Elasticsearch** | 集群        | LocalPV-LVM            | ❌ 不需要固定   | **前提**：`number_of_replicas ≥ 1`，确保主分片和副本分片在不同节点 |
+| **MongoDB**       | 单机        | LocalPV-LVM            | ✅ 必须固定     | 单机无高可用                                                 |
+| **MongoDB**       | 副本集      | LocalPV-LVM            | ❌ 不需要固定   | **前提**：节点数 ≥ 3，`writeConcern: majority`；自动选主，但单节点故障可能丢未同步数据 |
+| **Traefik**       | 单机单Pod   | LocalPV-LVM            | ✅ 必须固定     |                                                              |
 
-- 不支持 RWX → 无法用于多 Pod 共享写入场景
-- cStor/Jiva 有额外 CPU/内存开销
-- LocalPV **绑定节点**，Pod 迁移受限（需配合调度器策略）
+##### 4.4.1.5📊 中间件存储选型总结（全引擎）
 
-#### 4.4.1 安装
+| 中间件            | 部署模式  | 推荐存储引擎                            | 节点固定       | 前提条件/说明                                                |
+| :---------------- | :-------- | :-------------------------------------- | :------------- | :----------------------------------------------------------- |
+| **MySQL**         | 单机      | **Mayastor** 或 **LocalPV-LVM**         | ✅ 必须固定     | Mayastor 提供跨节点高可用，LocalPV-LVM 提供本地高性能；单机模式必须固定节点 |
+| **MySQL**         | 主从      | **Mayastor**                            | ✅ 主从分别固定 | 主从各自独立存储，不共享；Mayastor 提供存储层高可用，避免主从切换后的数据丢失 |
+| **PostgreSQL**    | 单机      | **Mayastor** 或 **LocalPV-LVM**         | ✅ 必须固定     | 同上                                                         |
+| **PostgreSQL**    | 主从      | **Mayastor**                            | ✅ 主从分别固定 | 同上                                                         |
+| **Jenkins**       | 单机      | **Mayastor** 或 **LocalPV-LVM**         | ✅ 必须固定     | 无 HA 能力，存储层高可用可避免节点故障后数据丢失             |
+| **Harbor**        | 单机      | **LocalPV-LVM** 或 **Mayastor**         | ✅ 必须固定     | 单机可用本地存储                                             |
+| **Harbor**        | HA        | **对象存储 (MinIO/S3)** 或 **NFS**      | ❌ 不固定       | 必须使用共享存储，LocalPV 和分布式块存储均不适用             |
+| **Nexus3**        | 单机      | **LocalPV-LVM** 或 **Mayastor**         | ✅ 必须固定     | 单机可用本地存储                                             |
+| **Nexus3**        | HA        | **NFS** 或 **对象存储**                 | ❌ 不固定       | 需多节点共享同一存储，块存储不适用                           |
+| **Redis**         | 单机      | **LocalPV-Hostpath** 或 **LocalPV-LVM** | ✅ 必须固定     | 单机无高可用，存储层无需复杂功能                             |
+| **Redis**         | 主从/哨兵 | **Mayastor**                            | ✅ 主从分别固定 | 存储层高可用可避免主从切换后的数据丢失；Mayastor 提供同步复制保障 |
+| **Redis**         | Cluster   | **LocalPV-LVM** 或 **LocalPV-Hostpath** | ❌ 不需要固定   | 应用自身已实现高可用（分片+副本），无需存储层额外开销        |
+| **Elasticsearch** | 单机      | **LocalPV-LVM** 或 **Mayastor**         | ✅ 必须固定     | 单机无高可用                                                 |
+| **Elasticsearch** | 集群      | **LocalPV-LVM**                         | ❌ 不需要固定   | **前提**：`number_of_replicas ≥ 1`，确保主分片和副本分片在不同节点；LocalPV 提供本地高性能 |
+| **MongoDB**       | 单机      | **Mayastor** 或 **LocalPV-LVM**         | ✅ 必须固定     | 单机无高可用                                                 |
+| **MongoDB**       | 副本集    | **Mayastor** 或 **LocalPV-LVM**         | ❌ 不需要固定   | **前提**：节点数 ≥ 3，`writeConcern: majority`；应用自身有自动选主能力，存储层可选 Mayastor 增强数据可靠性 |
+| **Kafka**         | 集群      | **LocalPV-LVM**                         | ❌ 不需要固定   | 应用自身通过副本机制保障高可用，LocalPV 提供本地高性能存储   |
+| **ClickHouse**    | 集群      | **LocalPV-LVM**                         | ❌ 不需要固定   | 应用自身有副本机制，LocalPV 提供本地高性能                   |
+| **Prometheus**    | 单机      | **LocalPV-LVM**                         | ✅ 必须固定     | 监控数据持久化，存储层高可用可选                             |
+| **Prometheus**    | 高可用    | **对象存储 (Thanos/Cortex)**            | ❌ 不固定       | 生产环境建议使用对象存储实现长期存储和高可用                 |
+| **Grafana**       | 单机      | **LocalPV-LVM** 或 **LocalPV-Hostpath** | ✅ 必须固定     | 存储仪表盘、数据源、用户等配置数据；Hostpath 适合开发测试，LVM 适合生产 |
+| **Grafana**       | 高可用    | **共享数据库 (MySQL/PostgreSQL)**       | ❌ 不固定       | Grafana HA 依赖共享数据库存储配置，本地存储无法实现多节点共享；数据库本身需高可用 |
+| **Traefik**       | 单机单Pod | **LocalPV-LVM** 或 **LocalPV-Hostpath** | ✅ 必须固定     |                                                              |
+| **Traefik**       | 多副本    | **Longhorn**或**Mayastor**              | ❌ 不需要固定   |                                                              |
+
+#### 4.4.2 安装
 
 https://openebs.io/
 
 首先，请确保安装了helm。
 
-- 添加helm仓库
+[安装各种存储引擎的先决条件](https://openebs.io/docs/quickstart-guide/prerequisites#local-pv-hostpath-prerequisites)
+
+##### 4.4.2.1 [LocalPV-LVM](https://openebs.io/docs/user-guides/local-storage-user-guide/local-pv-lvm/configuration/lvm-create-storageclass)前置条件
+
+**安装 LVM 驱动程序之前，请确保您的 Kubernetes 集群满足以下先决条件：**
+
+- 所有节点必须安装 lvm2 工具并加载 dm-snapshot 内核模块。
+
+  ```bash
+  # 安装 LVM
+  sudo dnf install -y lvm2
+  ```
+
+  ```bash
+  # 配置内核模块加载文件
+  cat << EOF | sudo tee /etc/modules-load.d/openebs.conf
+  dm_snapshot
+  dm_thin_pool
+  EOF
+  # 重启并加载，不重启也可以临时加载（sudo modprobe dm_snapshot）
+  sudo systemctl restart systemd-modules-load.service
+  # 验证
+  lsmod | grep -E "dm_snapshot|dm_thin_pool"
+  ```
+
+- 设置卷组：找到要用于 LVM 的磁盘，测试时可以使用回环设备。
+
+  ```bash
+  # 1. 创建存储目录
+  sudo mkdir -p /data/openebs/lvm
+  # 2. 创建 30GiB 预分配文件
+  sudo fallocate -l 30GiB /data/openebs/lvm/pv.img
+  # 3. 查看实际占用空间
+  du -sh /data/openebs/lvm/pv.img
+  # 4. 创建 loop 设备（自动分配，/dev/loop0不存在，则使用/dev/loop1...）
+  # sudo losetup -f /data/openebs/lvm/pv.img --show 有可能/dev/loop0已被占用，但执行时碰巧空闲释放，就会被占位
+  sudo losetup /dev/loop1 /data/openebs/lvm/pv.img
+  # 5. 验证 loop 设备
+  losetup -l | grep loop1
+  ```
+
+- 在所有节点上创建卷组，LVM 驱动程序将使用该卷组来配置卷。
+
+  ```bash
+  # 6.创建物理卷
+  sudo pvcreate /dev/loop1
+  # 7.验证物理卷
+  sudo pvs
+  # 8.创建卷组
+  sudo vgcreate openebs-vg /dev/loop1
+  # 9.验证卷组
+  sudo vgs openebs-vg
+  ```
+  
+- 重启时恢复 loop 设备与文件的关联关系
 
 ```bash
-$ helm repo add openebs https://openebs.github.io/charts
-# 更新仓库索引
-$ helm repo update
+# 1. 创建恢复脚本
+sudo tee /usr/local/bin/restore-lvm-loop.sh << 'EOF'
+#!/bin/bash
+losetup /dev/loop1 /data/openebs/lvm/pv.img 2>/dev/null
+losetup /dev/loop2 /data/openebs/lvm/pv2.img 2>/dev/null
+vgchange -ay
+EOF
+
+sudo chmod +x /usr/local/bin/restore-lvm-loop.sh
+
+# 2. 创建 systemd 服务
+sudo tee /etc/systemd/system/restore-lvm-loop.service << 'EOF'
+[Unit]
+Description=Restore LVM loop devices
+After=local-fs.target
+Before=lvm2-activation.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/restore-lvm-loop.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 3. 启用服务
+sudo systemctl daemon-reload
+sudo systemctl enable restore-lvm-loop.service
+```
+
+> 若是未配置恢复loop功能，可手动恢复
+>
+> 1. 重新创建 loop 设备并关联文件
+>
+> ```bash
+> # 重新关联之前创建的 loop 设备
+> sudo losetup /dev/loop1 /data/openebs/lvm/pv.img
+> sudo losetup /dev/loop2 /data/openebs/lvm/pv2.img
+> # 验证 loop 设备已关联
+> sudo losetup -l | grep loop
+> ```
+>
+> 2. 扫描并恢复 LVM 元数据
+>
+> ```bash
+> # 扫描所有磁盘，重新识别物理卷
+> sudo pvscan
+> # 扫描卷组
+> sudo vgscan
+> # 扫描逻辑卷
+> sudo lvscan
+> # 激活所有卷组
+> sudo vgchange -ay
+> ```
+>
+> 3. 验证恢复结果
+>
+> ```bash
+> # 查看物理卷
+> sudo pvs
+> # 查看卷组
+> sudo vgs
+> # 查看逻辑卷
+> sudo lvs
+> # 查看详细的卷组信息
+> sudo vgdisplay openebs-vg
+> ```
+
+##### 4.4.2.2 安装
+
+- 添加helm仓库
+
+https://openebs.github.io/openebs/
+
+```bash
+# 添加仓库（如果还没添加）
+$ helm repo add openebs https://openebs.github.io/openebs
+# 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
+$ helm repo update openebs
+# 查看可用版本
+$ helm search repo openebs -l
+# 查看values.yaml
+$ helm show values openebs/openebs > openebs-values.yaml
+# 拉取 Chart 到本地查看模板
+$ helm pull openebs/openebs --untar
 ```
 
 - 安装openebs
 
 ```bash
-$ helm install openebs openebs/openebs \
-  --namespace openebs \
-  --create-namespace \
-  --version 3.10.0
+$ helm upgrade --install openebs openebs/openebs \
+  --version 4.4.0 \
+  --namespace openebs-system --create-namespace \
+  --set engines.local.lvm.enabled=true \
+  --set engines.local.zfs.enabled=false \
+  --set engines.replicated.mayastor.enabled=false \
+  --set loki.enabled=false \
+  --set minio.enabled=false \
+  --set alloy.enabled=false
 ```
 
-- 查看
+:::details 安装详情
 
 ```bash
-$ helm ls -n openebs
-NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
-openebs openebs         1               2025-07-12 05:26:57.179546135 +0800 CST deployed        openebs-3.10.0  3.10.0 
+Release "openebs" does not exist. Installing it now.
+NAME: openebs
+LAST DEPLOYED: Fri Mar 27 14:42:30 2026
+NAMESPACE: openebs-system
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Successfully installed OpenEBS.
 
-$ kubectl get pods -n openebs
-NAME                                           READY   STATUS    RESTARTS   AGE
-openebs-localpv-provisioner-668c7d88f6-rdc8r   1/1     Running   0          2m37s
-openebs-ndm-operator-57fbd6b955-nhbfn          1/1     Running   0          24m
-openebs-ndm-xmxh9                              1/1     Running   0          24m
-openebs-ndm-zbbnl                              1/1     Running   0          24m
+Check the status by running: kubectl get pods -n openebs-system
 
-$ kubectl get sc
-NAME               PROVISIONER                                   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-nfs-storage        k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Immediate              false                  111m
-openebs-device     openebs.io/local                              Delete          WaitForFirstConsumer   false                  24m
-openebs-hostpath   openebs.io/local                              Delete          WaitForFirstConsumer   false                  24m
+The default values will install both Local PV and Replicated PV. However,
+the Replicated PV will require additional configuration to be fuctional.
+The Local PV offers non-replicated local storage using 3 different storage
+backends i.e Hostpath, LVM and ZFS, while the Replicated PV provides one replicated highly-available
+storage backend i.e Mayastor.
+
+For more information, 
+- view the online documentation at https://openebs.io/docs
+- connect with an active community on our Kubernetes slack channel.
+        - Sign up to Kubernetes slack: https://slack.k8s.io
+        - #openebs channel: https://kubernetes.slack.com/messages/openebs
 ```
+
+:::
+
+- 验证，确保所有 pod 都running
+
+```bash
+$ kubectl get po -n openebs-system
+```
+
+- 卸载
+
+```bash
+$ helm uninstall openebs -n openebs-system
+```
+
+##### 4.4.2.3 LVM StorageClass 配置速查
+
+**基础示例：**
+
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvm
+provisioner: local.csi.openebs.io
+reclaimPolicy: Delete                    # 或 Retain
+volumeBindingMode: WaitForFirstConsumer  # 或 Immediate
+allowVolumeExpansion: true               # 是否允许扩容
+parameters:
+  # 二选一：指定卷组（必填）
+  volgroup: "openebs-vg"                 # 指定具体的 VG 名称
+  # vgpattern: "lvmvg.*"                 # 或用正则匹配 VG（推荐）
+  
+  # 可选参数
+  fsType: "ext4"                         # ext2/ext3/ext4/xfs/btrfs，默认 ext4
+  shared: "yes"                          # 是否允许多 Pod 共享（同节点）
+  thinProvision: "yes"                   # 是否启用精简置备，创建时只分配元数据，按需分配，写入多少数据才占用多少空间
+```
+
+**核心参数：**
+
+| 参数            | 作用                   | 可选值                         |
+| :-------------- | :--------------------- | :----------------------------- |
+| `volgroup`      | 指定 VG 名称           | 你的 VG 名（如 `openebs-vg`）  |
+| `fsType`        | 文件系统类型           | `ext4`(默认) / `xfs` / `btrfs` |
+| `shared`        | 同节点多 Pod 共享卷    | `"yes"` / `"no"`(默认)         |
+| `thinProvision` | 精简置备，按需分配空间 | `"yes"` / `"no"`(默认)         |
+
+> 精简置备的核心价值是**超配**（创建多个总容量超过物理容量的卷）
+>
+> **超配 = 申请的容量总和 ＞ 实际物理容量**
+>
+> 假设你有一个 **10GB 的硬盘**（VG），现在有 5 个应用，每个都申请 **5GB 存储**。
+>
+> **厚置备**（默认，`thinProvision: "no"`）**结果**：10GB VG 最多创建 **2 个 5GB PVC**。
+>
+> **精简置备**（`thinProvision: "yes"`）**结果**：10GB VG 可以创建 **5 个 5GB PVC**，甚至更多。
+>
+> | 环境          | 推荐模式 | 原因                             |
+> | :------------ | :------- | :------------------------------- |
+> | **开发/测试** | 精简置备 | 资源有限，可超配，空间利用率高   |
+> | **生产**      | 厚置备   | 性能稳定，容量可预测，无超配风险 |
+
+**关键字段：**
+
+| 字段                   | 作用                                                 |
+| :--------------------- | :--------------------------------------------------- |
+| `reclaimPolicy`        | PVC 删除时，PV 和底层卷是否保留                      |
+| `volumeBindingMode`    | `WaitForFirstConsumer`(延迟绑定，推荐) / `Immediate` |
+| `allowVolumeExpansion` | 是否允许在线扩容                                     |
+
+##### 4.4.2.4 两个 StorageClass 配置
+
+1. **openebs-lvm-delete（删除策略）**
+
+```yaml
+cat << EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvm-delete
+provisioner: local.csi.openebs.io
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  storage: "lvm"
+  volgroup: "openebs-vg"
+  fsType: "ext4"
+  shared: "yes"
+  thinProvision: "yes"
+EOF
+```
+
+2. **openebs-lvm-retain（保留策略）**
+
+```yaml
+cat << EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvm-retain
+provisioner: local.csi.openebs.io
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  storage: "lvm"
+  volgroup: "openebs-vg"
+  fsType: "ext4"
+  shared: "yes"
+  thinProvision: "yes"
+EOF
+```
+
+> 推荐：扩展到 5G，预留一些空间给 VG 用于其他用途（注意，sudo vgs可以看到VSize和VFree，其中VFree会影响你分配的storageSize大小）
+>
+> ```BASH
+> sudo lvs
+> 
+> sudo lvextend -L 5G openebs-vg/openebs-vg_thinpool
+> ```
+>
+> 若不小心openebs-vg_thinpool分配大了，导致VFree偏小，可以增加openebs-vg来满足。
+> ```BASH
+> # 1. 创建存储目录
+> sudo mkdir -p /data/openebs/lvm
+> # 2. 创建 1GiB 预分配文件
+> sudo fallocate -l 1GiB /data/openebs/lvm/pv2.img
+> # 3. 查看实际占用空间
+> du -sh /data/openebs/lvm/pv2.img
+> # 4. 创建 loop 设备
+> sudo losetup /dev/loop2 /data/openebs/lvm/pv2.img
+> # 5. 验证 loop 设备
+> losetup -l | grep loop2
+> # 6.创建物理卷
+> sudo pvcreate /dev/loop2
+> # 7.验证物理卷
+> sudo pvs
+> # 8.扩展 VG（增加 1G 到 31G，或根据需要添加）
+> sudo vgextend openebs-vg /dev/loop2
+> # 9.验证卷组
+> sudo vgs openebs-vg
+> ```
 
 - 设置默认存储类
 
 **必须要设置默认存储类，不然安装kubesphere的时候，会报错，找不到默认存储类**
 
 ```bash
+# 注意：若这里设置了默认，KubeSphere安装时就不应该再启用openebs了
 $ kubectl patch storageclass openebs-hostpath -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
 
-$ kubectl get sc
-NAME                         PROVISIONER                                   RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-nfs-storage                  k8s-sigs.io/nfs-subdir-external-provisioner   Delete          Immediate              false                  117m
-openebs-device               openebs.io/local                              Delete          WaitForFirstConsumer   false                  30m
-openebs-hostpath (default)   openebs.io/local                              Delete          WaitForFirstConsumer   false                  30m
+[emon@k8s-node1 ~]$ kubectl get sc
+NAME                 PROVISIONER            RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+local (default)      openebs.io/local       Delete          WaitForFirstConsumer   false                  64d
+nfs-csi-delete       nfs.csi.k8s.io         Delete          Immediate              true                   60d
+nfs-csi-retain       nfs.csi.k8s.io         Retain          Immediate              true                   60d
+openebs-hostpath     openebs.io/local       Delete          WaitForFirstConsumer   false                  86s
+openebs-lvm-delete   local.csi.openebs.io   Delete          WaitForFirstConsumer   true                   16s
+openebs-lvm-retain   local.csi.openebs.io   Retain          WaitForFirstConsumer   true                   6s
+```
+
+##### 4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv
+
+```bash
+# 绑定了OpenEBS LocalPV-LVM的，卸载后会自动删除pvc，但需要手动删除pv和对应lv
+# 第一步：查看在哪一个节点
+kubectl get pv | grep youtrack | awk '{print $1}' | head -1 | xargs -I {} kubectl get pv {} -o jsonpath="{.spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0]}"
+# 第二步：到目标节点，先保存要清理的PV名称到变量
+PVS=$(kubectl get pv | grep youtrack | awk '{print $1}')
+# 第三步：删除PV
+echo "$PVS" | xargs kubectl delete pv
+# 低俗不：用保存的PV名称清理LV（在各节点执行）
+for pv in $PVS; do
+    sudo lvremove -f /dev/openebs-vg/$pv
+done  
 ```
 
 ### 4.5 CephFS

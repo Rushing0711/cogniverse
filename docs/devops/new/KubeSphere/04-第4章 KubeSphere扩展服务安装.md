@@ -1,4 +1,4 @@
-# 第3章 KubeSphere扩展服务安装
+# 第4章 KubeSphere扩展服务安装
 
 ## 1 安装OpenELB负载均衡器
 
@@ -907,13 +907,11 @@ $ HTTP_PROXY=http://192.168.200.1:7890 \
 HTTPS_PROXY=http://192.168.200.1:7890 \
 helm repo add bitnami https://charts.bitnami.com/bitnami
 # 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm repo update 
+$ helm repo update bitnami
+# 查看values.yaml
+$ helm show values bitnami/postgresql > postgresql-values.yaml
 # 下载Chart
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm pull bitnami/postgresql --version 18.5.1 --untar
+$ helm pull bitnami/postgresql --version 18.5.1 --untar
 # 查看可用版本
 $ helm search repo bitnami/postgresql -l
 
@@ -921,9 +919,9 @@ $ helm search repo bitnami/postgresql -l
 $ HTTP_PROXY=http://192.168.200.1:7890 \
 HTTPS_PROXY=http://192.168.200.1:7890 \
 NO_PROXY=lb.emon.local \
-helm install postgresql bitnami/postgresql --version 18.5.1 \
+helm upgrade --install postgresql bitnami/postgresql --version 18.5.1 \
 -n devops-system --create-namespace \
---set persistence.storageClass=local \
+--set primary.persistence.storageClass=openebs-lvm-retain \
 --set primary.persistence.size=10Gi \
 --set auth.database=sonarqube \
 --set auth.username=sonar \
@@ -934,7 +932,7 @@ helm install postgresql bitnami/postgresql --version 18.5.1 \
 
 ```bash
 NAME: postgresql
-LAST DEPLOYED: Fri Feb 27 17:30:42 2026
+LAST DEPLOYED: Sun Mar 29 12:41:38 2026
 NAMESPACE: devops-system
 STATUS: deployed
 REVISION: 1
@@ -1000,7 +998,7 @@ $ kubectl get po -n devops-system
 $ helm uninstall postgresql -n devops-system
 ```
 
-
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-5-%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4openebs-lvm-retain%E7%B1%BB%E5%9E%8B%E7%9A%84pv)
 
 **安装postgresql后，会自动生成保密字典，可以被sonarqube使用。**
 
@@ -1033,25 +1031,18 @@ postgres-password:  10 bytes
 
 ```bash
 # 添加仓库
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+$ helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
 # 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm repo update
+$ helm repo update sonarqube
+# 查看values.yaml
+$ helm show values sonarqube/sonarqube > sonarqube-values.yaml
 # 下载Chart
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm pull sonarqube/sonarqube --version 2025.6.1 --untar
+$ helm pull sonarqube/sonarqube --version 2025.6.1 --untar
 # 查看可用版本
 $ helm search repo sonarqube/sonarqube -l
 
 # 安装（目前2026.1.0版本的社区版使用外部数据库时有问题，2025.6.1默认会安装postgresql，需主动关闭）
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-NO_PROXY=lb.emon.local \
-export MONITORING_PASSCODE="yourPasscode" && \
+$ export MONITORING_PASSCODE="yourPasscode" && \
 helm upgrade --install sonarqube sonarqube/sonarqube --version 2025.6.1 \
 -n devops-system --create-namespace \
 --set service.type=NodePort --set service.nodePort=30681 \
@@ -1104,6 +1095,8 @@ $ kubectl get po -n devops-system
 $ helm uninstall sonarqube -n devops-system
 ```
 
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-5-%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4openebs-lvm-retain%E7%B1%BB%E5%9E%8B%E7%9A%84pv)
+
 ### 2.2 获取 SonarQube 控制台地址
 
 1. 执行以下命令获取 SonarQube NodePort。
@@ -1126,18 +1119,6 @@ http://192.168.200.116:30681
 
 ```bash
 $ kubectl get pod -n devops-system
-NAME                                     READY   STATUS      RESTARTS            AGE
-devops-29536470-xt85n                    0/1     Completed   0                   127m
-devops-29536530-zmq82                    0/1     Completed   0                   111m
-devops-29536590-22zv8                    0/1     Completed   0                   51m
-devops-apiserver-7f9cdf88d6-jh4rw        1/1     Running     4 (4h10m ago)       21d
-devops-controller-b5cd8f767-n5n5s        1/1     Running     2 (<invalid> ago)   21d
-devops-frontend-77c689567f-f6qn9         1/1     Running     5 (3h22m ago)       21d
-devops-jenkins-57ddc6c66b-lxttr          1/1     Running     2 (<invalid> ago)   21d
-helm-install-devops-agent-b8wzgq-sjlvj   0/1     Completed   0                   21d
-helm-install-devops-tx96kh-kk6db         0/1     Completed   0                   21d
-postgresql-0                             1/1     Running     0                   4h2m
-sonarqube-sonarqube-0                    1/1     Running     0                   3h58m
 ```
 
 2. 在浏览器中访问 SonarQube 控制台 [http://NodeIP:NodePort](http://nodeip:NodePort/)。
@@ -1170,7 +1151,7 @@ http://192.168.200.116:30681
 
 ![image-20260227220307083](images/image-20260227220307083.png)
 
-令牌： sqa_da4490626939f6986ef6066d1246dd5545f10d64
+令牌： sqa_b4e5a49c2e2f8c51b535e65d0898beb280374218
 
 :::danger
 如提示所示，您无法再次查看此令牌，因此请确保复制成功。
@@ -1179,7 +1160,9 @@ http://192.168.200.116:30681
 
 #### 2.3.3 步骤 3：创建 Webhook 服务器
 
-1. 执行以下命令获取 SonarQube Webhook 的地址。
+<span style="color:red;font-weight:bold;">作用：SonarQube通过Webhook访问Jenkins</span>
+
+1. 执行以下命令获取 Jenkins 地址并生成为SonarQube Webhook 的地址。
 
 ```bash
 export NODE_PORT=$(kubectl get --namespace kubesphere-devops-system -o jsonpath="{.spec.ports[0].nodePort}" services devops-jenkins)
@@ -1208,6 +1191,8 @@ http://192.168.200.116:30180/sonarqube-webhook/
 ![image-20260302133737982](images/image-20260302134017280.png)
 
 #### 2.3.4 步骤 4：将 SonarQube 服务器添加至 Jenkins
+
+<span style="color:red;font-weight:bold;">作用：Jenkins如何访问SonarQube</span>
 
 1. 执行以下命令获取 Jenkins 的地址。
 
@@ -1271,7 +1256,7 @@ data:
 
     sonarQube: // [!code ++][!code focus:3]
       host: http://192.168.200.116:30681 // [!code ++]
-      token: sqa_da4490626939f6986ef6066d1246dd5545f10d64 // [!code ++]
+      token: sqa_b4e5a49c2e2f8c51b535e65d0898beb280374218 // [!code ++]
 ```
 
 3. 完成操作后保存此文件。
@@ -1291,9 +1276,11 @@ data:
    ```yaml
        client:
          version:
-           kubesphere: v4.1.3
-           kubernetes: v1.30.6
+           kubesphere: v4.2.1
+           kubernetes: v1.32.8
+         isWarningHeaderNotificationEnabled: false
          enableKubeConfig: true
+         enableNodeListTerminal: true
          devops: # [!code ++][!code focus:2]
            sonarqubeURL: http://192.168.200.116:30681 # [!code ++]
    ```
@@ -1313,6 +1300,8 @@ $ kubectl -n kubesphere-system rollout restart deploy ks-console
 ```
 
 ### 2.4 为新项目创建 SonarQube Token
+
+#### 2.4.1 非社区版
 
 创建一个 SonarQube 令牌，以便流水线在运行时可以与 SonarQube 通信。
 
@@ -1371,6 +1360,31 @@ and run the following command:
 
 :::
 
+#### 2.4.2 社区版
+
+社区版无法生成“项目级令牌”，可通过**“创建专用用户 + 分配最小权限 + 生成该用户的令牌”**，来“限制令牌只能访问特定项目”的效果。
+
+**🛠️ 操作步骤**
+
+1. **创建专用账号**
+   - 使用管理员账号登录。
+   - 进入 **Administration (管理)** > **Security (安全)** > **Users (用户)**。
+   - 创建一个新用户，例如命名为 `jenkins_bot` 或 `scanner_user`。
+   - **注意**：不要把这个用户加入 `sonar-administrators` 组。
+2. **分配项目权限**
+   - 进入 **Administration (管理)** > **Projects (项目)** > **Project Management (项目管理)**。
+   - 选中你想要该用户扫描的特定项目（例如 `Project-A`）。
+   - 点击 **Permissions (权限)**。
+   - 添加用户 `jenkins_bot`，并赋予它 **`Browse` (浏览)** 和 **`Execute Analysis` (执行分析)** 权限。
+   - *切记*：不要给它 `Administer` (管理) 权限，除非它真的需要修改项目配置。
+3. **生成专属令牌**
+   - **注销** 管理员账号。
+   - **登录** 刚才创建的 `jenkins_bot` 账号。
+   - 点击右上角头像 > **My Account (我的账户)** > **Security (安全)**。
+   - 生成一个新的 **User Token (用户令牌)**。
+4. **在 CI/CD 中使用**
+   - 将这个新生成的令牌配置到你的 Jenkins/GitLab CI 环境变量中。
+
 ### 2.5 在 KubeSphere 控制台查看结果
 
 [使用 Jenkinsfile 创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/02-create-a-pipeline-using-jenkinsfile/)或[使用图形编辑面板创建流水线](https://www.kubesphere.io/zh/docs/v4.1/11-use-extensions/01-devops/03-how-to-use/02-pipelines/01-create-a-pipeline-using-graphical-editing-panel/)之后，即可查看代码质量分析的结果。
@@ -1410,27 +1424,23 @@ $ tar -xOzf harbor-offline-installer-v2.14.2_arm64.tgz harbor/harbor.v2.14.2.tar
 
 ```bash
 # 添加仓库
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm repo add harbor https://helm.goharbor.io
+$ helm repo add harbor https://helm.goharbor.io
 # 从 Helm 仓库服务器获取最新的索引文件，更新本地的仓库缓存
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm repo update 
+$ helm repo update harbor
 # 下载Chart
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-helm pull harbor/harbor --version 1.18.2 --untar
+$ helm pull harbor/harbor --version 1.18.2 --untar
 # 查看可用版本
 $ helm search repo harbor/harbor -l
 # 如需快速安装，您可以通过 NodePort 暴露 Harbor 并禁用 tls。
 # 请将 externalURL 设置为您的一个节点 IP，并确保 Jenkins 能够访问它。
-$ HTTP_PROXY=http://192.168.200.1:7890 \
-HTTPS_PROXY=http://192.168.200.1:7890 \
-NO_PROXY=lb.emon.local \
-helm install harbor harbor/harbor --version 1.18.2 \
+$ helm install harbor harbor/harbor --version 1.18.2 \
 -n devops-system --create-namespace \
---set expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false
+--set expose.type=nodePort,externalURL=http://192.168.200.116:30002,expose.tls.enabled=false \
+--set persistence.persistentVolumeClaim.registry.storageClass=openebs-lvm-retain \
+--set persistence.persistentVolumeClaim.jobservice.jobLog.storageClass=openebs-lvm-retain \
+--set persistence.persistentVolumeClaim.database.storageClass=openebs-lvm-retain \
+--set persistence.persistentVolumeClaim.redis.storageClass=openebs-lvm-retain \
+--set persistence.persistentVolumeClaim.trivy.storageClass=openebs-lvm-retain
 ```
 
 :::details 安装详情
@@ -1467,6 +1477,8 @@ $ kubectl get po -n devops-system
 ```bash
 $ helm uninstall harbor -n devops-system
 ```
+
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-5-%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4openebs-lvm-retain%E7%B1%BB%E5%9E%8B%E7%9A%84pv)
 
 ### 3.2 安装`buildkit`支持`nerdctl build`
 
@@ -1553,7 +1565,7 @@ source /etc/profile
 
 ```bash
 $ git clone https://github.com/Rushing0711/devops-dockerfile-examples
-$ cd dockerfile-examples/rethinkdb
+$ cd devops-dockerfile-examples/rethinkdb
 # 构建镜像
 $ sudo /usr/local/bin/nerdctl build -t 192.168.200.116:30002/ks-devops-harbor/docker-example:devops-test .
 # 输出错误
@@ -1566,6 +1578,8 @@ $ sudo -E env PATH=$PATH /usr/local/bin/nerdctl build -t 192.168.200.116:30002/k
 $ sudo /usr/local/bin/nerdctl images
 REPOSITORY                                               TAG            IMAGE ID        CREATED           PLATFORM       SIZE       BLOB SIZE
 192.168.200.116:30002/ks-devops-harbor/docker-example    devops-test    15cbb452a282    25 minutes ago    linux/arm64    107.9MB    28.87MB
+# 删除镜像
+$ sudo /usr/local/bin/nerdctl rmi 192.168.200.116:30002/ks-devops-harbor/docker-example:devops-test
 ```
 
 ### 3.3 [增强KubeSphere默认base构建镜像的能力](/devops/new/KubeSphere/05-第5章%20DevOps实战.html#_11-5-增强kubesphere默认base构建镜像的能力)
@@ -1583,7 +1597,7 @@ REPOSITORY                                               TAG            IMAGE ID
 
 ```bash
 name: 	robot$ks-devops-harbor+robot-test
-secret:	qGBGzF7seF9uh9jCGqr6I6EtSiQzWsCT
+secret:	kepdu1k58Jjg8mAVFDeBrNRSQzrPDO1x
 ```
 
 ### 3.5 启用 Insecure Registry
@@ -1851,7 +1865,7 @@ $ helm upgrade --install nexus3 sonatype/nexus-repository-manager \
   --create-namespace \
   --set persistence.enabled=true \
   --set persistence.storageSize=20Gi \
-  --set persistence.storageClass="nfs-csi-retain" \
+  --set persistence.storageClass="openebs-lvm-retain" \
   --set image.repository="klo2k/nexus3" \
   --set image.tag="3.68.1-02" \
   --set service.type=NodePort
@@ -1902,6 +1916,8 @@ $ kubectl get po -n devops-system
 $ helm uninstall nexus3 -n devops-system
 ```
 
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-%E7%AC%AC5%E7%AB%A0%20Kubernetes%E6%89%A9%E5%B1%95%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85.html#_4-4-2-5-%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4openebs-lvm-retain%E7%B1%BB%E5%9E%8B%E7%9A%84pv)
+
 - 修改nodePort端口并获得访问地址
 
 由于无法指定nodePort的端口，若想使用 30081 端口，可以修改。
@@ -1920,7 +1936,7 @@ echo http://$NODE_IP:$NODE_PORT
 export POD_NAME=$(kubectl get pods --namespace devops-system -l "app.kubernetes.io/name=nexus-repository-manager,app.kubernetes.io/instance=nexus3" -o jsonpath="{.items[0].metadata.name}")
 kubectl exec -it -n devops-system $POD_NAME -- cat /nexus-data/admin.password
 # 输出密码，首次登录是会修改
-aa614da4-3aaf-4d5c-a5c3-83a6383329f3
+a2ae2453-ba61-411b-a7f3-f76460addbd9
 ```
 
 http://192.168.200.116:30081
@@ -1934,7 +1950,7 @@ http://192.168.200.116:30081
 | 访问地址 | `http://192.168.200.116:30081`        |
 | 管理员   | `admin` / 你修改后的密码              |
 | 部署位置 | Kubernetes namespace: `devops-system` |
-| 存储类   | `nfs-csi-retain` (20Gi)               |
+| 存储类   | `openebs-lvm-retain` (20Gi)           |
 
 ------
 
@@ -1947,11 +1963,11 @@ http://192.168.200.116:30081
 
 2. Blob Store（存储后端）
 
-| 名称         | 用途             | 路径                         |
-| :----------- | :--------------- | :--------------------------- |
-| `default`    | 系统默认         | /nexus-data/blobs/default    |
-| `npm-blob`   | npm 包存储       | /nexus-data/blobs/npm-blob   |
-| `maven-blob` | Maven jar 包存储 | /nexus-data/blobs/maven-blob |
+| 名称         | 类型 | 用途             | 路径                         |
+| :----------- | ---- | :--------------- | :--------------------------- |
+| `default`    | File | 系统默认         | /nexus-data/blobs/default    |
+| `npm-blob`   | File | npm 包存储       | /nexus-data/blobs/npm-blob   |
+| `maven-blob` | File | Maven jar 包存储 | /nexus-data/blobs/maven-blob |
 
 3. 仓库配置
 
@@ -1965,7 +1981,7 @@ http://192.168.200.116:30081
 | 部署策略   | Allow redeploy                                         |
 | 访问地址   | `http://192.168.200.116:30081/repository/npm-private/` |
 
-另外，再创建2个npm仓库，分别是 `npm-central` proxy类型 和 `npm-public` group类型。并把`npm-central`和`npm-private`假如`npm-public`中。其中proxy类型的代理地址是 https://registry.npmjs.org/ 。
+另外，再创建2个npm仓库，分别是 `npm-central` proxy类型 和 `npm-public` group类型。并把`npm-central`和`npm-private`加入`npm-public`中。其中proxy类型的代理地址是 https://registry.npmjs.org/ 。
 
 `npm-central`和`npm-public`的Blob 都是 `default`。
 
@@ -2010,15 +2026,23 @@ npm publish
     <server>
       <id>nexus</id>
       <username>admin</username>
-      <password>你的密码</password>
+      <password>P@88word</password>
     </server>
   </servers>
 
   <mirrors>
     <mirror>
-      <id>nexus-mirror</id>
-      <url>http://192.168.200.116:30081/repository/maven-private/</url>
-      <mirrorOf>*</mirrorOf>
+      <id>maven-default-http-blocker</id>
+      <mirrorOf>external:http:*,!nexus-public,!nexus-public-plugins</mirrorOf>
+      <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+      <url>http://0.0.0.0/</url>
+      <blocked>true</blocked>
+    </mirror>
+    <mirror>
+      <id>nexus</id>
+      <mirrorOf>external:*,!spring-snapshots,!central-portal-snapshots,!nexus-public,!nexus-public-plugins</mirrorOf>
+      <name>aliyun nexus maven</name>
+      <url>http://maven.aliyun.com/nexus/content/groups/public</url>
     </mirror>
   </mirrors>
 </settings>
@@ -2027,12 +2051,56 @@ npm publish
 在项目的 `pom.xml` 中添加：
 
 ```xml
-<distributionManagement>
-  <repository>
-    <id>nexus</id>
-    <url>http://192.168.200.116:30081/repository/maven-private/</url>
-  </repository>
-</distributionManagement>
+    <profiles>
+        <profile>
+            <id>nexus-profile</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <!-- 配置依赖仓库 -->
+            <repositories>
+                <repository>
+                    <id>nexus-public</id>
+                    <name>My Nexus Public Repository</name>
+                    <url>http://192.168.200.116:30081/repository/maven-public/</url>
+                    <!-- 控制是否允许下载正式版依赖 -->
+                    <releases>
+                        <enabled>true</enabled>
+                    </releases>
+                    <!-- 控制是否允许下载快照版依赖 -->
+                    <snapshots>
+                        <enabled>true</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+    <!-- 配置插件仓库 -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>nexus-public-plugins</id>
+            <name>My Nexus Public Plugin Repository</name>
+            <url>http://192.168.200.116:30081/repository/maven-public/</url>
+            <!-- 控制是否允许下载正式版插件 -->
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <!-- 控制是否允许下载快照版插件 -->
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <!-- 向私服中发布jar时配置 -->
+    <distributionManagement>
+        <repository>
+            <id>nexus</id><!-- ID必须和setting.xml文件中server的id一致 -->
+            <url>http://192.168.200.116:30081/repository/maven-private/</url>
+        </repository>
+    </distributionManagement>
 ```
 
 发布命令：
@@ -2094,17 +2162,17 @@ $ helm pull twenty20-helm-charts/youtrack --untar
 $ helm upgrade --install youtrack twenty20-helm-charts/youtrack \
   --version 1.1.30 \
   --namespace devops-system --create-namespace \
-  --set persistence.data.storageClassName=nfs-csi-retain \
-  --set persistence.data.storageSize=20Gi \
-  --set persistence.logs.storageClassName=nfs-csi-retain \
+  --set persistence.data.storageClassName=openebs-lvm-retain \
+  --set persistence.data.storageSize=10Gi \
+  --set persistence.logs.storageClassName=openebs-lvm-retain \
   --set persistence.logs.storageSize=5Gi \
-  --set persistence.conf.storageClassName=nfs-csi-retain \
+  --set persistence.conf.storageClassName=openebs-lvm-retain \
   --set persistence.conf.storageSize=1Gi \
   --set persistence.temp.enabled=true \
-  --set persistence.temp.storageClassName=nfs-csi-retain \
-  --set persistence.temp.storageSize=100Gi \
+  --set persistence.temp.storageClassName=openebs-lvm-retain \
+  --set persistence.temp.storageSize=10Gi \
   --set persistence.backups.backupType=volumeStorage \
-  --set persistence.backups.volumeStorage.storageClassName=nfs-csi-retain \
+  --set persistence.backups.volumeStorage.storageClassName=openebs-lvm-retain \
   --set persistence.backups.volumeStorage.storageSize=20Gi \
   --set config.baseUrl="http://youtrack.flyin.devops:30080" \
   --set ingress.enabled=false \
@@ -2156,8 +2224,11 @@ $ kubectl get po -n devops-system
 
 ```bash
 $ helm uninstall youtrack -n devops-system
-$ kubectl delete pvc youtrack-backup youtrack-config youtrack-data youtrack-logs youtrack-temp -n devops-system
+# 删除ing
+$ kubectl delete ing youtrack-ingress -n devops-system
 ```
+
+> [4.4.2.5 如何删除openebs-lvm-retain类型的pv和lv](/devops/new/Kubernetes/05-第5章%20Kubernetes扩展服务安装.html#_4-4-2-5-如何删除openebs-lvm-retain类型的pv和lv)
 
 ### 5.2 检索令牌并登录
 
@@ -2173,19 +2244,35 @@ $ kubectl delete pvc youtrack-backup youtrack-config youtrack-data youtrack-logs
 - 获取token
 
 ```bash
+# 由于OpenEBS LocalPV-LVM默认会给目录初始化 lost-found 目录，会影响初始化，先删除
+$ kubectl exec -n devops-system -it youtrack-0 -- rm -rf /opt/youtrack/data/lost+found/
 $ kubectl exec -n devops-system -it youtrack-0 -- cat /opt/youtrack/conf/internal/services/configurationWizard/wizard_token.txt
 ```
 
-http://youtrack.flyin.devops:30080/?wizard_token=R37wGenvE0MIVuNzW9aj
+http://youtrack.flyin.devops:30080/?wizard_token=Si4UUFfunU6f8PYea3aG
 
+![image-20260329092245991](images/image-20260329092245991.png)
 
+### 5.3 为Idea创建一个永久令牌
+
+[创建一个永久令牌](https://www.jetbrains.com/help/youtrack/cloud/manage-permanent-token.html#obtain-permanent-token)
+
+![image-20260329211920285](images/image-20260329211920285.png)
+
+权限选择默认两项即可：
+
+YouTrack
+
+YouTrack Administration
+
+![image-20260329212325540](images/image-20260329212325540.png)
 
 ## 99 扩展服务登录信息
 
-| 登录地址                           | 描述      | 用户名 | 密码         | 原密码                               |
-| ---------------------------------- | --------- | ------ | ------------ | ------------------------------------ |
-| http://192.168.200.116:30002       | Harbor    | admin  | Harbor12345  | Harbor12345                          |
-| http://192.168.200.116:30681       | SonarQube | admin  | P@88word1234 | admin                                |
-| http://192.168.200.116:30081       | Nexus3    | admin  | P@88word1234 | aa614da4-3aaf-4d5c-a5c3-83a6383329f3 |
-| http://traefik.flyin.devops:30080  | traefik   | admin  | P@88word1234 |                                      |
-| http://youtrack.flyin.devops:30080 | YouTrack  | admin  | P@88word1234 | - - -                                |
+| 登录地址                                     | 描述      | 用户名 | 密码         | 原密码                               |
+| -------------------------------------------- | --------- | ------ | ------------ | ------------------------------------ |
+| http://192.168.200.116:30002                 | Harbor    | admin  | Harbor12345  | Harbor12345                          |
+| http://192.168.200.116:30681                 | SonarQube | admin  | P@88word1234 | admin                                |
+| http://192.168.200.116:30081                 | Nexus3    | admin  | P@88word     | a2ae2453-ba61-411b-a7f3-f76460addbd9 |
+| http://traefik.flyin.devops:30080/dashboard/ | traefik   | admin  | P@88word     |                                      |
+| http://youtrack.flyin.devops:30080           | YouTrack  | admin  | P@88word     | - - -                                |

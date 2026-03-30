@@ -9,7 +9,7 @@
 
 - 查看所有设备挂载情况
 
-命令：`lsblk`或`lsblk -f`
+命令：`lsblk`或`lsblk -f`或`sudo fdisk -l /dev/nvme0n1`
 
 <img src="./images/image-20241229235008254.png" alt="image-20241229235008254" style="zoom:50%;" />
 
@@ -50,12 +50,14 @@ graph LR
 - **存储池**：由多个 PV 组成的逻辑存储池
 - 创建命令：`vgcreate vg_data /dev/sdb /dev/sdc`
 - 扩展命令：`vgextend vg_data /dev/sdd`
+- 查看命令：`vgs`
 
 3. 逻辑卷 (LV - Logical Volume)
 
 - **虚拟分区**：从 VG 划分出的可动态调整的逻辑存储
 - 创建命令：`lvcreate -n lv_app -L 100G vg_data`
 - 扩展命令：`lvextend -L +50G /dev/vg_data/lv_app`
+- 查看命令：`lvs`
 
 ### 10.2.2 创建LVM磁盘
 
@@ -398,3 +400,11 @@ nvme0n2            259:4    0    1G  0 disk
 % tree /root
 % tree -L 1 /root
 ```
+
+## 10.7 分配空间
+
+| 方式          | 命令                                            | 创建速度        | 初始占用 | 性能  | 推荐度         |
+| :------------ | :---------------------------------------------- | :-------------- | :------- | :---- | :------------- |
+| **fallocate** | `fallocate -l 10G disk.img`                     | ⚡ 极快（<1秒）  | 10GB     | ⭐⭐⭐⭐⭐ | ✅ **强烈推荐** |
+| **dd**        | `dd if=/dev/zero of=disk.img bs=1M count=10240` | 🐌 慢（30-60秒） | 10GB     | ⭐⭐⭐⭐⭐ | ⭐⭐ 备选        |
+| **truncate**  | `truncate -s 10G disk.img`                      | ⚡ 极快（<1秒）  | 0        | ⭐⭐⭐   | ⚠️ 不推荐生产   |
