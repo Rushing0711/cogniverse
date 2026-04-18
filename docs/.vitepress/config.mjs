@@ -14,7 +14,7 @@ export default defineConfig({
         nav: [
             {text: '首页', link: '/'},
             {
-                text: '<img src="/frontend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="前端">',
+                text: '<img src="/frontend.png" style="height: 64px;margin-top: 25px;display: inline;" alt="前端">',
                 items: [
                     {items: [{text: '前端（旧）', link: '/frontend/old'},]},
                     {
@@ -41,7 +41,7 @@ export default defineConfig({
                 ]
             },
             {
-                text: '<img src="/backend.png" style="height: 32px;margin-top: 25px;display: inline;" alt="后端">',
+                text: '<img src="/backend.png" style="height: 64px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
                     {items: [{text: '后端（旧）', link: '/backend/old'},]},
                     {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇 前言篇.md'},
@@ -49,7 +49,7 @@ export default defineConfig({
                 ]
             },
             {
-                text: '<img src="/design.png" style="height: 32px;margin-top: 25px;display: inline;" alt="设计">',
+                text: '<img src="/design.png" style="height: 64px;margin-top: 25px;display: inline;" alt="设计">',
                 items: [
                     {text: '设计（旧）', link: '/design/old'},
                 ]
@@ -64,7 +64,14 @@ export default defineConfig({
                     {items: [{text: '大数据（旧）', link: '/bigdata/old'},]}
                 ]
             },
-            {text: 'AI大模型', link: '/ai'},
+            {
+                text: 'AI<img src="/aillm.png" style="height: 64px;margin-top: 25px;display: inline;" alt="AI大模型">',
+                items: [
+                    {text: 'Claude', link: '/ai/Claude/00-引言'},
+                    {text: 'OpenClaw', link: '/ai/OpenClaw/00-引言'},
+                    {text: 'Hermes', link: '/ai/Hermes/00-引言'},
+                ]
+            },
             {
                 text: 'DevOps',
                 items: [
@@ -98,7 +105,9 @@ export default defineConfig({
             '/design/old': autoGenSidebar('/design/old'),
             '/database/old': autoGenSidebar('/database/old'),
             '/bigdata/old': autoGenSidebar('/bigdata/old'),
-            '/ai': autoGenSidebar('/ai'),
+            '/ai/Claude': autoGenSidebar('/ai/Claude'),
+            '/ai/OpenClaw': autoGenSidebar('/ai/OpenClaw'),
+            '/ai/Hermes': autoGenSidebar('/ai/Hermes'),
             '/devops/old': autoGenSidebar('/devops/old'),
             '/misc': autoGenSidebar('/misc'),
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
