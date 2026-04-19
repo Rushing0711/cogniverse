@@ -65,11 +65,11 @@ export default defineConfig({
                 ]
             },
             {
-                text: 'AI<img src="/aillm.png" style="height: 64px;margin-top: 25px;display: inline;" alt="AI大模型">',
+                text: 'AI<img src="/aillm.png" style="height:32px;vertical-align:middle;margin-left:15px;margin-right:15px;display:inline-block;transform:scale(2);transform-origin:center;" alt="AI大模型">',
                 items: [
-                    {text: 'Claude', link: '/ai/Claude/00-引言'},
-                    {text: 'OpenClaw', link: '/ai/OpenClaw/00-引言'},
-                    {text: 'Hermes', link: '/ai/Hermes/00-引言'},
+                    {text: 'Claude', link: '/aillm/Claude/00-引言'},
+                    {text: 'OpenClaw', link: '/aillm/OpenClaw/00-引言'},
+                    {text: 'Hermes', link: '/aillm/Hermes/00-引言'},
                 ]
             },
             {
@@ -105,9 +105,9 @@ export default defineConfig({
             '/design/old': autoGenSidebar('/design/old'),
             '/database/old': autoGenSidebar('/database/old'),
             '/bigdata/old': autoGenSidebar('/bigdata/old'),
-            '/ai/Claude': autoGenSidebar('/ai/Claude'),
-            '/ai/OpenClaw': autoGenSidebar('/ai/OpenClaw'),
-            '/ai/Hermes': autoGenSidebar('/ai/Hermes'),
+            '/aillm/Claude': autoGenSidebar('/aillm/Claude'),
+            '/aillm/OpenClaw': autoGenSidebar('/aillm/OpenClaw'),
+            '/aillm/Hermes': autoGenSidebar('/aillm/Hermes'),
             '/devops/old': autoGenSidebar('/devops/old'),
             '/misc': autoGenSidebar('/misc'),
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
