@@ -27,5 +27,6 @@ dist-ssr
 docs/.vitepress/dist
 docs/.vitepress/cache
 stats.html
+.claude
 .obsidian
 .playwright-mcp/
