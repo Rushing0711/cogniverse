@@ -1,6 +1,6 @@
 # 第7章 MySQL配置文件详解
 
-## 1、`my.cnf`常规配置项
+## 7.1、`my.cnf`常规配置项
 
 ```
 [client]
@@ -141,4 +141,57 @@ secure_file_priv = ''
 ```bash
 mysql> show variables like 'log_bin';
 mysql> show variables like 'binlog_format';
+```
+
+## 7.2、设置变量
+
+### 7.2.1、设置全局变量
+
+- 修改配置文件并重启MySQL【不推荐】
+
+```shell
+$ vim /data/mysql/etc/my.cnf 
+$ sudo systemctl restart mysqld
+```
+
+- 在命令行里通过SET来设置，然后再修改参数文件
+
+1. 命令行里设置
+
+```sql
+mysql> set global long_query_time = 5;
+或者
+mysql> set @@global.long_query_time = 5;
+```
+
+2. 查看是否生效
+
+```sql
+mysql> show global variables like 'long_query_time';
+```
+
+**如果查询时使用的是show variables的话, 会发现设置并没有生效, 除非重新登录再查看. 这是因为使用show variables的话就等同于使用show session variables, 查询的是会话变量, 只有使用show global variables查询的才是全局变量. 如果仅仅想修改会话变量的话, 可以使用类似set long_query_time=5;或者set session long_query_time=5;这样的语法.**
+
+3. 修改配置文件
+
+当前只是修改正在运行的MySQL实例配置，下次重启MySQL又会回到默认值，所以记得修改配置文件
+
+```shell
+$ vim /data/mysql/etc/my.cnf 
+```
+
+### 7.2.2、设置会话变量
+
+如果要修改会话变量值，可以指定`session`或者`@@session`或者`@@`或者`local`或者`@@local`，或者什么都不使用。
+
+1. 设置
+
+```sql
+mysql> set long_query_time = 1;
+```
+
+2. 查看
+
+```sql
+mysql> show variables like 'long_query_time';
 ```

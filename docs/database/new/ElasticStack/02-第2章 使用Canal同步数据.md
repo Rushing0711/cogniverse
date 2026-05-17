@@ -1,0 +1,662 @@
+# 第2章 使用Canal同步数据
+
+
+[返回列表](https://github.com/EmonCodingBackEnd/backend-tutorial)
+
+[TOC]
+
+[临时：ES配置文件详解](https://www.cnblogs.com/sunxucool/p/3799190.html)
+
+[ES基础知识和常用查询](https://blog.csdn.net/weixin_38931408/article/details/125761305)
+
+# 一、使用`canal`同步数据
+
+**canal [kə'næl]**，译意为水道/管道/沟渠，主要用途是基于 MySQL 数据库增量日志解析，提供增量数据订阅和消费。
+
+基于日志增量订阅和消费的业务包括
+
+- 数据库镜像
+- 数据库实时备份
+- 索引构建和实时维护(拆分异构索引、倒排索引等)
+- 业务 cache 刷新
+- 带业务逻辑的增量数据处理
+
+[canal github地址](https://github.com/alibaba/canal)
+
+以上是`canal`的官方说明文档。
+
+## 2.1、canal各个服务列表
+
+下载`canal`，共有4部分：
+
+[各组件下载地址](https://github.com/alibaba/canal/releases)
+
+- canal.adapter-1.1.4.tar.gz
+  - 订阅deployer服务，适配到各个数据存储库，比如mysql/kafka/elasticsearch/hbase等
+- canal.admin-1.1.4.tar.gz
+  - 为canal提供整体配置管理、节点运维等面向运维的功能
+- canal.deployer-1.1.4.tar.gz
+  - canal的deployer服务
+- canal.example-1.1.4.tar.gz
+  - 订阅`deployer`服务的客户端演示版示例
+
+整体安装的目录规划：
+
+```bash
+$ mkdir -pv /usr/local/canal/{adapter,admin,deployer,example}
+```
+
+## 2.2、同步mysql到es
+
+### 2.2.1、部署`deployer`服务
+
+- 对于自建`MySQL`服务，需要开启`Binlog`写入功能
+
+```bash
+$ sudo vim /usr/local/mysql/etc/my.cnf
+```
+
+```bash
+log-bin = /usr/local/mysql/binlogs/mysql-bin
+binlog_format = row
+server-id=1
+```
+
+- 授权`canal`链接`MySQL`账号具有作为MySQL slave的权限，，如果已有账户可直接`grant`
+
+```bash
+-- 创建备份用户
+create user 'backup'@'%' identified by 'XXX';
+-- 授权备份用户
+grant select,replication slave,replication client ON *.* TO 'backup'@'%';
+-- 刷新生效
+flush privileges;
+```
+
+- 演示用的MySQL库实例与表
+
+```sql
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS canaldb DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- 使用数据库
+use canaldb;
+
+-- 创建数据表
+drop table if exists loginfo;
+
+/*==============================================================*/
+/* Table: loginfo                                               */
+/*==============================================================*/
+create table loginfo
+(
+   id                   bigint(20) not null comment '主键ID',
+   log_type             tinyint not null comment '日志类型',
+   content              varchar(1000) not null comment '日志内容',
+   deleted              tinyint not null default 0 comment '记录状态
+            0-未删除
+            1-已删除',
+   create_time          datetime not null default current_timestamp comment '创建时间',
+   modify_time          datetime not null default current_timestamp on update current_timestamp comment '更新时间',
+   version              int not null default 0 comment '版本信息',
+   primary key (id)
+);
+
+alter table loginfo comment '日志信息表';
+
+-- 初始化数据
+INSERT into loginfo (id, log_type, content, deleted, create_time, modify_time, version) VALUES(1, 1, '202008152033记录该文档', 0, '2020-08-15 20:34:12.0', '2020-08-15 20:34:12.0', 0);
+INSERT INTO loginfo (id, log_type, content, deleted, create_time, modify_time, version) VALUES(2, 1, 'canal达到单机生产可用的效果', 0, '2020-08-15 20:34:57.0', '2020-08-15 20:34:57.0', 0);
+```
+
+- 下载
+
+```bash
+$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.deployer-1.1.4.tar.gz
+```
+
+- 解压
+
+```bash
+$ tar -zxvf /usr/local/src/canal.deployer-1.1.4.tar.gz -C /usr/local/canal/deployer/
+```
+
+```bash
+$ ls /usr/local/canal/deployer/
+bin  conf  lib  logs
+```
+
+- 配置`canal.properties`
+
+[配置文件详解](https://blog.csdn.net/my201110lc/article/details/80765356)
+
+```bash
+$ vim /usr/local/canal/deployer/conf/canal.properties 
+```
+
+```properties
+# 修改
+canal.destinations = example
+=>
+canal.destinations = develop
+```
+
+- 复制`conf/example`配置文件进行修改
+
+```bash
+$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/develop
+$ vim /usr/local/canal/deployer/conf/develop/instance.properties 
+```
+
+```properties
+# 修改
+canal.instance.master.address=127.0.0.1:3306
+=>
+canal.instance.master.address=192.168.1.66:3306
+# 修改
+canal.instance.dbUsername=canal
+canal.instance.dbPassword=canal
+=>
+canal.instance.dbUsername=backup
+canal.instance.dbPassword=xxx
+# 修改：注意，\\.是.的转义;.*\\..*表示任何schema的任何表
+canal.instance.filter.regex=.*\\..*
+=>
+canal.instance.filter.regex=canaldb\\..*
+```
+
+- 启动
+
+```bash
+$ /usr/local/canal/deployer/bin/startup.sh
+```
+
+- 查看server日志
+
+```bash
+$ vim /usr/local/canal/deployer/logs/canal/canal.log 
+```
+
+```
+2020-08-15 20:40:49.945 [main] INFO  com.alibaba.otter.canal.deployer.CanalLauncher - ## set default uncaught exception handler
+2020-08-15 20:40:49.991 [main] INFO  com.alibaba.otter.canal.deployer.CanalLauncher - ## load canal configurations
+2020-08-15 20:40:50.003 [main] INFO  com.alibaba.otter.canal.deployer.CanalStarter - ## start the canal server.
+2020-08-15 20:40:50.049 [main] INFO  com.alibaba.otter.canal.deployer.CanalController - ## start the canal server[192.168.1.66(192.168.1.66):11111]
+2020-08-15 20:40:51.278 [main] INFO  com.alibaba.otter.canal.deployer.CanalStarter - ## the canal server is running now ......
+2020-08-15 20:40:51.383 [canal-instance-scan-0] INFO  com.alibaba.otter.canal.deployer.CanalController - auto notify start example successful.
+```
+
+- 查看instance的日志
+
+```bash
+$ vim /usr/local/canal/deployer/logs/develop/develop.log 
+```
+
+```
+2020-08-15 21:16:46.942 [main] INFO  c.a.otter.canal.instance.spring.CanalInstanceWithSpring - start CannalInstance for 1-develop
+2020-08-15 21:16:46.952 [main] WARN  c.a.o.canal.parse.inbound.mysql.dbsync.LogEventConvert - --> init table filter : ^canaldb\..*$
+2020-08-15 21:16:46.952 [main] WARN  c.a.o.canal.parse.inbound.mysql.dbsync.LogEventConvert - --> init table black filter :
+2020-08-15 21:16:46.961 [main] INFO  c.a.otter.canal.instance.core.AbstractCanalInstance - start successful....
+2020-08-15 21:16:47.054 [destination = develop , address = /192.168.1.66:3306 , EventParser] WARN  c.a.o.c.p.inbound.mysql.rds.RdsBinlogEventParserProxy - ---> begin to find start position, it will be long time for reset or first position
+2020-08-15 21:16:47.055 [destination = develop , address = /192.168.1.66:3306 , EventParser] WARN  c.a.o.c.p.inbound.mysql.rds.RdsBinlogEventParserProxy - prepare to find start position just show master status
+2020-08-15 21:16:47.658 [destination = develop , address = /192.168.1.66:3306 , EventParser] WARN  c.a.o.c.p.inbound.mysql.rds.RdsBinlogEventParserProxy - ---> find start position successfully, EntryPosition[included=false,journalName=mysql-bin.000244,position=5841,serverId=1,gtid=,timestamp=1597497385000] cost : 593ms , the next step is binlog dump
+```
+
+- 关闭
+
+```bash
+$ /usr/local/canal/deployer/bin/stop.sh
+```
+
+### 2.2.2、部署`adapter`服务
+
+- 下载
+
+```bash
+$ wget -cP /usr/local/src/ https://github.com/alibaba/canal/releases/download/canal-1.1.4/canal.adapter-1.1.4.tar.gz
+```
+
+- 解压
+
+```bash
+$ tar -zxvf /usr/local/src/canal.adapter-1.1.4.tar.gz -C /usr/local/canal/adapter
+```
+
+```bash
+$ ls /usr/local/canal/adapter/
+bin  conf  lib  logs  plugin
+```
+
+- 修改启动器配置：`application.yml`
+
+```bash
+$ vim /usr/local/canal/adapter/conf/application.yml
+```
+
+```yaml
+# 修改
+  canalServerHost: 127.0.0.1:11111
+# =>
+  canalServerHost: 192.168.1.66:11111 
+  
+# 修改
+#  srcDataSources:
+#    defaultDS:
+#      url: jdbc:mysql://127.0.0.1:3306/mytest?useUnicode=true
+#      username: root
+#      password: 121212
+  canalAdapters:
+  - instance: example # canal instance Name or mq topic name
+    groups:
+    - groupId: g1
+      outerAdapters:
+      - name: logger
+# =>
+  srcDataSources:
+    defaultDS:
+      url: jdbc:mysql://192.168.1.66:3306/canaldb?useUnicode=true&useSSL=false
+      username: backup
+      password: Jpss541018!
+  canalAdapters:
+#  - instance: example # canal instance Name or mq topic name
+#    groups:
+#    - groupId: g1
+#      outerAdapters:
+#      - name: logger
+  - instance: develop
+    groups:
+    - groupId: g1
+      outerAdapters:
+      - name: logger
+      - name: es
+      # 注意，写入数据时链接的最好是数据节点，否则很容易出现堆内存溢出。
+        hosts: 192.168.1.66:9200 # 127.0.0.1:9300 # 127.0.0.1:9200 for rest mode
+        properties:
+          mode: rest # transport # or rest
+          # security.auth: test:123456 #  only used for rest mode
+          cluster.name: es-cluster # elasticsearch
+```
+
+adapter将会自动加载conf/es下的所有.yml结尾的配置文件
+
+- 适配器表映射文件`conf/es/*.yml`
+
+添加一个新的yml文件：
+
+```bash
+# 拷贝创建
+$ cp /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/loginfo.yml
+# 备份默认的几个yml文件
+$ mv /usr/local/canal/adapter/conf/es/biz_order.yml /usr/local/canal/adapter/conf/es/biz_order.yml.bak
+$ mv /usr/local/canal/adapter/conf/es/customer.yml /usr/local/canal/adapter/conf/es/customer.yml.bak
+$ mv /usr/local/canal/adapter/conf/es/mytest_user.yml /usr/local/canal/adapter/conf/es/mytest_user.yml.bak
+# 编辑文件
+$ vim /usr/local/canal/adapter/conf/es/loginfo.yml 
+```
+
+```yaml
+dataSourceKey: defaultDS
+destination: develop
+groupId: g1
+esMapping:
+  _index: loginfo
+  _type: _doc
+  _id: _id
+  upsert: true
+#  pk: id
+  sql: "select l.id _id, l.log_type, l.content from loginfo l "
+#  objFields:
+#    _labels: array:;
+  etlCondition: "where l.modify_time>={}"
+  commitBatch: 3000
+```
+
+- `kibana`创建es的索引`loginfo`
+
+```bash
+PUT loginfo
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "long"
+      }
+    }
+  }
+}
+```
+
+- 启动
+
+```bash
+$ /usr/local/canal/adapter/bin/startup.sh 
+```
+
+- 查看日志
+
+$ vim /usr/local/canal/adapter/logs/adapter/adapter.log 
+
+```
+2020-08-15 22:57:43.297 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterService - ## start the canal client adapters.
+2020-08-15 22:57:43.304 [main] INFO  c.a.otter.canal.client.adapter.support.ExtensionLoader - extension classpath dir: /usr/local/canal/adapter/plugin
+2020-08-15 22:57:43.323 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterLoader - Load canal adapter: logger succeed
+2020-08-15 22:57:43.326 [main] INFO  c.a.o.canal.client.adapter.es.config.ESSyncConfigLoader - ## Start loading es mapping config ... 
+2020-08-15 22:57:43.383 [main] INFO  c.a.o.canal.client.adapter.es.config.ESSyncConfigLoader - ## ES mapping config loaded
+2020-08-15 22:57:43.969 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterLoader - Load canal adapter: es succeed
+2020-08-15 22:57:43.981 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterLoader - Start adapter for canal instance: develop succeed
+2020-08-15 22:57:43.981 [Thread-4] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterWorker - =============> Start to connect destination: develop <=============
+2020-08-15 22:57:43.981 [main] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterService - ## the canal client adapters are running now ......
+2020-08-15 22:57:43.989 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8081"]
+2020-08-15 22:57:43.990 [main] INFO  org.apache.tomcat.util.net.NioSelectorPool - Using a shared selector for servlet write/read
+2020-08-15 22:57:44.008 [main] INFO  o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port(s): 8081 (http) with context path ''
+2020-08-15 22:57:44.013 [main] INFO  c.a.otter.canal.adapter.launcher.CanalAdapterApplication - Started CanalAdapterApplication in 4.906 seconds (JVM running for 5.57)
+2020-08-15 22:57:44.051 [Thread-4] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterWorker - =============> Start to subscribe destination: develop <=============
+2020-08-15 22:57:44.091 [Thread-4] INFO  c.a.o.canal.adapter.launcher.loader.CanalAdapterWorker - =============> Subscribe destination: develop succeed <=============
+```
+
+- 停止
+
+```bash
+$ /usr/local/canal/adapter/bin/stop.sh 
+```
+
+- 全量数据同步
+
+```bash
+# `kibana`查看es的索引loginfo文档数
+GET /_cat/count/loginfo?v
+epoch      timestamp count
+1597503719 15:01:59  0
+
+# 全量数据同步
+$ curl http://192.168.1.66:8081/etl/es/loginfo.yml -X POST
+{"succeeded":true,"resultMessage":"导入ES 数据：2 条"}
+
+# `kibana`查看es的索引loginfo文档数
+GET /_cat/count/loginfo?v
+epoch      timestamp count
+1597503865 15:04:25  2
+# `kibana`查看第一条数据
+GET loginfo/_source/1
+{
+  "log_type" : 1,
+  "content" : "202008152033记录该文档"
+}
+```
+
+- 增量数据同步
+
+```bash
+update loginfo set content = concat(content , '-更新时间', now());
+# `kibana`查看第一条数据，验证
+GET loginfo/_source/1
+{
+  "log_type" : 1,
+  "content" : "202008152033记录该文档-更新时间2020-08-15 23:09:57"
+}
+```
+
+### 2.3、常见问题
+
+- adapter端问题之`net_write_timeout`
+
+```bash
+2020-09-21 08:36:27.422 [pool-3-thread-1] ERROR c.a.o.canal.adapter.launcher.loader.CanalAdapterWorker - java.lang.RuntimeException: java.lang.RuntimeException: com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Application was streaming results when the connection failed. Consider raising value of 'net_write_timeout' on the server.
+java.lang.RuntimeException: java.lang.RuntimeException: java.lang.RuntimeException: com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Application was streaming results when the connection failed. Consider raising value of 'net_write_timeout' on the server.
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.sync(ESSyncService.java:110)
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.sync(ESSyncService.java:58)
+    at com.alibaba.otter.canal.client.adapter.es.ESAdapter.sync(ESAdapter.java:179)
+    at com.alibaba.otter.canal.client.adapter.es.ESAdapter.sync(ESAdapter.java:158)
+    at com.alibaba.otter.canal.adapter.launcher.loader.AbstractCanalAdapterWorker.batchSync(AbstractCanalAdapterWorker.java:201)
+    at com.alibaba.otter.canal.adapter.launcher.loader.AbstractCanalAdapterWorker.lambda$null$1(AbstractCanalAdapterWorker.java:62)
+    at java.util.ArrayList.forEach(ArrayList.java:1255)
+    at com.alibaba.otter.canal.adapter.launcher.loader.AbstractCanalAdapterWorker.lambda$null$2(AbstractCanalAdapterWorker.java:58)
+    at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+    at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.RuntimeException: java.lang.RuntimeException: com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Application was streaming results when the connection failed. Consider raising value of 'net_write_timeout' on the server.
+    at com.alibaba.otter.canal.client.adapter.support.Util.sqlRS(Util.java:45)
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.wholeSqlOperation(ESSyncService.java:706)
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.update(ESSyncService.java:306)
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.sync(ESSyncService.java:95)
+    ... 11 common frames omitted
+Caused by: java.lang.RuntimeException: com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Application was streaming results when the connection failed. Consider raising value of 'net_write_timeout' on the server.
+    at com.alibaba.otter.canal.client.adapter.es.service.ESSyncService.lambda$wholeSqlOperation$6(ESSyncService.java:774)
+    at com.alibaba.otter.canal.client.adapter.support.Util.sqlRS(Util.java:41)
+    ... 14 common frames omitted
+```
+
+
+
+
+
+## 3、同步mysql到mysql
+
+### 3.1、部署`deployer`服务
+
+- 前提条件
+
+  - 作为数据供应方的mysql开启binlog，提供具有备份权限的用户；
+
+    - 开启Binlog：请参考【同步mysql到es】->【部署deployer服务】
+
+    - 创建备份账号：请参考【同步mysql到es】->【部署deployer服务】
+
+  - 作为数据目标方的mysql提供具有写入数据权限的用户；
+
+    - 创建具有数据写入权限的用户
+
+    ```sql
+    -- 创建用户
+    CREATE USER 'huiba'@'%' identified BY 'xxx';
+    -- 授权用户
+    GRANT ALL PRIVILEGES ON *.* TO 'huiba'@'%' WITH GRANT OPTION;
+    ```
+
+  - 演示用的MySQL库实例与表
+    - 源数据库：请参考【同步mysql到es】->【部署deployer服务】
+    - 目标数据库
+
+    ```sql
+    -- 创建数据库
+    CREATE DATABASE IF NOT EXISTS `canaldb-bak` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    -- 使用数据库
+    use  canaldb-bak;
+    -- 创建数据表
+    drop table if exists loginfo;
+    
+    /*==============================================================*/
+    /* Table: loginfo                                               */
+    /*==============================================================*/
+    create table loginfo
+    (
+       id                   bigint(20) not null comment '主键ID',
+       log_type             tinyint not null comment '日志类型',
+       content              varchar(1000) not null comment '日志内容',
+       deleted              tinyint not null default 0 comment '记录状态
+                0-未删除
+                1-已删除',
+       create_time          datetime not null default current_timestamp comment '创建时间',
+       modify_time          datetime not null default current_timestamp on update current_timestamp comment '更新时间',
+       version              int not null default 0 comment '版本信息',
+       primary key (id)
+    );
+    
+    alter table loginfo comment '日志信息表';
+    ```
+
+  
+
+- 配置`canal.properties`
+
+```bash
+$ vim /usr/local/canal/deployer/conf/canal.properties 
+```
+
+```properties
+# 修改canal.destinations来增加destinations
+# 修改
+canal.destinations = develop
+=>
+canal.destinations = develop,rdbsync
+```
+
+- 复制`conf/example`配置文件进行修改
+
+```bash
+$ cp -R /usr/local/canal/deployer/conf/example/ /usr/local/canal/deployer/conf/rdbsync
+$ vim /usr/local/canal/deployer/conf/rdbsync/instance.properties 
+```
+
+```properties
+# 修改
+canal.instance.master.address=127.0.0.1:3306
+=>
+canal.instance.master.address=192.168.1.66:3306
+# 修改
+canal.instance.dbUsername=canal
+canal.instance.dbPassword=canal
+=>
+canal.instance.dbUsername=backup
+canal.instance.dbPassword=xxx
+# 修改：注意，\\.是.的转义;.*\\..*表示任何schema的任何表
+canal.instance.filter.regex=.*\\..*
+=>
+canal.instance.filter.regex=canaldb\\..*
+```
+
+- 启动
+
+```
+$ /usr/local/canal/deployer/bin/startup.sh
+```
+
+- 查看server日志
+
+```
+$ vim /usr/local/canal/deployer/logs/canal/canal.log 
+```
+
+- 查看instance的日志
+
+```
+$ vim /usr/local/canal/deployer/logs/rdbsync/rdbsync.log
+```
+
+### 3.2、部署`adapter`服务
+
+- 修改启动器配置：`application.yml`
+
+```bash
+$ vim /usr/local/canal/adapter/conf/application.yml
+```
+
+```bash
+# 基于【同步mysql到es】增加配置
+# 在srcDataSources元素下新增DS
+    rdbsyncDS:
+      url: jdbc:mysql://192.168.1.66:3306/canaldb?useUnicode=true&useSSL=false
+      username: backup
+      password: Jpss541018!
+# 在canalAdapters下增加新的instance
+  - instance: rdbsync
+    groups:
+    - groupId: g1
+      outerAdapters:
+      - name: logger
+      - name: rdb
+        key: mysql1
+        properties:
+          jdbc.driverClassName: com.mysql.jdbc.Driver
+          jdbc.url: jdbc:mysql://192.168.1.66:3306/canaldb-bak?useUnicode=true&useSSL=false
+          jdbc.username: jpss
+          jdbc.password: Jpss541018!
+```
+
+adapter将会自动加载conf/es下的所有.yml结尾的配置文件
+
+- 适配器表映射文件`conf/rdbsync/*.yml`
+
+- 添加一个新的yml文件：
+
+  ```bash
+  # 拷贝创建
+  $ cp /usr/local/canal/adapter/conf/rdb/mytest_user.yml /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml
+  # 编辑文件
+  $ vim /usr/local/canal/adapter/conf/rdb/canaldb_bak_loginfo.yml 
+  ```
+
+  ```yaml
+  dataSourceKey: rdbsyncDS
+  destination: rdbsync
+  groupId: g1
+  outerAdapterKey: mysql1
+  concurrent: true
+  dbMapping:
+    database: canaldb
+    table: loginfo
+    targetTable: loginfo
+    targetPk:
+      id: id
+    mapAll: true
+  #  targetColumns:
+  #    id:
+  #    name:
+  #    role_id:
+  #    c_time:
+  #    test1:
+    etlCondition: "where modify_time>={}"
+    commitBatch: 3000 # 批量提交的大小
+  
+  
+  ## Mirror schema synchronize config
+  #dataSourceKey: defaultDS
+  #destination: example
+  #groupId: g1
+  #outerAdapterKey: mysql1
+  #concurrent: true
+  #dbMapping:
+  #  mirrorDb: true
+  #  database: mytest
+  ```
+
+- 启动
+
+```bash
+$ /usr/local/canal/adapter/bin/startup.sh 
+```
+
+- 查看日志
+
+```bash
+$ vim /usr/local/canal/adapter/logs/adapter/adapter.log
+```
+
+- 停止
+
+```bash
+$ /usr/local/canal/adapter/bin/stop.sh 
+```
+
+- 全量数据同步
+
+```bash
+[emon@emon ~]# curl http://192.168.1.66:8081/etl/rdb/mysql1/canaldb_bak_loginfo.yml -X POST
+```
+
+- 增量同步
+
+```sql
+update loginfo set content = concat(content , '-更新时间', now());
+-- 在canaldb-bak库查询并验证
+select * from loginfo;
+
+[emon@emon ~]# curl http://172.16.154.169:8081/etl/es/hbsitedb_flat_goods.yml -X POST -d "params=2022-02-10 15:01:02"
+```
+
+
+

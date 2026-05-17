@@ -43,9 +43,23 @@ export default defineConfig({
             {
                 text: '<img src="/backend.png" style="height: 64px;margin-top: 25px;display: inline;" alt="后端">',
                 items: [
-                    {items: [{text: '后端（旧）', link: '/backend/old'},]},
                     {text: 'JVM与GC调优', link: '/backend/new/JVM与GC调优/00--第零篇 前言篇.md'},
                     {text: '数据结构与算法分析', link: '/backend/new/数据结构与算法分析/01-引言'},
+                    {text: 'Spring', link: '/backend/new/Spring/00-引言'},
+                    {text: 'Kafka', link: '/backend/new/Kafka/00-引言'},
+                    {text: 'Java', link: '/backend/new/Java/00-引言'},
+                    {text: 'RabbitMQ', link: '/backend/new/RabbitMQ/00-引言'},
+                    {text: '剑指Java', link: '/backend/new/剑指Java/00-引言'},
+                    {text: 'ZooKeeper', link: '/backend/new/ZooKeeper/00-引言'},
+                    {text: 'Shiro', link: '/backend/new/Shiro/00-引言'},
+                    {text: 'SkyWalking', link: '/backend/new/SkyWalking/00-引言'},
+                    {text: 'Maven', link: '/backend/new/Maven/00-引言'},
+                    {text: 'Python', link: '/backend/new/Python/00-引言'},
+                    {text: 'HTTP', link: '/backend/new/HTTP/00-引言'},
+                    {text: 'Concurrency', link: '/backend/new/Concurrency/00-引言'},
+                    {text: 'Distributed', link: '/backend/new/Distributed/00-引言'},
+                    {text: 'PCO', link: '/backend/new/PCO/00-引言'},
+                    {items: [{text: '后端（旧）', link: '/backend/old'},]},
                 ]
             },
             {
@@ -56,11 +70,24 @@ export default defineConfig({
             },
             {
                 text: '数据库', items: [
+                    {text: 'MySQL', link: '/database/new/MySQL/00-引言'},
+                    {text: 'Redis', link: '/database/new/Redis/00-引言'},
+                    {text: 'MongoDB', link: '/database/new/MongoDB/00-引言'},
+                    {text: 'ElasticStack', link: '/database/new/ElasticStack/00-引言'},
+                    {text: 'Oracle', link: '/database/new/Oracle/00-引言'},
                     {items: [{text: '数据库（旧）', link: '/database/old'},]}
                 ]
             },
             {
                 text: '大数据', items: [
+                    {text: 'BigData', link: '/bigdata/new/BigData/00-引言'},
+                    {text: 'Flink', link: '/bigdata/new/Flink/00-引言'},
+                    {text: 'Flume', link: '/bigdata/new/Flume/00-引言'},
+                    {text: 'Hive', link: '/bigdata/new/Hive/00-引言'},
+                    {text: 'Hadoop', link: '/bigdata/new/Hadoop/00-引言'},
+                    {text: 'Spark', link: '/bigdata/new/Spark/00-引言'},
+                    {text: 'HBase', link: '/bigdata/new/HBase/00-引言'},
+                    {text: 'Scala', link: '/bigdata/new/Scala/00-引言'},
                     {items: [{text: '大数据（旧）', link: '/bigdata/old'},]}
                 ]
             },
@@ -101,15 +128,52 @@ export default defineConfig({
         sidebar: {
             '/guide': autoGenSidebar('/guide'),
             '/frontend/old': autoGenSidebar('/frontend/old'),
-            '/backend/old': autoGenSidebar('/backend/old'),
             '/design/old': autoGenSidebar('/design/old'),
+            '/devops/old': autoGenSidebar('/devops/old'),
+            '/backend/old': autoGenSidebar('/backend/old'),
             '/database/old': autoGenSidebar('/database/old'),
             '/bigdata/old': autoGenSidebar('/bigdata/old'),
             '/aillm/Claude': autoGenSidebar('/aillm/Claude'),
             '/aillm/OpenClaw': autoGenSidebar('/aillm/OpenClaw'),
             '/aillm/Hermes': autoGenSidebar('/aillm/Hermes'),
-            '/devops/old': autoGenSidebar('/devops/old'),
             '/misc': autoGenSidebar('/misc'),
+
+            // database/new
+            '/database/new/MySQL/': autoGenSidebar('/database/new/MySQL'),
+            '/database/new/Redis/': autoGenSidebar('/database/new/Redis'),
+            '/database/new/MongoDB/': autoGenSidebar('/database/new/MongoDB'),
+            '/database/new/ElasticStack/': autoGenSidebar('/database/new/ElasticStack'),
+            '/database/new/Oracle/': autoGenSidebar('/database/new/Oracle'),
+
+            // bigdata/new
+            '/bigdata/new/BigData/': autoGenSidebar('/bigdata/new/BigData'),
+            '/bigdata/new/Flink/': autoGenSidebar('/bigdata/new/Flink'),
+            '/bigdata/new/Flume/': autoGenSidebar('/bigdata/new/Flume'),
+            '/bigdata/new/Hive/': autoGenSidebar('/bigdata/new/Hive'),
+            '/bigdata/new/Hadoop/': autoGenSidebar('/bigdata/new/Hadoop'),
+            '/bigdata/new/Spark/': autoGenSidebar('/bigdata/new/Spark'),
+            '/bigdata/new/HBase/': autoGenSidebar('/bigdata/new/HBase'),
+            '/bigdata/new/Scala/': autoGenSidebar('/bigdata/new/Scala'),
+
+            // backend/new (existing + new)
+            '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
+            '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
+            '/backend/new/Spring/': autoGenSidebar('/backend/new/Spring'),
+            '/backend/new/Kafka/': autoGenSidebar('/backend/new/Kafka'),
+            '/backend/new/Java/': autoGenSidebar('/backend/new/Java'),
+            '/backend/new/RabbitMQ/': autoGenSidebar('/backend/new/RabbitMQ'),
+            '/backend/new/剑指Java/': autoGenSidebar('/backend/new/剑指Java'),
+            '/backend/new/ZooKeeper/': autoGenSidebar('/backend/new/ZooKeeper'),
+            '/backend/new/Shiro/': autoGenSidebar('/backend/new/Shiro'),
+            '/backend/new/SkyWalking/': autoGenSidebar('/backend/new/SkyWalking'),
+            '/backend/new/Maven/': autoGenSidebar('/backend/new/Maven'),
+            '/backend/new/Python/': autoGenSidebar('/backend/new/Python'),
+            '/backend/new/HTTP/': autoGenSidebar('/backend/new/HTTP'),
+            '/backend/new/Concurrency/': autoGenSidebar('/backend/new/Concurrency'),
+            '/backend/new/Distributed/': autoGenSidebar('/backend/new/Distributed'),
+            '/backend/new/PCO/': autoGenSidebar('/backend/new/PCO'),
+
+            // frontend/new
             '/frontend/new/HTML/': autoGenSidebar('/frontend/new/HTML'),
             '/frontend/new/CSS/': autoGenSidebar('/frontend/new/CSS'),
             '/frontend/new/JavaScript/': autoGenSidebar('/frontend/new/JavaScript'),
@@ -119,8 +183,8 @@ export default defineConfig({
             '/frontend/new/Vue/': autoGenSidebar('/frontend/new/Vue'),
             '/frontend/new/Bootstrap/': autoGenSidebar('/frontend/new/Bootstrap'),
             '/frontend/new/Tailwind/': autoGenSidebar('/frontend/new/Tailwind'),
-            '/backend/new/JVM与GC调优': autoGenSidebar('/backend/new/JVM与GC调优'),
-            '/backend/new/数据结构与算法分析': autoGenSidebar('/backend/new/数据结构与算法分析'),
+
+            // devops/new
             '/devops/new/Linux': autoGenSidebar('/devops/new/Linux'),
             '/devops/new/Nginx': autoGenSidebar('/devops/new/Nginx'),
             '/devops/new/Docker': autoGenSidebar('/devops/new/Docker'),
