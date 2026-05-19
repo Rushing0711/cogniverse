@@ -97,6 +97,7 @@ export default defineConfig({
                     {text: 'Claude', link: '/aillm/Claude/00-引言'},
                     {text: 'OpenClaw', link: '/aillm/OpenClaw/00-引言'},
                     {text: 'Hermes', link: '/aillm/Hermes/00-引言'},
+                    {text: 'DS4', link: '/aillm/ds4/ds4-使用'},
                 ]
             },
             {
@@ -136,6 +137,7 @@ export default defineConfig({
             '/aillm/Claude': autoGenSidebar('/aillm/Claude'),
             '/aillm/OpenClaw': autoGenSidebar('/aillm/OpenClaw'),
             '/aillm/Hermes': autoGenSidebar('/aillm/Hermes'),
+            '/aillm/ds4': autoGenSidebar('/aillm/ds4'),
             '/misc': autoGenSidebar('/misc'),
 
             // database/new
