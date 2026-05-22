@@ -23,10 +23,23 @@ dist-ssr
 *.sln
 *.sw?
 
-# ===自定义===
+# === VitePress ===
 docs/.vitepress/dist
 docs/.vitepress/cache
 stats.html
-.claude
+
+# === Claude Code ===
+# 白名单：只提交项目级配置，排除个人配置和运行时生成文件
+.claude/*
+!.claude/commands/
+!.claude/skills/
+!.claude/settings.json
+!.claude/agents/
+!.claude/rules/
+
+# === AI Coding Tools ===
 .obsidian
 .playwright-mcp/
+
+# === AI 生成中间产物 ===
+docs/superpowers/
