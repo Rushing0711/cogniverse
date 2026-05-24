@@ -1,5 +1,5 @@
 # Skills与生态
-## 1 Skills 套装实战
+## 1 Skills 生态概览
 
 社区生态中有多套流行的 Skills 套装，它们不是单个 Skill，而是一组配合使用的技能包，各有不同的设计哲学和适用场景。
 
@@ -7,9 +7,9 @@
 
 | 套装 | Stars | 核心理念 | 技能数 | 适用场景 | 安装命令 |
 |------|-------|----------|--------|----------|----------|
-| **[Superpowers](https://github.com/obra/superpowers)** | 195k+ | 工程纪律 + TDD 强制 | 14 个 | 日常开发的完整闭环 | `npx skills add obra/superpowers -g -a claude-code` |
+| **[Superpowers](https://github.com/obra/superpowers)** | 202k+ | 工程纪律 + TDD 强制 | 14 个 | 日常开发的完整闭环 | `/plugin install superpowers@superpowers-marketplace` |
 | **[gstack](https://github.com/garrytan/gstack)** | 99k+ | 虚拟 23 人工程团队 + Power Tools | 47 个 | Solo 冲刺产品 MVP | `git clone` 到 `~/.claude/skills/gstack` |
-| **[mattpocock](https://github.com/mattpocock/skills)** | 89k+ | 慢下来，先想清楚再动手 | 12 个 | TypeScript 开发 | 见 1.6 节（支持单技能安装，路径含分类名） |
+| **[mattpocock](https://github.com/mattpocock/skills)** | 89k+ | 慢下来，先想清楚再动手 | 12 个 | TypeScript 开发 | 见第5章（支持单技能安装，路径含分类名） |
 | **[GSD](https://github.com/gsd-build/get-shit-done)** | 63k+ | Spec 驱动 + 上下文工程 | 多个 | 0→1 完整功能开发 | `npx get-shit-done-cc@latest` |
 | **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** | 49k+ | Spec 驱动开发（SDD） | 1 套 CLI + 多命令 | 需求到交付的完整闭环 | `npm install -g @fission-ai/openspec@latest` |
 | **[find-skills](https://github.com/vercel-labs/skills)** | 579k+ 安装 | Skills 搜索引擎 | 1 个 | 发现和搜索其他 Skills | `npx skills add vercel-labs/skills -g -a claude-code --skill find-skills` |
@@ -57,66 +57,614 @@ npx skills add vercel-labs/skills -g -a claude-code --skill find-skills
 
 Skills 最终是纯 Markdown 文本文件，与 Node/npm/nvm **完全解耦**。即使切换 Node 版本甚至卸载 Node，已安装的 Skills 不受影响。唯一依赖 Node 的是安装新 Skill 时 `npx` 命令本身。
 
-**为什么不用 Plugin 安装这些套装？** Plugin（`/plugin install`）适合打包 Skills + Hooks + MCP + LSP 等需要统一管理的多功能组合。Superpowers、gstack、mattpocock、GSD 这些套装本质是**纯 Skill 合集**——只有 Markdown 指令文件，不含 Hooks 或 MCP 服务器。用 `npx skills add` 安装，文件直接放入 `~/.claude/skills/`，调用路径更短（`/brainstorming` 而不是 `/plugin-name:brainstorming`），卸载只需删除对应目录。对于纯 Skill 套装，`npx skills add` **就是最干净的方式**。
+**Plugin 还是 npx？** Superpowers 推荐通过 Plugin 市场安装（`/plugin install superpowers@superpowers-marketplace`），它能利用 CC 的插件管理系统进行版本更新、scope 管理和启用/禁用。gstack、mattpocock、GSD 目前主要通过 `npx skills add` 或 `git clone` 安装，效果完全相同——Skills 最终都是 `~/.claude/skills/` 下的 Markdown 文件。选择哪种方式取决于套装作者提供什么分发渠道。
 
 **安装建议**：一次装 2-3 个核心的，用一周感受后再决定加不加。多套全装（80+ 个 Skill）token 开销大，而且不同套装理念可能冲突，反而降低效率。
 
-### 1.3 Superpowers 实战
+## 2 Superpowers 实战
 
-Superpowers 是目前最完整的开发流程技能包，195k+ Stars、570K+ 安装。它不是让 AI 更聪明，而是**强制 AI 遵守标准开发流程**。
+### 2.1 核心理念与背景
 
-**安装**（注意：不是 `/plugin install`，而是 npx）：
+Superpowers 由 Jesse Vincent 和 Prime Radiant 创建，MIT 许可，203k+ Stars。它不是一个普通的 Skill 集合，而是一套**完整的软件开发方法论**——用 14 个相互配合的技能，强制 AI 编码代理遵守标准开发流程，而不是拿到需求就急于写代码。
+
+**核心定位**："把 AI 当作热情但没判断力的初级工程师"。AI 会急于写代码、跳过测试、忽略边界情况、声称"完成了"但实际没验证。Superpowers 用流程约束行为——先设计再编码、先测试再实现、先验证再声明完成。
+
+**四条核心哲学**：
+
+- **TDD 优先**：永远先写测试。没有看到失败测试，不准写生产代码
+- **系统化优于临时应对**：流程压倒猜测，每个开发阶段有明确的检查清单和退出标准
+- **简化复杂度**：简单是首要目标，能用简单方案绝不用复杂方案（YAGNI）
+- **证据优于声明**：宣称"完成"前必须拿出测试通过、审查通过的实际证据
+
+**调度器 `using-superpowers`**：这是整个系统的核心。它在每次对话启动时加载，持续监控 Claude 的行为——有 1% 可能性匹配到某个 Skill 就触发它。这不是建议，不是可选，**不可协商，不可跳过**。你说"帮我做 X"时，它不会直接写代码，而是先触发 `brainstorming` 追问需求；你说"修这个 bug"时，它不会直接改代码，而是先走 `systematic-debugging` 四阶段流程。
+
+所有 14 个技能均未设置 `disable-model-invocation`——全部自动触发，Claude 在匹配到对应场景时自动加载。整套一次性安装，不支持单独挑选：流程的价值在于环环相扣，去掉任何一环都会削弱闭环的纪律性。
+
+### 2.2 安装
+
+Superpowers 通过 Plugin 市场分发：
 
 ```bash
-npx skills add obra/superpowers -g -a claude-code --skill '*' -y
+# 1. 添加 Superpowers 市场
+/plugin marketplace add obra/superpowers-marketplace
+
+# 2. 安装（--scope 默认 user，所有项目可用）
+/plugin install superpowers@superpowers-marketplace
+
+# 3. 重新加载使插件生效
+/reload-plugins
 ```
 
-安装后自动生效，无需手动调用——当你的任务匹配到某个技能时，它自动触发对应流程。
+安装后 14 个技能自动可用。无需额外配置——当你的任务匹配到某个技能时，它自动触发对应流程。
 
-**14 个核心技能清单**：
+由于 Superpowers 需要执行测试、git 操作等 Bash 命令，确保 `~/.claude/settings.json` 中合理配置了权限：
 
-| 阶段 | 技能 | 流程必需度 | 触发场景 | 实际效果 |
-|------|------|--------|----------|----------|
-| **设计** | `brainstorming` | ★★★★ | "帮我设计一个..." | 苏格拉底式追问，逼你理清需求边界 |
-| **规划** | `writing-plans` | ★★★★★ | "制定实施计划" | 拆成 2-5 分钟可完成的原子步骤 |
-| **环境** | `using-git-worktrees` | ★★ | 需要并行开发 | 自动创建隔离 worktree |
-| **执行** | `subagent-driven-development` | ★★★ | 复杂多文件改动 | 每任务独立子代理 + 两阶段审查 |
-| **执行** | `executing-plans` | ★★★★ | 批量执行任务 | 逐个执行，每步检查点验证 |
-| **执行** | `dispatching-parallel-agents` | ★★★ | 多个独立任务 | 自动检测可并行任务，派发子代理 |
-| **质量** | `test-driven-development` | ★★★★★ | "写代码实现..." | **强制**先写测试→失败→实现→通过 |
-| **质量** | `requesting-code-review` | ★★★★ | 代码完成后 | 5 个子代理并行审查（安全/性能/正确性/风格/测试） |
-| **质量** | `receiving-code-review` | ★★★ | 收到审查反馈 | 结构化处理，逐条修复 |
-| **调试** | `systematic-debugging` | ★★★★★ | "修这个 bug" | 观察→假设→验证→修复 四阶段 |
-| **调试** | `verification-before-completion` | ★★★★ | 宣称"完成"前 | "真的完成了吗？拿出证据" |
-| **交付** | `finishing-a-development-branch` | ★★★ | 功能开发完成 | 4 种选项：合并/PR/保留/丢弃 |
-| **元技能** | `writing-skills` | ★★ | "创建一个新 skill" | 用 TDD 方式编写 Skill |
-| **元技能** | `using-superpowers` | ★★★★★ | 全局 | 核心调度器，确保流程约束生效 |
-
-**评星维度：流程必需度**——去掉该技能，Superpowers 的开发闭环是否断裂。同时综合考量自动触发可靠性和执行质量。
-
-**💡 按星筛选安装**：★★★★★ 是流程支柱（`test-driven-development`、`writing-plans`、`systematic-debugging`、`using-superpowers`），去掉则闭环断裂。★★★★ 是高价值补充（`brainstorming`、`executing-plans`、`requesting-code-review`、`verification-before-completion`）。★★★ 以下按场景按需加装。Superpowers 不支持单技能安装，整套 `npx skills add obra/superpowers -g -a claude-code --skill '*' -y` 安装后自动触发。
-
-**自动触发 vs 手动引导**：
-
-Superpowers 主要通过自动触发工作——Claude 检测任务类型后自动加载对应技能。说"帮我修 bug"就走 `systematic-debugging` 流程，不会直接改代码。你也可以手动引导：
-
-```text
-"用 superpowers 的 brainstorming 帮我梳理这个需求"
-"用 TDD 方式实现这个函数"
-"dispatch parallel agents 分别审查 src/auth/ 和 src/db/"
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test *)",
+      "Bash(npx vitest *)",
+      "Bash(git *)",
+      "Bash(ls *)"
+    ]
+  }
+}
 ```
 
-**实战演示**：从零开发用户认证模块：
+### 2.3 14 个技能全览
 
-- **无 Superpowers**：CC 直接写代码，可能漏边界情况、跳过测试
-- **有 Superpowers**：
-  1. `brainstorming` 追问："JWT 还是 Session？Token 刷新策略？角色模型？"
-  2. `writing-plans` 拆任务：Token 模型→签发→验证中间件→刷新→测试→审查
-  3. `test-driven-development` 每步先写测试，确认失败再写实现
-  4. `requesting-code-review` 5 个审查 Agent 并行检查
-  5. `verification-before-completion` 所有测试通过、审查无严重问题才算完成
+以下描述均来自各技能 `SKILL.md` 的官方 `description` 字段——这是 Claude 判断何时触发该技能的依据。技能按 2.4 节工作流顺序排列。
 
-### 1.4 OpenSpec 实战 — Spec 驱动开发
+| 阶段 | 技能 | 官方描述（SKILL.md description） |
+|------|------|------|
+| **全局** | `using-superpowers` | 每次对话启动时使用——建立如何发现和使用技能的方式，要求在**任何**回复（包括澄清性问题）之前先调用 Skill 工具 |
+| **设计** | `brainstorming` | **必须在任何创造性工作之前使用**——创建功能、构建组件、添加功能或修改行为。在实现之前探索用户意图、需求和设计 |
+| **环境** | `using-git-worktrees` | 开始需要与当前工作区隔离的功能工作之前、或执行实施计划之前使用——通过原生工具或 git worktree 回退确保隔离工作区存在 |
+| **规划** | `writing-plans` | 在有 spec 或需求的多步骤任务时使用，**在写代码之前** |
+| **执行** | `subagent-driven-development` | 在当前会话中执行包含独立任务的实施计划时使用 |
+| **执行** | `executing-plans` | 有书面的实施计划要在独立会话中执行并附带审查检查点时使用 |
+| **执行** | `dispatching-parallel-agents` | 面对 2 个以上独立任务、可以无共享状态或顺序依赖地并行处理时使用 |
+| **质量** | `test-driven-development` | **在实现任何功能或 bug 修复时使用，在编写实现代码之前** |
+| **质量** | `requesting-code-review` | 完成任务、实现主要功能、或合并之前使用，以验证工作是否满足要求 |
+| **质量** | `receiving-code-review` | 收到代码审查反馈时、在实施建议之前使用——特别是反馈看起来不清晰或技术上存疑时。要求技术严谨性和验证，而非表演式同意或盲目实施 |
+| **调试** | `systematic-debugging` | 遇到任何 bug、测试失败或意外行为时，在提出修复之前使用 |
+| **调试** | `verification-before-completion` | 即将宣称工作完成、已修复或已通过时，在提交或创建 PR 之前使用——要求运行验证命令并确认输出，然后才能做出任何成功声明；证据先于断言 |
+| **交付** | `finishing-a-development-branch` | 实现完成、所有测试通过、需要决定如何整合工作时使用——通过呈现合并、PR 或清理的结构化选项来引导开发工作完成 |
+| **元技能** | `writing-skills` | 创建新技能、编辑现有技能、或在部署前验证技能是否正常工作时使用 |
+
+### 2.4 核心工作流
+
+Superpowers 将开发过程拆成 7 个步骤。Claude 在每个步骤触发前检查是否有相关的 Skill——这些不是建议，是强制流程。
+
+<div class="workflow-rows">
+  <div class="wf-row wf-design">
+    <div class="wf-marker">1</div>
+    <div class="wf-body">
+      <div class="wf-skill">brainstorming</div>
+      <div class="wf-desc">通过苏格拉底式逐个追问，把模糊想法变成清晰设计。探索 2-3 种替代方案后，分节呈现设计等你确认。<strong>硬门槛：设计批准前，禁止写任何代码。</strong></div>
+      <div class="wf-output">📄 产出：<code>docs/superpowers/specs/YYYY-MM-DD-&lt;主题&gt;-design.md</code></div>
+    </div>
+  </div>
+  <div class="wf-row wf-env">
+    <div class="wf-marker">2</div>
+    <div class="wf-body">
+      <div class="wf-skill">using-git-worktrees</div>
+      <div class="wf-desc">创建隔离 git worktree 和新分支，运行项目初始化，验证基线测试通过。已在 worktree 中则智能跳过，优先使用原生 harness 控制。</div>
+      <div class="wf-output">📄 产出：新的 worktree + 分支（无文档文件）</div>
+    </div>
+  </div>
+  <div class="wf-row wf-plan">
+    <div class="wf-marker">3</div>
+    <div class="wf-body">
+      <div class="wf-skill">writing-plans</div>
+      <div class="wf-desc">将设计拆成原子任务，每个 2-5 分钟。每任务包含：具体文件路径、完整代码骨架、验证命令。开始前先列出文件地图——哪些文件新建、哪些修改、各自的职责。</div>
+      <div class="wf-output">📄 产出：<code>docs/superpowers/plans/YYYY-MM-DD-&lt;功能名&gt;.md</code></div>
+    </div>
+  </div>
+  <div class="wf-row wf-exec">
+    <div class="wf-marker">4</div>
+    <div class="wf-body">
+      <div class="wf-skill">subagent-driven-development / executing-plans</div>
+      <div class="wf-desc">二选一执行引擎：<code>subagent-driven-development</code>（每任务派独立子代理，两阶段强制审查——先验证规格合规，再审查代码质量）或 <code>executing-plans</code>（主会话逐项执行，每步检查点验证后继续）。</div>
+      <div class="wf-output">📄 产出：实现代码（含 git commit）</div>
+    </div>
+  </div>
+  <div class="wf-row wf-tdd">
+    <div class="wf-marker">5</div>
+    <div class="wf-body">
+      <div class="wf-skill">test-driven-development</div>
+      <div class="wf-desc">步骤 4 执行期间自动触发。强制 RED-GREEN-REFACTOR 循环：先写失败测试 → 确认因功能缺失而失败 → 写最小实现 → 确认通过 → 重构 → 提交。<strong>代码写在了测试之前？删除，重来。</strong>禁止任何例外。</div>
+      <div class="wf-output">📄 产出：测试文件 + 最小实现代码（每任务一个 commit）</div>
+    </div>
+  </div>
+  <div class="wf-row wf-review">
+    <div class="wf-marker">6</div>
+    <div class="wf-body">
+      <div class="wf-skill">requesting-code-review</div>
+      <div class="wf-desc">对照计划审查全部变更，按严重程度分级报告问题。Critical 问题阻塞进度、必须修复后重新审查。审查维度包括安全性、LLM 信任边界、条件性副作用。</div>
+      <div class="wf-output">📄 产出：严重程度分级的审查报告</div>
+    </div>
+  </div>
+  <div class="wf-row wf-finish">
+    <div class="wf-marker">7</div>
+    <div class="wf-body">
+      <div class="wf-skill">finishing-a-development-branch</div>
+      <div class="wf-desc">确认所有测试通过后，提供 4 种收尾选项：合并到主分支 / 推送并创建 PR / 保留分支待后续 / 丢弃并清理 worktree。选择 PR 时保留 worktree 以供后续迭代。</div>
+      <div class="wf-output">📄 产出：PR（选项2）或合并提交（选项1）</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.workflow-rows { margin: 24px 0; display: flex; flex-direction: column; gap: 0; }
+.wf-row { display: flex; gap: 16px; padding: 16px 20px; border-left: 3px solid; position: relative; }
+.wf-row + .wf-row { border-top: 1px solid #e8e8e8; }
+.wf-marker { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px; }
+.wf-body { flex: 1; }
+.wf-skill { font-size: 14px; font-weight: 700; font-family: monospace; margin-bottom: 4px; }
+.wf-desc { font-size: 14px; color: #555; line-height: 1.7; }
+.wf-output { font-size: 12px; color: #888; margin-top: 6px; word-break: break-all; }
+.wf-design  { border-color: #c8d6ff; } .wf-design  .wf-marker { background: #5b7fff; }
+.wf-env     { border-color: #d0d0d0; } .wf-env     .wf-marker { background: #999; }
+.wf-plan    { border-color: #c8d6ff; } .wf-plan    .wf-marker { background: #5b7fff; }
+.wf-exec    { border-color: #e8d8a0; } .wf-exec    .wf-marker { background: #d4a017; }
+.wf-tdd     { border-color: #e8c8a0; } .wf-tdd     .wf-marker { background: #c07820; }
+.wf-review  { border-color: #b8d8b8; } .wf-review  .wf-marker { background: #3a8f3a; }
+.wf-finish  { border-color: #d8c8ff; } .wf-finish  .wf-marker { background: #7b5ea7; }
+</style>
+
+除上述 7 步流水线外，以下技能作为**始终在线的质量守卫**，在特定场景自动介入：
+
+| 守卫 | 触发时机 | 作用 |
+|------|----------|------|
+| `verification-before-completion` | 任何宣称"完成"之前 | 强制五步验证：确定验证命令 → 完整运行 → 阅读输出和退出码 → 确认证据是否支撑声明 → 确认后才允许声明 |
+| `systematic-debugging` | "修这个 bug"、异常行为 | 四阶段：观察症状 → 形成假设 → 验证假设 → 精准修复。禁止猜测性修改 |
+| `receiving-code-review` | 收到审查反馈时 | 结构化处理每条意见，逐条修复并验证，不敷衍不跳过 |
+
+**你只需要做三件事**：设计阶段回答追问 → 审查阶段确认修复 → 交付阶段选择收尾方式。其余环节 Superpowers 自动流转。
+
+### 2.5 实战演练：用 Superpowers 开发 TodoList
+
+以下是一次真实的 Superpowers 会话记录。项目从空目录 `/Users/wenqiu/AIAgent/superpowers_in_action/` 启动，用户只说了一句话，Superpowers 自动接管全部流程。
+
+**当前进度总览**：
+
+| 阶段 | 技能 | 状态 | 产出物 | Git |
+|------|------|------|--------|-----|
+| 调度器 | `using-superpowers` | ✅ 完成 | — | — |
+| 1-设计 | `brainstorming` | ✅ 完成 | `docs/superpowers/specs/2026-05-24-todolist-design.md` | ❌ |
+| 2-环境 | `using-git-worktrees` | ⏭️ 跳过 | — | — |
+| 3-规划 | `writing-plans` | ✅ 完成 | `docs/superpowers/plans/2026-05-24-todolist.md`（19 任务） | ❌ |
+| 4-执行 | `subagent-driven-development` | ✅ 完成 | 19/19 任务全部完成 | ✅ 15 次 commit |
+| 5-TDD | `test-driven-development` | ✅ 完成 | Rust 24 + 前端 7 = 31 测试通过 | ✅ 每任务先测后写 |
+| 6-审查 | `requesting-code-review` | ⏭️ 被覆盖 | 子代理内置 spec+code 双审查替代 | 任务内完成 |
+| 7-交付 | `finishing-a-development-branch` | ✅ 完成 | README `.dmg` 构建、分支→master | ✅ 收尾 commit |
+| Bug修复 | `systematic-debugging` | ✅ 6 轮触发 | 14 项迭代优化 + 优化文档 | ✅ 每轮提交 |
+| 验证 | `verification-before-completion` | ✅ 多次触发 | 每次宣称完成前检查 | ✅ |
+| **Git 汇总** | — | — | — | **✅ 22+ 次 commit，中文描述** |
+
+> **状态说明**：✅ 已完成 | ⏭️ 被覆盖/跳过 | ⏳ 未触发
+> 
+> **Git 说明**：任务 1 初始化 git，19 个任务 + 6 轮 bug 修复 + 收尾 = 22+ 次 commit。从阶段 1-3 的缺席者变成贯穿始终的安全网。
+
+
+#### 阶段 0：调度器 using-superpowers
+
+会话开始时，`SessionStart` Hook 注入 `using-superpowers` 技能内容到系统提示词。这不是一个可选项——它持续监控 Claude 的行为，只要检测到 1% 的可能性匹配某个技能，就强制触发。用户看不到这个过程，但它已经就位。
+
+
+#### 阶段 1：brainstorming — 设计阶段
+
+**触发**：用户说"我想开发一个 TodoList 应用" → `using-superpowers` 检测到创造性工作 → 自动调用 `brainstorming`
+
+**brainstorming 的 9 步 Checklist**（Skill 内置，创建为 TodoWrite 任务逐项推进）：
+
+```
+☑ Explore project context      → 空目录，全新项目
+☑ Offer visual companion       → 用户接受，启动浏览器可视化
+☑ Ask clarifying questions     → 5 个问题逐一确认
+☑ Propose 2-3 approaches       → 方案 A（薄后端）vs 方案 B（分层架构）
+☑ Present design sections      → 4 节：数据模型 → 组件架构 → UI 布局 → 错误/测试/结构
+☑ Write design doc             → 写入 specs/ 目录
+☑ Spec self-review             → 发现 1 处歧义，当场修正
+☑ User reviews written spec    → 用户确认
+☑ Transition to implementation → 终端状态：调用 writing-plans
+```
+
+**`<HARD-GATE>`**：brainstorming 加载时就声明了硬门槛——设计批准前，禁止写任何代码、禁止调用任何实现 Skill。即使是"简单的 TodoList"也必须走完流程。
+
+**逐项追问（一问一答，每次只问一个问题）**：
+
+| # | Claude 问 | 用户答 |
+|---|-----------|--------|
+| 1 | 平台？Web / 移动端 / CLI / 桌面 | 桌面应用 |
+| 2 | 技术栈？Electron / Tauri / Python+GUI / 你推荐 | Tauri |
+| 3 | 功能范围？基础版 / 进阶版 / 完整版 | 完整版 |
+| 4 | 数据持久化？SQLite / JSON / 你推荐 | SQLite |
+| 5 | 前端框架？React / Vue / Svelte / 你推荐 | 你推荐 → React+TS |
+
+**Visual Companion 实战**：用户接受了浏览器可视化伴侣。Claude 启动本地服务器，在 `http://localhost:58613` 展示交互式设计选项。期间服务器挂掉了一次——用户反馈"无法访问"，Claude 检查状态、重启服务器、恢复内容到新端口 `http://localhost:50776`。后续的方案对比卡片、数据模型 ER 图、组件树结构图、布局线框图都在浏览器中展示。
+
+**方案对比**：浏览器中展示了两种架构方案的交互式对比卡片——方案 A（薄后端，Rust 只做数据直通）vs 方案 B（分层架构，Rust Service → Repository → SQLite）。用户点击选择方案 B。
+
+**逐节呈现设计，每节等待确认**：
+
+1. **数据模型**（浏览器 ER 图）→ 4 张表：`projects`、`tasks`、`tags`、`task_tags` → 用户确认
+2. **组件架构**（浏览器组件树 + Rust 三层结构）→ 前端 `App → Sidebar/TaskView/Toolbar`，后端 `commands → services → repositories` → 用户确认
+3. **UI 布局**（浏览器线框图）→ 方案 A（右侧详情面板，三栏一览无余）vs 方案 B（弹窗编辑，两栏更简洁）→ 用户选 A，适合 macOS 桌面宽屏
+4. **错误处理 + 测试策略 + 文件结构**（终端文本）→ 用户确认
+
+**用户的三次纠正**：
+
+| 纠正 | 用户反馈 | 结果 |
+|------|----------|------|
+| 目录命名 | "`src` 应该调整为 `src-ui` 更清晰" | `src/` → `src-ui/`（React 前端），`src-tauri/`（Rust 后端） |
+| 多余子目录 | "为何要创建 `superpowers_todo/`？当前目录就是项目目录" | 取消子目录，一切资源在 `superpowers_in_action/` 下 |
+| Git 位置 | "后面还会初始化 git 吧，在哪个目录？" | 确认在项目根目录初始化，`.superpowers/` 加入 `.gitignore` |
+
+**产出物**：`docs/superpowers/specs/2026-05-24-todolist-design.md`
+
+**自审修正**：Claude 对设计文档做自审，发现一处歧义——数据库驱动写法 "rusqlite/sqlx" 模糊，修正为明确的 "rusqlite"。
+
+**Git 提交**：❌ 尚未初始化 git（brainstorming 阶段不强制 git，用户也未要求立即初始化）
+
+**终端状态**：brainstorming 的唯一合法出口是调用 `writing-plans`。不允许调用任何其他实现 Skill。
+
+
+#### 阶段 2：using-git-worktrees — 环境隔离
+
+⏭️ **跳过**。该技能在检测到需要隔离环境时触发，但当前项目是空目录，没有需要隔离的既有代码，且实现尚未开始。brainstorming 和 writing-plans 不需要 worktree 隔离——worktree 是为执行阶段准备的。
+
+
+#### 阶段 3：writing-plans — 规划阶段
+
+**触发**：brainstorming 终端状态自动调用，加载 writing-plans 技能
+
+**流程**：
+1. 再次读取设计文档 `2026-05-24-todolist-design.md`
+2. 列出文件地图——哪些文件新建、各自职责
+3. 按 2-5 分钟粒度的原子任务拆解，每个任务包含：文件路径 + 完整代码骨架 + TDD 步骤 + 验证命令
+4. 计划自审——检查是否覆盖所有 spec 需求、无占位符、类型前后一致
+5. 保存到 `docs/superpowers/plans/2026-05-24-todolist.md`
+
+**19 个原子任务**：
+
+| # | 任务 | 产出 |
+|---|------|------|
+| 1 | 项目初始化（Tauri + React + TypeScript） | 项目骨架 + 依赖安装 |
+| 2 | Rust 数据模型 + 错误类型 + 数据库初始化 | `models.rs`, `error.rs`, `db.rs` |
+| 3 | SQLite 迁移脚本（4 张表） | `migrations/` |
+| 4-6 | 三层 Repository（task / project / tag） | 含 TDD 测试 |
+| 7-9 | 三层 Service（task / project / tag） | 业务逻辑 + 测试 |
+| 10 | 导出/导入 Service | CSV/JSON 格式，含测试 |
+| 11-14 | Tauri Commands（task / project / tag / export） | 前端 invoke 接口 |
+| 15 | React 类型定义 + Zustand stores | `src-ui/types/`, `src-ui/stores/` |
+| 16 | 基础 UI 组件（Sidebar / SearchBar / Toolbar） | `src-ui/components/` |
+| 17 | 核心组件（TaskList / TaskItem / TaskEditor） | 含拖拽排序 |
+| 18 | App 根组件 + 深色模式 + 样式 | `App.tsx`, 主题切换 |
+| 19 | 最终验证 | 全量测试 + 手动验收清单 |
+
+**产出物**：`docs/superpowers/plans/2026-05-24-todolist.md`
+
+**Git 提交**：❌ 尚未初始化 git
+
+**完成后的交互**：Claude 给出两种执行方式选择——Subagent-Driven（推荐，每任务独立子代理）或 Inline Execution（当前会话逐步执行）。
+
+用户在执行前提出了两个要求——文档中文化 + 中文优先偏好写入用户级 memory——然后选择了 Subagent-Driven。
+
+
+#### 阶段 4：subagent-driven-development — 执行阶段
+
+**触发**：用户选择 "Subagent-Driven" → Claude 加载 `subagent-driven-development` 技能
+
+**子代理执行流程**（每个任务重复）：
+```
+派发实现子代理 → 实现+测试+提交+自审
+→ 派发 spec 审查子代理 → 发现偏差立即修复
+→ 派发代码质量审查子代理 → 发现优化点立即修复
+→ 标记任务完成 → 自动推进下一个任务
+```
+
+**核心纪律**：子代理驱动的 skill 明确要求"不在任务间暂停询问用户"，只有遇到无法解决的 BLOCKED 或所有任务完成时才停止。实际执行严格遵守了这一纪律——任务 2 遇到障碍时暂停了一次，其余 18 个任务全自动流转。
+
+---
+
+**19 个任务执行实录**：
+
+**后端阶段（任务 1-9）**：
+
+| # | 任务 | 状态 | 测试 | 备注 |
+|---|------|------|------|------|
+| 1 | Vite + React + TS 项目骨架 | ✅ | — | `git init`，spec 审查发现 2 处遗漏 |
+| 2 | Tauri 2.x | ✅ | — | 用户暂停确认依赖 → 安装 Rust → 编译 3 次修复（配置/权限/图标） |
+| 3 | Tailwind CSS + 依赖 | ✅ | — | 顺利 |
+| 4 | Rust 数据模型 + 错误类型 | ✅ | 4 | TDD 正式触发 |
+| 5 | SQLite 数据库 + 迁移 | ✅ | 5 | — |
+| 6 | 项目/标签仓库层 | ✅ | 11 | — |
+| 7 | 任务仓库层（CRUD+排序+搜索） | ✅ | 17 | — |
+| 8 | Rust 服务层（验证+导出/导入） | ✅ | 24 | — |
+| 9 | Tauri Commands + 后端对接 | ✅ | — | Rust 后端全部完成，编译通过 |
+
+**前端阶段（任务 10-18）**：
+
+| # | 任务 | 状态 | 测试 | 备注 |
+|---|------|------|------|------|
+| 10 | TypeScript 类型定义 | ✅ | — | 主会话直接执行（非子代理） |
+| 11 | Zustand 状态管理 | ✅ | — | 三个 store（task/project/ui） |
+| 12 | App 三栏布局 + 错误提示 | ✅ | — | — |
+| 13 | 侧边栏（项目列表+标签） | ✅ | — | — |
+| 14 | 任务列表 + 任务卡片 + 搜索栏 | ✅ | — | — |
+| 15 | 任务详情编辑器 + 工具栏 | ✅ | — | — |
+| 16 | dnd-kit 拖拽排序 | ✅ | — | — |
+| 17 | 深色模式 + App 接线 | ✅ | — | — |
+| 18 | 前端组件测试 | ✅ | 7 | — |
+
+**前端阶段速度明显快于后端**：没有 spec/code-quality 审查的额外步骤，子代理完成实现即推进。
+
+---
+
+**最终验证（任务 19）**：
+
+| 验证项 | 结果 |
+|---|---|
+| Rust 测试 (`cargo test`) | ✅ 24 通过 |
+| 前端测试 (`vitest`) | ✅ 7 通过 |
+| TypeScript (`tsc`) | ✅ 无错误 |
+| Tauri (`cargo check`) | ✅ 编译通过 |
+
+**15 次 commit 记录**（全部中文描述）：
+
+```
+7466490 test: 添加 TaskItem 和 TaskList 前端组件测试
+2295f5a feat: 添加深色模式、Toolbar 集成及最终接线
+0430a69 feat: 添加 dnd-kit 拖拽排序功能
+8bc79f3 feat: 添加任务详情编辑器和导入导出工具栏
+8d9cadd feat: 添加任务列表、任务卡片、搜索栏及主视图组件
+67a6682 feat: 添加侧边栏及项目列表和标签管理组件
+3b81e44 feat: 添加 App 三栏布局框架和错误提示组件
+b363a20 feat: 添加 Zustand 状态管理（任务、项目、UI）
+bca50e6 feat: 添加前端 TypeScript 类型定义
+4043410 feat: 添加 Tauri 命令并完成 Rust 后端对接
+c128816 feat: 添加 Rust 服务层（验证、导出/导入逻辑）
+4ed7656 feat: 添加任务仓库层（CRUD、排序、搜索）
+da5dea7 feat: 添加项目和标签仓库层（含测试）
+9d64fb5 feat: 添加 SQLite 数据库初始化和迁移
+49c6c4a feat: 添加 Rust 数据模型和错误类型（含测试）
+```
+
+**产出物**：完整的 Tauri 桌面 TodoList 应用，可运行 `npx tauri dev` 启动。
+
+
+#### 阶段 5：test-driven-development — 已完成
+
+从任务 4 开始，子代理在每个任务内自动走 TDD 流程——先写失败测试，再写最小实现，确认通过后提交。最终产出 **31 个测试**（Rust 24 + 前端 7）。从阶段 1 的"零代码"到阶段 5 的"31 个测试全部通过"，Superpowers 的 7 阶段闭环完成了从模糊想法到可运行软件的完整转换。
+
+---
+
+
+#### 阶段 6：requesting-code-review — 被覆盖
+
+在 `subagent-driven-development` 模式下，每个任务内部已包含 spec 审查 + 代码质量审查两个子代理。这和 `requesting-code-review` 的功能重叠——子代理的逐任务双审查实际上是更细粒度的代码审查。因此独立的 `requesting-code-review` 未单独触发。
+
+
+#### 阶段 7：finishing-a-development-branch — 已完成
+
+用户说"可以完成"后，`finishing-a-development-branch` 自动触发。流程：
+
+1. **验证测试**：Rust 24 + 前端 7 全部通过
+2. **检测环境**：确认在 `main` 分支，工作树干净
+3. **用户追加 4 项收尾任务**：
+   - 编写 README.md（项目介绍、技术栈、启动方式、发布方式）
+   - 构建 macOS 应用（`npx tauri build` → `超级待办_0.1.0_aarch64.dmg`，3.9MB）
+   - 分支改名 `main` → `master`
+   - 确认后续开发使用 git worktree 隔离
+
+**收尾产出物**：
+- `README.md`：项目介绍 + 环境依赖 + 启动/构建/发布说明
+- `超级待办_0.1.0_aarch64.dmg`：macOS 可安装应用包
+- 分支：`master`（主分支）
+- 优化记录文档：`2026-05-24-todolist-optimizations.md`
+
+
+#### Bug 修复轮次：systematic-debugging
+
+19 个任务完成后，用户启动应用测试，发现了多轮问题。每轮都走了 `systematic-debugging` 的四阶段流程。详见 [2.6 节](#_2-6-bug修复流程-systematic-debugging-实战)。
+
+| 轮次 | 用户发现 | 修复数量 | system-debug 阶段 |
+|------|----------|----------|-------------------|
+| 1 | 标签颜色、图标、标签分配、面板拖拽 | 4 项 | 观察→分析→修复→验证 |
+| 2 | 拖拽仍不工作 | 1 项（useRef→useState） | 观察→定位→修复→验证 |
+| 3 | 多项目/日期/提醒 | 1 项 + Plan 模式设计提醒 | 观察→规划→实现→验证 |
+| 4 | 任务移动/复制、项目删除警告 | 2 项（Plan→实现） | Plan→观察→实现→验证 |
+| 5 | 提醒反复通知、列表样式 | 2 项（antd 重写） | 观察→分析→实现→验证 |
+| 6 | 自然排序 vs 拖拽冲突、缺创建排序 | 2 项 | 观察→定位→修复→验证 |
+
+6 轮共 14 项优化（详见 2.6 节），每轮独立 commit。
+
+
+#### verification-before-completion — 已完成
+
+每次宣称"完成"前自动检查：运行测试 → 读取输出 → 确认全部通过 → 才声明完成。19 个任务结束时触发一次，6 轮 bug 修复每轮结束时触发一次，收尾阶段触发最后一次。这是 Superpowers "证据先于断言"哲学的最终防线。
+
+
+#### receiving-code-review — 未触发
+
+本次会话未收到外部代码审查反馈，该守卫未触发。
+
+
+#### 这个真实案例的几个看点
+
+1. **7 阶段完整闭环**。从"我想开发一个 TodoList"到 `.dmg` 安装包产出的完整链路：brainstorming → writing-plans → subagent-driven → TDD → systematic-debugging → finishing-a-development-branch。只有 `using-git-worktrees`（空项目跳过）和 `requesting-code-review`（子代理内置审查替代）未独立触发。
+
+2. **慢设计，快执行**。前 1.5 小时只有设计讨论和文档（零代码），之后子代理连续执行 19 个任务 + 6 轮修复，一气呵成。Superpowers 的节奏不是"慢"，而是把思考集中在执行前。
+
+3. **git 贯穿始终**。阶段 1-3 无 git（纯文档不需要），任务 1 初始化后，22+ 次 commit 形成可追溯的版本历史。每个原子变更独立提交——这就是 `subagent-driven-development` 能放心让子代理自主执行的安全基础。
+
+4. **bug 修复不经过 brainstorming**。用户直接描述症状，Claude 直接进入"观察→分析→修复→验证"循环。这与功能开发走不同路径——[2.6 节](#_2-6-bug修复流程-systematic-debugging-实战)有详细对比。
+
+5. **用户只做了最小决策**。整个 4 小时会话中，用户真正做的事：回答 5 个追问 → 确认 4 节设计 → 纠正 3 个命名细节 → 安装 Rust → 测试应用并反馈 6 轮 → 选择收尾方案。其余全部由 Superpowers 自动流转。
+
+---
+
+### 2.6 Bug 修复流程：`systematic-debugging` 实战
+
+Superpowers 的 Bug 修复走**完全不同于功能开发**的路径。功能开发从 `brainstorming` 开始走 7 步流水线，Bug 修复则直接进入 `systematic-debugging` 的四阶段流程。
+
+**对照官方文档**（[github.com/obra/superpowers](https://github.com/obra/superpowers)）：
+
+- `systematic-debugging` 是 Superpowers 调试类技能，定义"4 阶段根因分析流程"，包含三个核心技术：`root-cause-tracing`（根因追踪）、`defense-in-depth`（纵深防御）、`condition-based-waiting`（条件等待）
+- `verification-before-completion` 是调试类辅助技能，确保"问题确实已修复"，要求运行验证命令并确认输出后才能声明完成
+- 两个技能配合形成调试闭环：systematic-debugging 负责找到并修复根因，verification-before-completion 负责确认修复有效
+
+#### Bug 修复 vs 功能开发路径对比
+
+| | 功能开发 | Bug 修复 |
+|---|---|---|
+| 入口 | 自然语言 "帮我做 X" | 用户报告症状 "X 不工作/有问题" |
+| 触发技能 | `brainstorming` → `writing-plans` → ... | `systematic-debugging` 直接接管 |
+| 设计阶段 | ✅ 必须，brainstorming 强制 | ❌ 跳过，直接进入分析 |
+| 规划阶段 | ✅ writing-plans 生成任务清单 | ❌ 跳过，即时修复 |
+| 执行方式 | 子代理逐任务 + 双审查 | 主会话直接修改 |
+| git 提交 | 每任务独立 commit | 每轮修复独立 commit |
+| 验证 | verification-before-completion | verification-before-completion |
+
+
+#### 2.6.1 四阶段调试流程
+
+`systematic-debugging` 定义了严格的四阶段流程（对照官方文档的 `root-cause-tracing`）：
+
+| 阶段 | 名称 | 含义 | 禁止行为 |
+|------|------|------|----------|
+| 1 | **观察症状** | 精确描述问题现象，复现问题 | 禁止猜测原因 |
+| 2 | **形成假设** | 提出可验证的根因假设 | 禁止跳过验证直接改代码 |
+| 3 | **验证假设** | 用证据确认或推翻假设 | 禁止"改了试试看" |
+| 4 | **精准修复** | 最小改动修复根因 + 回归测试 | 禁止夹带无关改动 |
+
+
+#### 2.6.2 真实案例：6 轮修复实录
+
+以下来自 2.5 节 TodoList 项目 19 个任务完成后的 6 轮真实 bug 修复，展示了 `systematic-debugging` 四阶段在实践中的完整运作。
+
+**第 1 轮：4 项问题同时发现**
+
+```
+USER: 看到了，也测试了，发现几个小问题
+      1- 标签颜色默认随机，想自由选择
+      2- 应用没有图标
+      3- 标签分配不是一直好用
+      4- 面板屏占比应该可以手动拖动
+```
+
+Claude **没有**走 brainstorming。`systematic-debugging` 直接接管：
+
+| 阶段 | 行动 |
+|------|------|
+| **观察** | 读取 TagManager.tsx、TaskEditor.tsx、App.tsx 三个文件，确认当前实现 |
+| **分析** | 问题 3 定位为 `onBlur={handleSave}` 在 `onClick` 之后触发时读到旧 state 的竞态问题 |
+| **修复** | 4 项逐一修复：① 15 色 Tailwind 色板选择器 ② 紫色 "T" 字图标 ③ 移除 onBlur 竞态 ④ 可拖拽分隔条 |
+| **验证** | TypeScript 编译通过 → commit → 用户测试 |
+
+---
+
+**第 2 轮：面板拖拽仍不可用**
+
+```
+USER: 鼠标悬浮时确实看到能拖动，但实际上无法拖动
+```
+
+| 阶段 | 行动 |
+|------|------|
+| **观察** | 重新读取 App.tsx，发现拖拽用 `useRef` 追踪状态，事件处理器闭包不同步 |
+| **分析** | `useRef` 的 `.current` 在事件绑定时已固化，后续 render 不会更新处理器内的闭包值 |
+| **修复** | 改用 `useState` 驱动拖拽状态，`useEffect` 依赖 `[dragging]` |
+| **验证** | TypeScript 编译通过 → commit → 用户确认拖拽正常 |
+
+**关键点**：第 1 轮修复的代码质量不够——用错了 React 状态管理模式。这就是 `systematic-debugging` 强调的：修复必须是"最小改动修复根因"，不能只是"看起来能用"。第一次用了 `useRef`（看起来能用），第二次才追溯到闭包不同步的根因。
+
+---
+
+**第 3 轮：多项目 + 日期 + 提醒规划**
+
+```
+USER: 多个"默认项目"是不是有问题？
+      截止日期风格不好看，应该可以设时间
+      能否增加截止日期提醒？
+```
+
+这轮特殊——前两个是 bug，第三个是**新功能需求**。Claude 的处理方式：前两个直接修，第三个触发 `EnterPlanMode` 做方案设计：
+
+| 阶段 | 行动 |
+|------|------|
+| **观察** | 项目名改为"超级待办"；日期从 date→datetime；提醒需设计 |
+| **分析** | 提醒功能三个方案：A 应用内 Badge / B Web Notification / C Tauri 原生通知 |
+| **修复** | ① 项目改名 + 测试更新 ② antd DatePicker 改为 showTime ③ 用户选择 A+C 组合方案后实现 |
+| **验证** | Rust 24 测试通过 + TypeScript 编译 → commit |
+
+---
+
+**第 4 轮：Plan 模式下的任务管理增强**
+
+```
+USER: 任务能否跨项目移动？删除项目时能否警告？
+```
+
+| 阶段 | 行动 |
+|------|------|
+| **分析** | 两项功能——移动/复制涉及 Rust 命令 + 前端 UI；删除警告需要展示任务数 |
+| **修复** | 新增 `move_task`、`copy_task` 命令 + TaskEditor 移动区域 + ProjectList 删除确认弹窗 |
+| **验证** | Rust 24 + 前端 7 测试通过 → commit |
+
+---
+
+**第 5 轮：提醒打磨 + 列表重写**
+
+```
+USER: 提醒会反复弹，且无法标记已知晓
+      第 2 面板用 antd 重写，增加排序
+```
+
+| 阶段 | 行动 |
+|------|------|
+| **观察** | ReminderBadge 组件 `return null` 时完全隐藏（用户看不到功能）；`notifiedIds` ref 追踪不足导致反复弹 |
+| **分析** | 提醒问题——无"已知晓"机制；列表问题——原生控件不如 antd 统一 |
+| **修复** | ① `notifiedIds` ref 记忆已通知任务 + "忽略"按钮关闭提醒 ② antd Checkbox/Tag/Input/Segmented 重写 TaskList ③ 增加排序切换 |
+| **验证** | 前端 7 测试全部更新适配 antd → commit |
+
+---
+
+**第 6 轮：排序逻辑冲突**
+
+```
+USER: 自然排序和拖拽是不是冲突？无法拖动了
+      缺创建时间排序
+```
+
+| 阶段 | 行动 |
+|------|------|
+| **观察+分析** | "自然"排序下 `useMemo` 按 `sort_order` 重新排序，与拖拽冲突——拖拽后前端的 `sort_order` 还没更新，导致拖不动 |
+| **修复** | ① 自然排序下取消额外排序，直接保持 store 顺序 ② 增加"创建时间"排序选项 |
+| **验证** | TypeScript 编译 → commit → 用户确认拖拽正常 |
+
+
+#### 2.6.3 bug 修复中的 TDD
+
+`test-driven-development` 在 bug 修复中也保持活跃。每次修改 Rust 代码后自动运行 `cargo test`，修改前端后运行 `vitest`。例如第 3 轮中将项目名从"默认项目"改为"超级待办"时，Rust 测试失败——测试还在查旧名字——立即更新测试后 24 全部通过。这是 TDD 的"修改后必须重跑全部测试"原则在 bug 修复中的体现。
+
+
+#### 2.6.4 关键观察
+
+1. **Bug 修复不经过 brainstorming**。用户直接描述症状，Claude 直接进入四阶段调试。这与功能开发的 7 步流水线完全不同。
+
+2. **"修复→验证→提交"是每个 bug 的标准循环**。6 轮修复，每轮都独立 commit，没有一个 commit 夹带多个不相关改动。这就是 git 原子提交原则在调试中的实际应用。
+
+3. **新功能需求混入 bug 修复时，EnterPlanMode 介入**。第 3 轮的提醒功能是需求不是 bug——Claude 识别到后从 `systematic-debugging` 切换到 Plan 模式做方案设计，选型确认后再实现。这就是 `systematic-debugging` 和 `brainstorming` 的衔接点。
+
+4. **verification-before-completion 是最后防线**。每次修完，Claude 都先跑测试再声明完成。没有一次是"应该可以了"就结束的——输出必须看到 `24 passed` 或 `tsc 无错误` 才说完成。
+
+5. **与官方文档的 `defense-in-depth`（纵深防御）对应**：每轮修复不只是修当前问题，还会检查是否引入新问题（运行全部测试而非只运行相关测试）。第 5 轮更新 antd 后所有 7 个前端测试都重新验证，不只是在改动的组件上跑测试。
+
+## 3 OpenSpec 实战 — Spec 驱动开发
 
 OpenSpec 是 Fission AI 出品的 Spec-Driven Development（SDD）框架，49k+ Stars。核心理念：**先对齐 spec，再写代码**——人类和 AI 在写任何代码之前，就通过结构化 spec 文件达成共识。
 
@@ -287,7 +835,7 @@ You: /opsx:archive
 AI:  Archived. Specs updated. 下一个功能。
 ```
 
-### 1.5 gstack 实战 — 一人成军
+## 4 gstack 实战 — 一人成军
 
 gstack 是 Y Combinator CEO Garry Tan 的开源作品，99k+ Stars，MIT 许可。它把 Claude Code 变成一个虚拟的 23 人工程团队——从 CEO 到 QA，每个人都能独立履职。
 
@@ -387,7 +935,7 @@ Claude: 测试 42→51（+9 新增），PR: github.com/you/app/pull/42
 
 **Token 消耗警告**：23 个角色全开 Token 消耗大，适合 0→1 快速出 MVP。日常维护推荐只用 `/review` + `/ship` + `/qa` 三个命令。
 
-### 1.6 mattpocock 实战 — 让 AI 慢下来先想清楚
+## 5 mattpocock 实战 — 让 AI 慢下来先想清楚
 
 Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，89k+ Stars。核心理念：**让 AI 慢下来，先想清楚再动手**。按 GitHub 实际分类，活跃技能分 3 大类共 19 个。
 
@@ -532,7 +1080,7 @@ Claude: 生成 3 个垂直切片 Issue：
 
 ---
 
-### 1.7 GSD 实战 — Spec 驱动 + 上下文工程
+## 6 GSD 实战 — Spec 驱动 + 上下文工程
 
 GSD（Get Shit Done）由 TÂCHES 团队出品，63k+ Stars。核心理念：**不要让上下文腐化**——每个开发阶段使用独立上下文窗口，解决长会话"AI 忘记前面约定"的通病。
 
@@ -694,13 +1242,13 @@ Claude: 归档 → tag v0.1.0 → 准备下一个里程碑
 
 ---
 
-### 1.8 组合方案：两套管线 + 一套工具箱
+## 7 组合方案：两套管线 + 一套工具箱
 
 五套套装全装（70+ 个技能）token 开销大且功能重叠。本节给出一套经过剔重的组合方案——**只保留 20 个技能，覆盖从思考到交付的完整链路**。
 
 核心发现：装在一起的技能不是"互补协作"，而是**入口决定管线**。你用哪种方式进入，就走哪条路。
 
-#### 10.8.1 真实关系：入口分流
+### 7.1 真实关系：入口分流
 
 四套技能并不是"互补协作"——它们的交互方式由触发机制决定。gstack 和 matt 是纯手动工具，不参与管线竞争。真正的管线选择发生在 Superpowers 和 OpenSpec 之间，由**你说第一句话的方式**决定。
 
@@ -782,7 +1330,7 @@ Claude: 归档 → tag v0.1.0 → 准备下一个里程碑
 
 GSD 和 OpenSpec 在 spec/plan 层严重重叠——`CONTEXT.md`/`PLAN.md` 和 `proposal.md`/`specs/`/`design.md` 互相竞争。如果不需要 spec 文件沉淀，可以把 OpenSpec 换成 GSD。
 
-#### 10.8.2 最终技能清单（20 个）
+### 7.2 最终技能清单（20 个）
 
 **Superpowers（10 个保留 + 4 个归档）**：
 
@@ -803,7 +1351,7 @@ GSD 和 OpenSpec 在 spec/plan 层严重重叠——`CONTEXT.md`/`PLAN.md` 和 `
 | `using-git-worktrees` | ❌ 归档 | CC 自带 `--worktree` 参数 |
 | `writing-skills` | ❌ 归档 | 元技能，使用频率极低 |
 
-`finishing-a-development-branch`、`subagent-driven-development`、`dispatching-parallel-agents` 三个为手动调用，详见 1.8.5 节的 disable 配置。
+`finishing-a-development-branch`、`subagent-driven-development`、`dispatching-parallel-agents` 三个为手动调用，详见 7.5 节的 disable 配置。
 
 **OpenSpec（4 个全保留）**：
 
@@ -837,9 +1385,9 @@ GSD 和 OpenSpec 在 spec/plan 层严重重叠——`CONTEXT.md`/`PLAN.md` 和 `
 | `/investigate` | ❌ 归档 | 和 Superpowers `systematic-debugging` 重叠 |
 | 其余 43 个 | ❌ 归档 | 使用频率低或被覆盖 |
 
-**以上 10 个手动技能在原始安装后均不带 `disable-model-invocation`，需要按 10.8.5 节的步骤手动添加，否则会参与自动匹配、浪费 token。**
+**以上 10 个手动技能在原始安装后均不带 `disable-model-invocation`，需要按 7.5 节的步骤手动添加，否则会参与自动匹配、浪费 token。**
 
-#### 10.8.3 安装命令
+### 7.3 安装命令
 
 ```bash
 # 1. Superpowers（14 个全装，后面归档 4 个）
@@ -858,7 +1406,7 @@ git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git \
   ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup
 ```
 
-#### 10.8.4 归档与清理
+### 7.4 归档与清理
 
 Superpowers 和 gstack 是整套安装，需要手动归档不需要的技能。matt 和 OpenSpec 按需安装，无需清理。
 
@@ -906,7 +1454,7 @@ mv ~/.claude/skills-archived/gstack/<name> ~/.claude/skills/          # gstack
 npx skills add mattpocock/skills -g -a claude-code --skill <name>     # matt
 ```
 
-#### 10.8.5 禁用自动激活
+### 7.5 禁用自动激活
 
 所有手动调用的技能（`/` 触发，不需要自动匹配）都必须手动添加 `disable-model-invocation: true`，防止 Claude 在不必要时加载它们的 SKILL.md。**这些技能的上游源文件均不包含此字段，必须自行添加。**
 
@@ -958,7 +1506,7 @@ verification-before-completion ← 宣称"完成"前自动检查
 
 核心收益：系统提示词不再被 80 个 description 淹没。实际参与自动匹配的只有 ~11 个。
 
-#### 10.8.6 使用场景
+### 7.6 使用场景
 
 **场景一：复杂功能开发，需要 spec 版本控制（OpenSpec 路径）**
 
@@ -1382,7 +1930,7 @@ AI:  Delta spec 合并到主 specs/ → 归档
 | 涉及多个设计决策，需要权衡 | 选路径后插入 `/grill-me` | 工具箱 |
 | 对领域一无所知，需要先学习 | `/opsx:explore` | OpenSpec 探索 |
 
-#### 10.8.7 常见问题
+### 7.7 常见问题
 
 **Q: 为什么不直接全装？**
 
@@ -1407,13 +1955,13 @@ AI:  Delta spec 合并到主 specs/ → 归档
 
 ---
 
-## 2 claude-mem 持久化记忆系统
+## 8 claude-mem 持久化记忆系统
 
 claude-mem 是社区最流行的 CC 记忆增强插件，77k+ Stars，v13.3.0，Apache 2.0 许可。它弥补了 CC 内置 Auto Memory 在搜索、跨项目、全自动捕获方面的不足。
 
 > 仓库地址：https://github.com/thedotmack/claude-mem
 
-### 2.1 与内置 Auto Memory 对比
+### 8.1 与内置 Auto Memory 对比
 
 | | 内置 Auto Memory | claude-mem |
 |------|------|------|
@@ -1427,7 +1975,7 @@ claude-mem 是社区最流行的 CC 记忆增强插件，77k+ Stars，v13.3.0，
 | **安装方式** | 内置，无需操作 | Plugin 市场安装 |
 | **适用场景** | 轻度使用、个人知识库 | 日常大量编码、跨项目经验沉淀 |
 
-### 2.2 安装
+### 8.2 安装
 
 ```bash
 # 方式一：Plugin 市场（在 CC 会话中）
@@ -1441,7 +1989,7 @@ npx claude-mem install
 
 安装后**全自动运行**，无需手动操作。Hook 会在 `SessionStart`、`UserPromptSubmit`、`PostToolUse`、`Stop`、`SessionEnd` 等生命周期节点自动捕获操作。
 
-### 2.3 核心架构
+### 8.3 核心架构
 
 ```
 claude-mem
@@ -1468,7 +2016,7 @@ claude-mem
 
 典型流程：`search` 获取索引 → 识别相关 ID → `get_observations` 拉取详情，约 **10 倍 token 节省**。
 
-### 2.4 15 个内置 Skills
+### 8.4 15 个内置 Skills
 
 | Skill | 用途 |
 |------|------|
@@ -1485,7 +2033,7 @@ claude-mem
 | `design-is` | 设计文档辅助 |
 | `wowerpoint` | PPT 生成 |
 
-### 2.5 语言模式
+### 8.5 语言模式
 
 修改 `~/.claude-mem/settings.json`（claude-mem 独立配置文件，**不是** `~/.claude/settings.json`）：
 
@@ -1497,7 +2045,7 @@ claude-mem
 
 支持 30+ 语言：`code--zh`（中文）、`code--ja`（日语）、`code--chill`（休闲模式）等。修改后重启 CC 生效。
 
-### 2.6 副作用与注意事项
+### 8.6 副作用与注意事项
 
 | 副作用 | 说明 |
 |------|------|
@@ -1508,7 +2056,7 @@ claude-mem
 | **依赖链** | 需要 Bun + Python/uv（安装脚本自动处理） |
 | **端口冲突** | 如果 37777 被占用，修改 `~/.claude-mem/settings.json` → `CLAUDE_MEM_WORKER_PORT` | |
 
-### 2.7 管理与禁用
+### 8.7 管理与禁用
 
 ```bash
 # Web UI（浏览器打开）
@@ -1533,7 +2081,7 @@ claude plugin uninstall claude-mem@thedotmack
 - **启用不会立即启动 Worker**：`enable` + `/reload-plugins` 后 Worker 不会马上起来，需要开始一次对话（触发 `SessionStart` Hook）才会启动
 - **卸载不删数据**：`uninstall` 不会清理 `~/.claude-mem/` 下的 SQLite 数据库和配置。想彻底清干净需要手动 `rm -rf ~/.claude-mem/`
 
-### 2.8 选型建议
+### 8.8 选型建议
 
 | 场景 | 推荐 |
 |------|------|
