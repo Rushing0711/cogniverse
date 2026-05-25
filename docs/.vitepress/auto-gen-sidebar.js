@@ -9,8 +9,8 @@ const WHITE_LIST = ['.DS_Store', 'images', 'index.md']
 // 判断是否文件夹
 const isDirectory = (path) => fs.lstatSync(path).isDirectory();
 
-// 去差值
-const intersections = (arr1, arr2) => Array.from(new Set(arr1.filter((item) => !new Set(arr2).has(item))));
+// 差集：从 arr1 中排除 arr2 包含的元素
+const difference = (arr1, arr2) => Array.from(new Set(arr1.filter((item) => !new Set(arr2).has(item))));
 
 // 对“00-第零篇”、“01-第一篇”等标题特殊处理
 const regex = /^\d{2}--第[零一二三四五六七八九十]篇/;
@@ -38,7 +38,7 @@ function specialTitle(basename) {
  */
 function getList(files, dirPath, pathname) {
     // 过滤掉
-    const items = intersections(files, WHITE_LIST)
+    const items = difference(files, WHITE_LIST)
     // 存放结果
     const res = []
     // 开始遍历params
