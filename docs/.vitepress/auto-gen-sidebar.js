@@ -41,27 +41,27 @@ function getList(files, dirPath, pathname) {
     const items = difference(files, WHITE_LIST)
     // 存放结果
     const res = []
-    // 开始遍历params
-    for (let file in items) {
+    // 开始遍历
+    for (let i = 0; i < items.length; i++) {
         // 拼接目录
-        const dir = path.join(dirPath, items[file])
+        const dir = path.join(dirPath, items[i])
         // 判断是否是文件夹
         const isDir = isDirectory(dir)
         if (isDir) {
             // 如果是文件夹,读取之后作为下一次递归参数
-            const files = fs.readdirSync(dir)
+            const subFiles = fs.readdirSync(dir)
             res.push({
-                text: items[file],
+                text: items[i],
                 collapsible: true,
-                items: getList(files, dir, `${pathname}/${items[file]}`),
+                items: getList(subFiles, dir, `${pathname}/${items[i]}`),
             })
         } else {
             // 获取不带后缀的文件名
-            const basename = path.parse(items[file]).name
+            const basename = path.parse(items[i]).name
             // 获取名字
-            const name = path.basename(items[file])
+            const name = path.basename(items[i])
             // 排除非 md 文件
-            const suffix = path.extname(items[file])
+            const suffix = path.extname(items[i])
             if (suffix !== '.md') {
                 continue
             }
