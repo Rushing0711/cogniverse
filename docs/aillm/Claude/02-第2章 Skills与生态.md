@@ -666,26 +666,323 @@ USER: 自然排序和拖拽是不是冲突？无法拖动了
 
 ## 3 OpenSpec 实战 — Spec 驱动开发
 
-OpenSpec 是 Fission AI 出品的 Spec-Driven Development（SDD）框架，49k+ Stars。核心理念：**先对齐 spec，再写代码**——人类和 AI 在写任何代码之前，就通过结构化 spec 文件达成共识。
+OpenSpec 是 Fission AI 出品的 Spec-Driven Development（SDD）框架，50k+ Stars。核心理念：**先对齐 spec，再写代码**——人类和 AI 在写任何代码之前，就通过结构化 spec 文件达成共识。
 
-**两种模式：Core vs Custom**：
+### 3.1 核心理念与背景
 
-OpenSpec 有两级配置——全局配置（`~/.config/openspec/config.json`）和项目配置（`openspec/config.yaml`）。全局配置中的 `profile` 字段决定你能用哪些命令：
+#### 什么是 OpenSpec
+
+AI 编程助手最大的不确定性在于：需求仅存在于聊天历史里，关了会话就丢失。OpenSpec 在代码之上加了一层**轻量级规范层**，将人和 AI 对"要构建什么"的共识**持久化为结构化文件**。每个变更都有独立的文件夹，包含 proposal（为什么做）、specs（需求场景）、design（技术方案）、tasks（实施清单），可随时更新、无强制阶段关卡。
+
+#### 五大设计原则
+
+| 原则 | 含义 |
+|------|------|
+| **fluid not rigid** | 无强制阶段关卡，任何时候都能更新任何工件 |
+| **iterative not waterfall** | 迭代式推进，随着理解加深逐步完善 |
+| **easy not complex** | 轻量安装，最小认知负担 |
+| **built for brownfield** | 天然适配存量项目，Delta Spec 只描述变化量，不要求重写全量规格 |
+| **scalable** | 从个人项目到企业级团队均可使用 |
+
+#### 核心特色
+
+**Delta Spec 机制** — OpenSpec 最核心的概念。每次功能变更不直接修改主 spec，而是写一份"变更单"（Delta Spec），用三个区段标记改动：`ADDED`（新增）、`MODIFIED`（修改，附带原值）、`REMOVED`（删除，附带原因）。归档时自动合并到主 spec，类似"规格的 git diff"，每次改动都有迹可循。
+
+**Artifact 依赖图** — 工件按依赖关系组织：`proposal → specs → design → tasks → implement`。依赖是"参考"而非"关卡"——它们告诉你可以创建什么，而非强制你必须创建什么。不需要的工件可以跳过。
+
+**双模式灵活切换** — Core 模式覆盖日常 90% 场景（4 个默认命令 + 可选的 sync，快速闭环），Custom 模式提供完整的 11 个命令用于复杂流程的逐步控制。
+
+**25+ AI 工具支持** — 同一套配置兼容 Claude Code、Cursor、Windsurf、GitHub Copilot、Gemini CLI 等主流工具。不同工具的斜杠命令语法略有差异（如 Claude Code 用 `/opsx:propose`，Cursor 用 `/opsx-propose`），但工作流完全一致。
+
+**多语言支持** — 在 `openspec/config.yaml` 中声明一行语言指令，所有 artifact 自动以目标语言生成。
+
+**Schema 可定制** — 内置工作流不满意？`openspec schema fork spec-driven` 复制一份到项目里自己改依赖图和产物类型。
+
+#### 概念关系图
+
+```mermaid
+graph LR
+    S[specs/<br/>真相源] -->|描述当前行为| C[changes/<br/>变更区]
+    C -->|Delta Spec| D[ADDED / MODIFIED / REMOVED]
+    D -->|archive 合并| S
+    C -->|包含| A[Artifacts]
+    A --> P[proposal.md<br/>为什么做]
+    A --> SP[specs/<br/>需求场景]
+    A --> DE[design.md<br/>技术方案]
+    A --> T[tasks.md<br/>实施清单]
+    T -->|apply 执行| I[实现代码]
+```
+
+### 3.2 安装与初始化
+
+#### 前置要求
+
+- Node.js ≥ 20.19.0
+
+#### 全局安装 CLI
+
+```bash
+npm install -g @fission-ai/openspec@latest
+```
+
+支持 pnpm、yarn、bun、nix 等包管理器，详见官方安装文档。
+
+#### 项目初始化
+
+进入项目目录执行：
+
+```bash
+cd your-project
+openspec init
+```
+
+<span style="color:red;font-weight:bold;">提示：下图中安装产物（`.claude/settings.local.json` 除外）</span>
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const current = ref(0)
+const images = [
+  { src: 'images/image-20260525125936739.png', alt: 'openspec-init-step1' },
+  { src: 'images/image-20260525125947192.png', alt: 'openspec-init-step2' },
+  { src: 'images/image-20260525125953455.png', alt: 'openspec-init-step3' },
+]
+
+const len = images.length
+let timer = null
+
+function start() {
+  stop()
+  timer = setInterval(() => {
+    current.value = (current.value + 1) % len
+  }, 2000)
+}
+
+function stop() {
+  if (timer) { clearInterval(timer); timer = null }
+}
+
+function prev() {
+  current.value = (current.value - 1 + len) % len
+}
+
+function next() {
+  current.value = (current.value + 1) % len
+}
+
+onMounted(start)
+onUnmounted(stop)
+</script>
+
+<div
+  class="carousel-wrapper"
+  @mouseenter="stop"
+  @mouseleave="start"
+>
+  <button class="carousel-arrow carousel-arrow-left" @click="prev">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <div
+    class="carousel-track"
+    :style="{ transform: `translateX(-${current * 100}%)` }"
+  >
+    <img
+      v-for="(img, i) in images"
+      :key="i"
+      :src="img.src"
+      :alt="img.alt"
+      class="carousel-slide"
+    />
+  </div>
+  <button class="carousel-arrow carousel-arrow-right" @click="next">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+  <div class="carousel-dots">
+    <span
+      v-for="(_, i) in images"
+      :key="i"
+      class="carousel-dot"
+      :class="{ 'carousel-dot-active': i === current }"
+    />
+  </div>
+</div>
+
+<style scoped>
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+.carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+}
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s, background 0.3s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.carousel-arrow:hover {
+  background: var(--vp-c-brand);
+  color: #fff;
+}
+.carousel-arrow-left  { left: 12px; }
+.carousel-arrow-right { right: 12px; }
+.carousel-wrapper:hover .carousel-arrow {
+  opacity: 1;
+}
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vp-c-text-3);
+  transition: background 0.3s;
+}
+.carousel-dot-active {
+  background: var(--vp-c-brand);
+}
+</style>
+
+交互式流程仅询问选择 AI 工具（Claude Code / Cursor / Windsurf 等），profile 使用全局配置的默认值（Core）。也可非交互式一步到位：
+
+```bash
+# 只配置 Claude Code
+openspec init --tools claude
+
+# 配置多个工具
+openspec init --tools claude,cursor
+
+# 配置所有 25+ 工具
+openspec init --tools all
+
+# 指定 profile（默认 core）
+openspec init --tools claude --profile core
+```
+
+#### 默认初始化产物
+
+`openspec init --tools claude` 完成后，项目中的新增文件如下：
+
+```
+.claude
+├── commands
+│   └── opsx
+│       ├── apply.md
+│       ├── archive.md
+│       ├── explore.md
+│       └── propose.md
+└── skills
+    ├── openspec-apply-change
+    │   └── SKILL.md
+    ├── openspec-archive-change
+    │   └── SKILL.md
+    ├── openspec-explore
+    │   └── SKILL.md
+    └── openspec-propose
+        └── SKILL.md
+openspec
+├── changes
+│   └── archive
+├── config.yaml
+└── specs
+```
+
+默认初始化做了两件事：① 创建 `openspec/` 目录结构（specs + changes + config.yaml）；② 生成 Claude Code 的 slash command 和 skill 文件。
+
+但默认配置存在两个不理想之处：
+
+| 问题 | 影响 |
+|------|------|
+| 只有 4 个命令，缺少 `sync` | `sync` 用于将 delta spec 中途合并到主 spec，对长期运行的变更或并行变更非常有价值。缺少它意味着只能在 archive 时一次性合并 delta，无法在中途做检查点 |
+| delivery 默认 `both`，同时装了 skill 文件 | slash command 已足够触发所有工作流，skill 文件功能重叠，且可能被 Claude Code 自动激活造成意外触发 |
+
+#### 推荐配置：先配后装，一步到位
+
+`openspec init` 本身不支持 `--delivery` 参数，但它会读取全局配置中的 delivery 和 workflow 设置。因此，**在 init 之前先配好全局 config**，就能一步生成理想产物：
+
+```bash
+# 第 1 步：安装 CLI
+npm install -g @fission-ai/openspec@latest
+
+# 第 2 步：配置全局 profile —— delivery 切 commands only，补上 sync
+openspec config profile
+# → 选择 "Change delivery + workflows"
+# → delivery 选 "Commands only"
+# → 在 workflow 列表中勾选 sync
+
+# 第 3 步：初始化（使用刚才配好的全局配置）
+openspec init --tools claude
+```
+
+这样 init 直接产出干净的 `.claude/`和`openspec`：
+
+```
+.claude
+└── commands
+    └── opsx
+        ├── apply.md
+        ├── archive.md
+        ├── explore.md
+        ├── propose.md
+        └── sync.md
+openspec
+├── changes
+│   └── archive
+└── specs
+
+7 directories, 5 files
+```
+
+> **如果已经跑过 `openspec init`**（默认同时装了 skill 文件），可以先配好全局 config，再执行 `openspec update` 刷新项目文件，效果同上。
+
+> **关于 delivery 模式**：OpenSpec 支持三种 delivery —— `both`（同时生成 Slash Commands + Skills，默认）、`commands only`（仅斜杠命令）、`skills only`（仅 Skills，适合不支持斜杠命令的工具如 Kimi、Trae）。对于 Claude Code 而言，斜杠命令已足够触发全部工作流，`commands only` 是更干净的选择。
+
+#### Core vs Custom 模式选择
+
+OpenSpec 有两级配置：全局配置（`~/.config/openspec/config.json`）和项目配置（`openspec/config.yaml`）。全局配置的 `profile` 决定可用命令集：
 
 | 模式 | 命令数 | 包含的命令 | 适用场景 |
 |------|--------|-----------|----------|
-| **Core**（默认） | 5 个 | `propose`、`explore`、`apply`、`sync`、`archive` | 日常快速迭代，90% 场景够用 |
-| **Custom** | 11 个 | Core 的 5 个 + `new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` | 复杂功能、需要逐步控制每个阶段 |
+| **Core**（默认） | 4 个 | `propose`、`explore`、`apply`、`archive` | 日常快速迭代，90% 场景够用。可通过 config profile 补上 `sync` |
+| **Custom** | 11 个 | Core 的全部 + `sync`、`new`、`continue`、`ff`、`verify`、`bulk-archive`、`onboard` | 复杂功能、需要逐步控制每个阶段 |
 
-**模式管理命令**：
+**选择建议**：一开始用 Core。按上一节的推荐配置补上 `sync` 并切到 `commands only`，即可满足绝大多数场景。当需要逐步审查工件、归档前显式验证或并行多个 change 时，再切 Custom。
 
 ```bash
-# 查看当前配置（全局 + 项目）
+# 查看当前配置
 openspec config list
 
 # 交互式选择 profile 和 workflows（推荐）
 openspec config profile
-# → 选择 core（5 个核心命令）或 custom（自选 11 个中的任意组合）
+# → 选择 core 或 custom
+# → 选择 delivery 模式
+# → 选择具体 workflows（custom 模式可多选）
 
 # 将配置同步到项目（每次改完 profile 都要执行）
 openspec update
@@ -695,83 +992,172 @@ openspec config set profile core
 openspec config set profile custom
 ```
 
-**安装**（需要 Node.js ≥ 20.19.0）：
+#### 升级与更新
 
 ```bash
+# 升级 CLI
 npm install -g @fission-ai/openspec@latest
-cd your-project && openspec init --tools claude
+
+# 刷新项目中的 AI 指令文件（每次升级后必做）
+openspec update
 ```
 
-`openspec init` 做了三件事：创建 `openspec/` 目录结构、生成 AI 工具的 slash command 文件、初始化项目配置。支持 25+ AI 工具（Claude Code、Cursor、Windsurf、Copilot 等），不同工具的 command 语法略有差异（如 CC 用 `/opsx:propose`，Cursor 用 `/opsx-propose`）。
+#### 卸载
 
-**完整命令清单**：
+OpenSpec 没有官方卸载命令。要移除：
 
-| 命令 | 所属 | 核心度 | 用途 |
-|------|------|--------|------|
-| `/opsx:explore [topic]` | Core | ★★★★ | 思考探索阶段：调查代码库、对比方案、评估风险，**纯只读**，不写代码 |
-| `/opsx:propose <idea>` | Core | ★★★★★ | 一键创建 change + 所有规划产物（proposal + specs + design + tasks） |
-| `/opsx:apply` | Core | ★★★★★ | 按 tasks.md 逐项实现，写代码、跑测试、勾选 checkbox |
-| `/opsx:sync` | Core | ★★★ | 将 delta spec 合并到主 spec（长期变更的中途检查点） |
-| `/opsx:archive` | Core | ★★★★ | 归档变更：合并 spec → 移动到 `archive/YYYY-MM-DD-<name>/` |
-| `/opsx:new` | Custom | ★★★ | 创建空 change 目录 + `.openspec.yaml` 元数据（不生成产物） |
-| `/opsx:continue` | Custom | ★★ | 按依赖图逐个创建产物（propose 一键已覆盖此流程） |
-| `/opsx:ff` | Custom | ★★★ | 快速推进：一键创建所有剩余产物 |
-| `/opsx:verify` | Custom | ★★★ | 三维度验证：完整性（Completeness）、正确性（Correctness）、一致性（Coherence） |
-| `/opsx:bulk-archive` | Custom | ★★ | 批量归档多个 change，自动检测和解决 spec 冲突 |
-| `/opsx:onboard` | Custom | ★ | 交互式新手引导，用你的实际代码库走完整流程（一次性使用） |
+1. 删除项目中的 `openspec/` 目录
+2. 删除生成的 AI 工具文件：`.claude/commands/opsx/`、`.claude/skills/openspec-*/` 等
+3. 如需卸载全局 CLI：`npm uninstall -g @fission-ai/openspec`
 
-**评星维度：命令核心度**——缺了该命令，spec→代码→归档闭环是否还能跑通。同时综合考量命令的打磨成熟度。
+### 3.3 命令全览
 
-**💡 按星筛选使用**：★★★★★ 是闭环支柱（`propose` 起点 + `apply` 执行），日常必用。★★★★ 是高频补充（`explore` 需求模糊时、`archive` 收尾时）。★★★ 以下按需启用。OpenSpec 通过 `npm install -g @fission-ai/openspec@latest && openspec init` 整套安装，不支持单命令安装。
+OpenSpec 的命令分为两类：**CLI 命令**在终端中使用，**Slash Commands** 在 AI 编码助手中使用。
 
-**核心工作流**：
+#### CLI 命令（终端）
+
+| 类别 | 命令 | 用途 |
+|------|------|------|
+| 设置 | `openspec init [path] [--tools ...]` | 初始化项目，创建目录结构，配置 AI 工具 |
+| 设置 | `openspec update [path]` | 升级 CLI 后刷新项目中的 AI 指令文件 |
+| 浏览 | `openspec list [--specs\|--changes]` | 列出活动变更或规格 |
+| 浏览 | `openspec show [name]` | 查看变更或规格的详细内容 |
+| 浏览 | `openspec view` | 打开交互式终端仪表盘 |
+| 验证 | `openspec validate [name\|--all]` | 验证变更/规格的结构问题 |
+| 状态 | `openspec status [--change name]` | 查看变更的工件完成状态 |
+| 指令 | `openspec instructions [artifact]` | 获取下一步操作指令（供 AI agent 使用） |
+| 归档 | `openspec archive [name] [-y\|--skip-specs]` | 终端直接归档变更，合并 delta spec |
+| 配置 | `openspec config <subcommand>` | 管理全局配置（list/get/set/profile 等） |
+| Schema | `openspec schema init/fork/validate` | 创建或自定义工作流 schema |
+| 补全 | `openspec completion install [shell]` | 安装 shell 补全（bash/zsh/fish） |
+| 反馈 | `openspec feedback <message>` | 通过 GitHub Issue 提交反馈 |
+
+常用 `--json` 选项供脚本/AI agent 消费结构化输出。
+
+#### Slash Commands（AI 对话中）
+
+**Core 模式（默认 4 个，sync 需手动启用）：**
+
+| 命令 | 用途 |
+|------|------|
+| `/opsx:propose [name]` | 一键创建 change 并生成所有规划工件（proposal + specs + design + tasks） |
+| `/opsx:explore [topic]` | 探索代码库、对比方案、评估风险，**纯只读**，不创建任何文件 |
+| `/opsx:apply [name]` | 按 tasks.md 中的 checkbox 逐项实现，写代码、标记完成 |
+| `/opsx:archive [name]` | 归档变更：合并 delta spec → 移动到 `archive/YYYY-MM-DD-name/` |
+| `/opsx:sync [name]` | （需手动启用）将 delta spec 合并到主 spec，长期变更的中途检查点 |
+
+**Custom 模式（全部 11 个，包含上方 Core 的 5 个 + 下表 6 个）：**
+
+| 命令 | 用途 |
+|------|------|
+| `/opsx:new [name] [--schema]` | 创建空 change 目录和 `.openspec.yaml` 元数据，不生成任何工件 |
+| `/opsx:continue [name]` | 按依赖图逐个创建工件，显示 ✓（完成）、◆（就绪）、○（受阻）状态 |
+| `/opsx:ff [name]` | 快进：一键创建所有剩余规划工件 |
+| `/opsx:verify [name]` | 三维度验证：完整性（Completeness）、正确性（Correctness）、一致性（Coherence） |
+| `/opsx:bulk-archive` | 批量归档多个 change，自动检测和解决跨变更 spec 冲突 |
+| `/opsx:onboard` | 交互式新手引导，在真实代码库中走完完整工作流（约 15-30 分钟） |
+
+> **语法差异**：Claude Code 使用冒号格式 `/opsx:propose`，Cursor/Windsurf 使用横线格式 `/opsx-propose`，Kimi/Trae 基于 skill 调用。功能完全一致，仅语法不同。
+
+### 3.4 Core 工作流
+
+Core 是默认模式，覆盖日常 90% 场景。以下是 Core 的完整工作流。
+
+#### 3.4.1 工件生命周期
+
+一次变更从创建到归档，工件按依赖关系推进：
+
+```
+proposal ──→ specs ──→ design ──→ tasks ──→ implement (apply)
+   │            │           │           │
+   │        delta spec   技术方案    实施清单
+   │        ADDED/MOD/
+   │        REMOVED
+   │
+  为什么做 + 范围 + 高层方案
+```
+
+| 工件 | 文件 | 职责 |
+|------|------|------|
+| **Proposal** | `proposal.md` | 为什么要做（Intent）、做什么范围（Scope）、高层方案（Approach） |
+| **Specs** | `specs/<domain>/spec.md` | Delta spec，描述行为变化：ADDED / MODIFIED / REMOVED |
+| **Design** | `design.md` | 技术方案、架构决策及理由（Rationale）、数据流、涉及文件 |
+| **Tasks** | `tasks.md` | 实施清单，checkbox 驱动，按层级编号（1.1, 1.2...） |
+
+依赖是"参考"而非"关卡"——它们告诉你可以创建什么，不强制下一步必须做什么。不需要的工件可以跳过。
+
+#### 3.4.2 标准流程
+
+```
+/opsx:explore [topic]           → 可选：需求不明确时先探索
+/opsx:propose <change-name>     → 一键生成 proposal + specs + design + tasks
+/opsx:apply                     → 按 tasks.md 逐项实现
+/opsx:sync                      → 可选：中途合并 delta spec（需手动启用，见 3.2）
+/opsx:archive                   → 归档，delta 合并到主 spec
+```
+
+#### 3.4.3 实战示例：添加暗色模式
+
+以官方 dark mode 示例贯穿全流程：
+
+**第 1 步：创建变更**
 
 ```text
-# Core 默认快速路径（5 步）
-/opsx:explore                   → 可选：需求不明确时先探索
-/opsx:propose add-dark-mode     → 生成 proposal + specs + design + tasks
-/opsx:apply                     → 按 tasks.md 逐项实现
-/opsx:sync                      → 可选：长期变更中途合并 spec
-/opsx:archive                   → 归档到 archive/，更新主 specs
-
-# Custom 展开路径（逐阶段控制）
-/opsx:new                       → 创建空 change 目录
-/opsx:continue × N              → 逐个创建产物，步步审查
-/opsx:apply                     → 逐项实现
-/opsx:verify                    → 验证实现与 spec 的一致性
-/opsx:archive                   → 归档
-
-# Custom 快速路径（等同于 propose 但分开两步）
-/opsx:new → /opsx:ff → /opsx:apply → /opsx:archive
+You: /opsx:propose add-dark-mode
 ```
 
-**产生的文件结构**：
+AI 自动创建 `openspec/changes/add-dark-mode/` 目录，并生成：
 
-```
-openspec/
-├── specs/                    ← 主 spec 库（系统的"真相源"）
-│   └── <domain>/
-│       └── spec.md           ← 当前系统的行为规格
-├── changes/                  ← 变更区（每个 change 一个文件夹）
-│   └── <change-name>/
-│       ├── .openspec.yaml    ← 变更元数据（schema、创建日期）
-│       ├── proposal.md       ← 为什么做、做什么变更
-│       ├── specs/            ← Delta spec（相对于主 spec 的增量）
-│       │   └── <domain>/
-│       │       └── spec.md
-│       ├── design.md         ← 技术方案
-│       └── tasks.md          ← 实现清单（checkbox 驱动）
-├── changes/archive/          ← 归档区（按日期组织，保留审计历史）
-│   └── YYYY-MM-DD-<name>/
-└── config.yaml               ← 项目配置（可选）
-```
-
-**Delta Spec 机制**——OpenSpec 的核心概念。每次功能变更不直接修改主 spec，而是写一份"变更单"（Delta Spec），用三个区段标记改动内容：
+- `proposal.md` — 捕获意图："用户要求暗色模式以减少眼部疲劳"，范围包括主题切换开关、系统偏好检测、localStorage 持久化
+- `specs/ui/spec.md` — Delta spec：
 
 ```markdown
-# Delta for Auth  ← 这次改的是认证模块
+# Delta for UI
 
-## ADDED Requirements     ← 新增了什么
+## ADDED Requirements
+
+### Requirement: Theme Selection
+系统 SHALL 允许用户在亮色和暗色主题之间选择。
+
+#### Scenario: 手动切换
+- GIVEN 用户点击主题切换按钮
+- WHEN 主题从亮色切换为暗色
+- THEN 页面立即更新为暗色调色板
+- AND 偏好持久化到 localStorage
+
+#### Scenario: 系统偏好
+- GIVEN 用户没有保存的主题偏好
+- WHEN 用户首次访问
+- THEN 使用系统 preferred 配色方案
+```
+
+- `design.md` — 技术方案：ThemeContext + CSS 自定义属性 + localStorage
+- `tasks.md` — 实施清单，分为主题基础设施、UI 组件、样式三大块
+
+**第 2 步：实施**
+
+```text
+You: /opsx:apply
+```
+
+AI 按 tasks.md 逐项实现，标记 checkbox。实施过程中若发现新信息，可随时更新工件。
+
+**第 3 步：归档**
+
+```text
+You: /opsx:archive
+```
+
+AI 将 delta spec 合并到主 `openspec/specs/ui/spec.md`，change 文件夹移至 `openspec/changes/archive/2025-01-23-add-dark-mode/`。变更完成，准备下一个功能。
+
+#### 3.4.4 Delta Spec 深入
+
+Delta Spec 是 OpenSpec 最核心的概念。它不在主 spec 中直接修改，而是写一份"变更单"，用三个区段标记改动：
+
+```markdown
+# Delta for Auth
+
+## ADDED Requirements
 ### Requirement: Two-Factor Authentication
 系统 MUST 在登录时要求第二因素验证。
 #### Scenario: OTP 验证
@@ -779,61 +1165,155 @@ openspec/
 - WHEN 用户提交正确的凭据
 - THEN 弹出 OTP 验证页面
 
-## MODIFIED Requirements   ← 改了什么（原来的值附在后面）
+## MODIFIED Requirements
 ### Requirement: Session Timeout
 系统 SHALL 在 30 分钟无操作后过期会话。（原值：60 分钟）
 
-## REMOVED Requirements    ← 删了什么（附带删除原因）
+## REMOVED Requirements
 ### Requirement: Remember Me
 （因引入 2FA 而废弃）
 ```
 
-一言蔽之：**Delta Spec = 规格的 git diff**。只写变化量，不重写全文。
+归档时自动合并：
+- **ADDED** → 追加入主 spec
+- **MODIFIED** → 替换主 spec 中对应条目
+- **REMOVED** → 从主 spec 中删除
 
-归档时自动合并：ADDED 追加入主 spec → MODIFIED 替换对应条目 → REMOVED 从主 spec 删除。非破坏性合并，每次改动都有迹可循。
+非破坏性合并，每次改动都有迹可循。两个并行 change 只要修改不同 requirement 就不会冲突。
 
-**实战演示：用 explore 探索 + propose 实施**：
+#### 3.4.5 辅助 CLI 命令
 
-```text
-# 场景：做一个用户权限系统，但需求还不明确
-You: /opsx:explore 用户权限系统
+```bash
+# 列出所有活动变更
+openspec list
 
-AI:  让我先看看你现有的代码库...
-     [分析 src/ 目录结构、现有认证模块]
+# 查看变更详情
+openspec show add-dark-mode
 
-     目前你用的是简单的 role 字段（admin/user），扩展性有限。
-     三种主流方案：
+# 验证规格格式
+openspec validate add-dark-mode
 
-     1. RBAC（角色-权限-用户三层）— 最通用，生态成熟
-     2. ABAC（属性基）— 更灵活但复杂度高，适合细粒度控制
-     3. ReBAC（关系基）— 适合有层级关系的资源（如 Google Drive）
+# 查看工件进度
+openspec status --change add-dark-mode
 
-     你的场景是 B2B SaaS，多租户 + 角色分明 → 推荐 RBAC。
-
-     需要我基于 RBAC 方案创建 change 吗？
-
-You: 好，用 RBAC
-
-You: /opsx:propose add-rbac-permission-system
-AI:  Created openspec/changes/add-rbac-permission-system/
-     ✓ proposal.md — 引入 RBAC 模型，支持角色-权限-用户三层
-     ✓ specs/      — 6 个场景：管理员赋权、角色继承、权限检查、越权拒绝...
-     ✓ design.md   — 中间件拦截 → PermissionService → RoleResolver 链
-     ✓ tasks.md    — 12 个任务，从数据模型到集成测试
-
-You: 审阅 proposal.md 和 design.md，发现角色继承层级太深，
-     改为最多 2 层继承。更新后：
-
-You: /opsx:apply
-AI:  1.1 Role 和 Permission 数据模型 ✓
-     1.2 RoleResolver 服务 ✓
-     1.3 PermissionMiddleware ✓
-     ...逐一完成 12 个任务...
-     所有任务完成！
-
-You: /opsx:archive
-AI:  Archived. Specs updated. 下一个功能。
+# 交互式仪表盘
+openspec view
 ```
+
+### 3.5 Custom 工作流
+
+当 Core 的"一键生成"粒度太粗时，Custom 提供对每个阶段的显式控制。
+
+#### 什么时候切到 Custom
+
+- 想在生成工件阶段**逐步审查**（而非 `propose` 一口气生成全部）
+- 想在归档前**显式验证**实现与 spec 的一致性（`verify`）
+- **并行推进多个 change**，最后批量归档（`bulk-archive`）
+- 需要**自定义 schema** 定义自己的工件依赖图
+
+#### 切换方式
+
+```bash
+# 交互式选择
+openspec config profile
+# → 选择 custom
+# → 勾选需要的 workflows（new / continue / ff / verify / bulk-archive / onboard）
+# → 选择 delivery 模式
+
+# 同步到项目
+openspec update
+```
+
+#### Custom 独有命令详解
+
+**`/opsx:new [change-name] [--schema]`** — 创建空 change 目录和 `.openspec.yaml` 元数据，不生成任何工件。与 `propose` 不同，`new` 只搭目录骨架，让你显式控制后续每个工件的创建。
+
+**`/opsx:continue [change-name]`** — 按依赖图逐个创建下一个就绪的工件。每次调用显示工件状态：
+- ✓ 已完成
+- ◆ 就绪（可创建）
+- ○ 受阻（依赖未满足）
+
+适合需要逐步骤审查的复杂变更。
+
+**`/opsx:ff [change-name]`** — "fast-forward"，一键创建所有剩余规划工件。和 `propose` 效果类似，但分两步走（先 `new` 建目录，再 `ff` 生成工件），中间可以插入自定义编辑。
+
+**`/opsx:verify [change-name]`** — 归档前的质量检查，从三个维度验证：
+
+| 维度 | 检查内容 |
+|------|---------|
+| Completeness | 所有任务完成、所有需求实现、所有场景覆盖 |
+| Correctness | 实现符合 spec 意图、边界情况已处理 |
+| Coherence | 设计决策在代码中体现、模式一致 |
+
+问题分级输出：CRITICAL / WARNING / SUGGESTION。verify 不会阻止归档，但会在关闭变更前揭示潜在问题。
+
+**`/opsx:bulk-archive`** — 列出所有已完成变更，逐个验证，检测跨变更的 spec 冲突并自动解决，按时间顺序批量归档。
+
+**`/opsx:onboard`** — 交互式新手教程，在你的真实代码库中走完完整工作流。无需任何参数，直接输入 `/opsx:onboard` 即可启动。
+
+执行过程（11 个阶段）：
+1. AI 扫描你的代码库，寻找一个适合演示的改进点（小且安全的改动）
+2. 以此改进点为案例，创建真实 change，生成 proposal / specs / design / tasks
+3. 实施 tasks 中的代码改动
+4. 归档 change
+5. 每个阶段附带解释，告诉你当前在做什么、为什么这样做
+
+整个过程耗时约 15-30 分钟，你只需跟着指引操作即可。**适合首次安装 OpenSpec 后跑一遍**，比读文档更直观。一次性使用，学会后无需再跑。
+
+#### Custom 典型流程
+
+**快速路径（范围清晰）：**
+
+```
+/opsx:new → /opsx:ff → /opsx:apply → /opsx:verify → /opsx:archive
+```
+
+**逐步审查路径（复杂变更）：**
+
+```
+/opsx:new → /opsx:continue × N → /opsx:apply → /opsx:verify → /opsx:archive
+```
+
+**探索式路径（需求模糊）：**
+
+```
+/opsx:explore → /opsx:new → /opsx:continue × N → /opsx:apply
+```
+
+#### ff vs continue 选择指南
+
+| 场景 | 用 |
+|------|-----|
+| 可以一次性描述完整范围 | `/opsx:ff` |
+| 边做边摸索，需要逐步审查 | `/opsx:continue` |
+| 想在写 specs 前先迭代 proposal | `/opsx:continue` |
+| 时间紧迫，需要快速推进 | `/opsx:ff` |
+| 复杂变更，希望粒度和控制 | `/opsx:continue` |
+
+> 经验法则：如果你能一句话说清完整范围，用 `ff`；如果需要边做边想，用 `continue`。
+
+#### 并行变更 + 批量归档
+
+Custom 模式支持多个 change 同时进行：
+
+1. `openspec new change-a` → `/opsx:ff` → 开始实现
+2. 被中断，启动 `openspec new change-b` → `/opsx:ff` → 实现并归档
+3. 切回 change-a 继续
+4. 所有完成后：`/opsx:bulk-archive` 批量归档
+
+#### 何时更新已有 change vs 开新 change
+
+**更新已有 change：**
+- 意图不变，只是执行方式优化
+- 范围缩小（先做 MVP，其余后续）
+- 基于实现反馈调整设计
+
+**启动新 change：**
+- 意图根本改变
+- 范围扩展到完全不同的工作
+- 原 change 可独立标记为"完成"
+
+核心判断标准：**这是同一项工作吗？** 考察意图是否一致、是否有超过 50% 的重叠、原 change 能否不包含这些改动而视为"完成"。
 
 ## 4 gstack 实战 — 一人成军
 
