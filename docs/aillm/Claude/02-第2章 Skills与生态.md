@@ -1024,8 +1024,8 @@ OpenSpec 的命令分为两类：**CLI 命令**在终端中使用，**Slash Comm
 | 浏览 | `openspec show [name]` | 查看变更或规格的详细内容 |
 | 浏览 | `openspec view` | 打开交互式终端仪表盘 |
 | 验证 | `openspec validate [name\|--all]` | 验证变更/规格的结构问题 |
-| 状态 | `openspec status [--change name]` | 查看变更的工件完成状态 |
-| 指令 | `openspec instructions [artifact]` | 获取下一步操作指令（供 AI agent 使用） |
+| 状态 | `openspec status [--change <name>]` | 查看变更的工件完成状态 |
+| 指令 | `openspec instructions [artifact]` | 获取下一步操作指令（供 AI agent 使用）。artifact 为 `proposal`/`specs`/`design`/`tasks`/`apply` |
 | 归档 | `openspec archive [name] [-y\|--skip-specs]` | 终端直接归档变更，合并 delta spec |
 | 配置 | `openspec config <subcommand>` | 管理全局配置（list/get/set/profile 等） |
 | Schema | `openspec schema init/fork/validate` | 创建或自定义工作流 schema |
@@ -1226,18 +1226,18 @@ openspec update
 
 #### Custom 独有命令详解
 
-**`/opsx:new [change-name] [--schema]`** — 创建空 change 目录和 `.openspec.yaml` 元数据，不生成任何工件。与 `propose` 不同，`new` 只搭目录骨架，让你显式控制后续每个工件的创建。
+**`/opsx:new [name] [--schema]`** — 创建空 change 目录和 `.openspec.yaml` 元数据，不生成任何工件。与 `propose` 不同，`new` 只搭目录骨架，让你显式控制后续每个工件的创建。
 
-**`/opsx:continue [change-name]`** — 按依赖图逐个创建下一个就绪的工件。每次调用显示工件状态：
+**`/opsx:continue [name]`** — 按依赖图逐个创建下一个就绪的工件。每次调用显示工件状态：
 - ✓ 已完成
 - ◆ 就绪（可创建）
 - ○ 受阻（依赖未满足）
 
 适合需要逐步骤审查的复杂变更。
 
-**`/opsx:ff [change-name]`** — "fast-forward"，一键创建所有剩余规划工件。和 `propose` 效果类似，但分两步走（先 `new` 建目录，再 `ff` 生成工件），中间可以插入自定义编辑。
+**`/opsx:ff [name]`** — "fast-forward"，一键创建所有剩余规划工件。和 `propose` 效果类似，但分两步走（先 `new` 建目录，再 `ff` 生成工件），中间可以插入自定义编辑。
 
-**`/opsx:verify [change-name]`** — 归档前的质量检查，从三个维度验证：
+**`/opsx:verify [name]`** — 归档前的质量检查，从三个维度验证：
 
 | 维度 | 检查内容 |
 |------|---------|
@@ -1314,6 +1314,63 @@ Custom 模式支持多个 change 同时进行：
 - 原 change 可独立标记为"完成"
 
 核心判断标准：**这是同一项工作吗？** 考察意图是否一致、是否有超过 50% 的重叠、原 change 能否不包含这些改动而视为"完成"。
+
+### 3.6 实战演练
+
+以下三种场景的工作流，每条只保留最优路径，可直接复制使用。
+
+#### 3.6.1 从 0 到 1 开发新项目
+
+```text
+探索与拆解 → 生成工件 → 实现代码 → 测试与修正 → 验证 → 同步 → 归档
+```
+
+| 阶段 | 命令 | 做什么 |
+|------|------|--------|
+| **一：探索** | `/opsx:explore` | 需求探索、技术选型、功能拆分。将大目标拆成多个 change，建议先产出一个核心 change 的完整工件，其余只创建 draft proposal 占位 |
+| **二：生成工件** | `/opsx:propose [name]` | 一键生成 proposal.md + Delta Spec + design.md + tasks.md |
+| **三：实现代码** | `/opsx:apply [name]` | 按 tasks.md 逐项实现，每完成一项打勾。不指定 name 时从上下文推断 |
+| **四：测试修正** | `/opsx:explore [topic]` → 修复 | 测试发现问题 → explore 诊断 → bug 直接修代码 / 需求遗漏先更新 Delta Spec 再修代码 |
+| **五：验证** | `openspec validate [name]` + `/opsx:verify [name]` | CLI 校验 Spec 格式（如 MUST/SHALL 关键字缺失），verify 检查完整性 / 正确性 / 一致性 |
+| **六：同步** | `/opsx:sync [name]` | 将 Delta Spec 合并到 `openspec/specs/` |
+| **七：归档** | `/opsx:archive [name]` | 移入 `archive/YYYY-MM-DD-<name>/`，完成 |
+
+> **技巧**：`openspec validate` 能发现 verify 发现不了的结构问题（如缺少 RFC 2119 关键字），两者互补，建议都执行。
+
+> **注意**：首次 archive 时 `openspec/specs/` 为空，没有主 spec 可对比，sync 不会自动触发——必须显式执行 `/opsx:sync`。后续 archive 会正常检测并提示 sync。
+
+#### 3.6.2 添加新功能
+
+流程与 3.6.1 完全一致，区别在于此时 `openspec/specs/` 已有主 spec，Delta Spec 是基于已有规格写变化量。
+
+| 阶段 | 命令 | 做什么 |
+|------|------|--------|
+| **一：探索** | `/opsx:explore` | 基于现有主 spec 讨论新功能范围 |
+| **二：生成工件** | `/opsx:propose [name]` | 生成 Delta Spec + design + tasks |
+| **三：实现代码** | `/opsx:apply [name]` | 按 tasks 逐项实现 |
+| **四：测试修正** | `/opsx:explore [topic]` → 修复 | bug 直接修 / 需求遗漏先更新 Delta Spec 再修 |
+| **五：验证** | `openspec validate [name]` + `/opsx:verify [name]` | 结构校验 + 三维度验证 |
+| **六：同步** | `/opsx:sync [name]` | 合并 Delta Spec 到主 spec |
+| **七：归档** | `/opsx:archive [name]` | 归档 |
+
+> **生成工件的三种方式**：阶段二除了 `/opsx:propose`（一键生成全部），Custom 模式下还可用 `/opsx:ff`（创建空 change 后一键生成全部工件）或 `/opsx:continue`（按依赖图逐个生成，每步可审查修正）。需求明确时用 propose 或 ff，需求需要推敲时用 continue。
+
+#### 3.6.3 修复 bug
+
+```text
+诊断 → 判断 → 修复 → 验证
+```
+
+| 阶段 | 命令 | 做什么 |
+|------|------|--------|
+| **一：诊断** | `/opsx:explore "问题描述"` | 只读定位根因，不写代码。不指定 change name，由上下文推断 |
+| **二：判断** | — | 代码不符合 spec → bug，不改文档；spec 遗漏或有歧义 → 先更新 Delta Spec（ADDED 或 MODIFIED） |
+| **三：修复** | 直接改代码 | bug 直接修；需求遗漏先更新文档再修代码 |
+| **四：验证** | 重启应用 | 确认修好；没修好则回到阶段一重新诊断 |
+
+> **核心原则**：bug 的本质是"实现不符合 spec"，修代码是在对齐真相源，不需要动文档。只有 spec 本身有问题（遗漏、歧义）才需要更新 Delta Spec。
+
+> **慎用直接修复**：不要看到 bug 就说"修"——先 explore 诊断，定位根因后再动手。跳过诊断可能一次修不好，反而拉长修复时间。
 
 ## 4 gstack 实战 — 一人成军
 
