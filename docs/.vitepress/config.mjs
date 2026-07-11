@@ -96,6 +96,7 @@ export default defineConfig({
                 items: [
                     {text: 'Claude', link: '/aillm/Claude/00-引言'},
                     {text: 'Codex', link: '/aillm/Codex/00-引言'},
+                    {text: 'OpenCode', link: '/aillm/OpenCode/00-引言'},
                     {text: 'OpenClaw', link: '/aillm/OpenClaw/00-引言'},
                     {text: 'Hermes', link: '/aillm/Hermes/00-引言'},
                     {text: 'DS4', link: '/aillm/ds4/ds4-使用'},
@@ -137,6 +138,7 @@ export default defineConfig({
             '/bigdata/old': autoGenSidebar('/bigdata/old'),
             '/aillm/Claude': autoGenSidebar('/aillm/Claude'),
             '/aillm/Codex': autoGenSidebar('/aillm/Codex'),
+            '/aillm/OpenCode': autoGenSidebar('/aillm/OpenCode'),
             '/aillm/OpenClaw': autoGenSidebar('/aillm/OpenClaw'),
             '/aillm/Hermes': autoGenSidebar('/aillm/Hermes'),
             '/aillm/ds4': autoGenSidebar('/aillm/ds4'),
