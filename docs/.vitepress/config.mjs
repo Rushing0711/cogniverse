@@ -95,6 +95,7 @@ export default defineConfig({
                 text: 'AI<img src="/aillm.png" style="height:32px;vertical-align:middle;margin-left:15px;margin-right:15px;display:inline-block;transform:scale(2);transform-origin:center;" alt="AI大模型">',
                 items: [
                     {text: 'Claude', link: '/aillm/Claude/00-引言'},
+                    {text: 'Codex', link: '/aillm/Codex/00-引言'},
                     {text: 'OpenClaw', link: '/aillm/OpenClaw/00-引言'},
                     {text: 'Hermes', link: '/aillm/Hermes/00-引言'},
                     {text: 'DS4', link: '/aillm/ds4/ds4-使用'},
@@ -135,6 +136,7 @@ export default defineConfig({
             '/database/old': autoGenSidebar('/database/old'),
             '/bigdata/old': autoGenSidebar('/bigdata/old'),
             '/aillm/Claude': autoGenSidebar('/aillm/Claude'),
+            '/aillm/Codex': autoGenSidebar('/aillm/Codex'),
             '/aillm/OpenClaw': autoGenSidebar('/aillm/OpenClaw'),
             '/aillm/Hermes': autoGenSidebar('/aillm/Hermes'),
             '/aillm/ds4': autoGenSidebar('/aillm/ds4'),
