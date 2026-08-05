@@ -9,7 +9,7 @@
 |------|-------|----------|--------|----------|----------|
 | **[Superpowers](https://github.com/obra/superpowers)** | 202k+ | 工程纪律 + TDD 强制 | 14 个 | 日常开发的完整闭环 | `/plugin install superpowers@superpowers-marketplace` |
 | **[gstack](https://github.com/garrytan/gstack)** | 99k+ | 虚拟 23 人工程团队 + Power Tools | 47 个 | Solo 冲刺产品 MVP | `git clone` 到 `~/.claude/skills/gstack` |
-| **[mattpocock](https://github.com/mattpocock/skills)** | 89k+ | 慢下来，先想清楚再动手 | 12 个 | TypeScript 开发 | 见第5章（支持单技能安装，路径含分类名） |
+| **[mattpocock](https://github.com/mattpocock/skills)** | 203k+ | Skills for Real Engineers，小而可组合、不拥有流程 | 22 个 | 通用工程（任意模型/语言） | 见第5章（Claude Code 插件 + skills.sh 两种方式） |
 | **[GSD](https://github.com/gsd-build/get-shit-done)** | 63k+ | Spec 驱动 + 上下文工程 | 多个 | 0→1 完整功能开发 | `npx get-shit-done-cc@latest` |
 | **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** | 49k+ | Spec 驱动开发（SDD） | 1 套 CLI + 多命令 | 需求到交付的完整闭环 | `npm install -g @fission-ai/openspec@latest` |
 | **[find-skills](https://github.com/vercel-labs/skills)** | 579k+ 安装 | Skills 搜索引擎 | 1 个 | 发现和搜索其他 Skills | `npx skills add vercel-labs/skills -g -a claude-code --skill find-skills` |
@@ -18,7 +18,7 @@
 
 - **Superpowers**："把 AI 当作热情但没判断力的初级工程师"，用强制流程约束行为
 - **gstack**："一个人编程，但 AI 扮演整个团队"，角色扮演式协作
-- **mattpocock**："让 AI 慢下来先想清楚再动手"，用追问逼你理清思路
+- **mattpocock**："Skills for Real Engineers"，不拥有流程、小而可组合；用追问（grill）逼你先想清楚再动手
 - **GSD**："不要让上下文腐化"，每个阶段用独立上下文窗口
 - **OpenSpec**："先对齐 spec 再写代码"，人类与 AI 在写代码前就目标达成一致（[官网](https://openspec.dev/)）
 
@@ -57,7 +57,7 @@ npx skills add vercel-labs/skills -g -a claude-code --skill find-skills
 
 Skills 最终是纯 Markdown 文本文件，与 Node/npm/nvm **完全解耦**。即使切换 Node 版本甚至卸载 Node，已安装的 Skills 不受影响。唯一依赖 Node 的是安装新 Skill 时 `npx` 命令本身。
 
-**Plugin 还是 npx？** Superpowers 推荐通过 Plugin 市场安装（`/plugin install superpowers@superpowers-marketplace`），它能利用 CC 的插件管理系统进行版本更新、scope 管理和启用/禁用。gstack、mattpocock、GSD 目前主要通过 `npx skills add` 或 `git clone` 安装，效果完全相同——Skills 最终都是 `~/.claude/skills/` 下的 Markdown 文件。选择哪种方式取决于套装作者提供什么分发渠道。
+**Plugin 还是 npx？** Superpowers 和 mattpocock 都通过 Plugin 市场安装（`/plugin install superpowers@superpowers-marketplace`、`/plugin install mattpocock-skills`），能利用 CC 的插件管理系统进行版本更新、scope 管理和启用/禁用。gstack、GSD 目前主要通过 `npx skills add` 或 `git clone` 安装，效果完全相同——Skills 最终都是 `~/.claude/skills/` 下的 Markdown 文件。选择哪种方式取决于套装作者提供什么分发渠道。
 
 **安装建议**：一次装 2-3 个核心的，用一周感受后再决定加不加。多套全装（80+ 个 Skill）token 开销大，而且不同套装理念可能冲突，反而降低效率。
 
@@ -1472,82 +1472,87 @@ Claude: 测试 42→51（+9 新增），PR: github.com/you/app/pull/42
 
 **Token 消耗警告**：23 个角色全开 Token 消耗大，适合 0→1 快速出 MVP。日常维护推荐只用 `/review` + `/ship` + `/qa` 三个命令。
 
-## 5 mattpocock 实战 — 让 AI 慢下来先想清楚
+## 5 mattpocock 实战 — Skills for Real Engineers
 
-Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，89k+ Stars。核心理念：**让 AI 慢下来，先想清楚再动手**。按 GitHub 实际分类，活跃技能分 3 大类共 19 个。
+Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，MIT 许可。它的定位已经从"让 AI 慢下来先想清楚"升级为 **"Skills for Real Engineers"**——这些技能直接取自作者 `.agents` 目录、每天真实工程都在用的东西，不是 vibe coding。作者明确不跟 GSD、BMAD、Spec-Kit 这类"拥有整个流程"的框架竞争，而是提供**小而可组合**的技能：保留你的控制权，方便自行修改，且支持任意模型。
 
 **安装**：
 
-Matt 的技能按分类存放在仓库子目录中（`skills/productivity/`、`skills/engineering/`、`skills/misc/`），但 `--skill` 参数只需指定技能名即可，工具会自动递归搜索匹配的 `SKILL.md`。
+现在有两条安装路线，对应两种哲学，**二选一**（都装会每个技能出现两次）：
 
-```bash
-# 一键安装全部活跃技能（--skill 需指定子目录）
-npx skills@latest add mattpocock/skills -g -a claude-code --skill '*' -y
+| 路线 | 命令 | 哲学 |
+|------|------|------|
+| **Claude Code 插件**（推荐） | `claude plugins install mattpocock-skills`，或会话内 `/plugin install mattpocock-skills` | 托管式、只读、自动更新——订阅而非 fork。已在 CC 官方市场，无需先添加市场 |
+| **skills.sh 复制** | `npx skills@latest add mattpocock/skills` | 把可编辑的 Skill 文件复制进项目，归你所有，可 hack 可魔改。Codex 及其他 agent 用这个。安装器会交互式让你挑选要装哪些技能，之后用 `npx skills update` 手动拉更新 |
 
-# 按需安装单个 Skill（mattpocock 是五套中唯一支持单独安装的）
-npx skills@latest add mattpocock/skills -g -a claude-code --skill grill-me       # 方案追问
-npx skills@latest add mattpocock/skills -g -a claude-code --skill tdd            # TDD 红绿重构
-npx skills@latest add mattpocock/skills -g -a claude-code --skill diagnose       # 结构化调试
-npx skills@latest add mattpocock/skills -g -a claude-code --skill git-guardrails-claude-code  # Git 危险命令拦截
-```
+安装后在每个仓库运行一次 `/setup-matt-pocock-skills`：询问 issue tracker 类型（GitHub / Linear / 本地文件）、triage 标签、文档保存位置。
 
-> **注意**：不能用 `npx skills@latest add mattpocock/skills/grill-me`（会报 "No skills found"）。因为 `grill-me` 不在仓库根目录。正确做法是 `npx skills@latest add mattpocock/skills --skill grill-me`，工具会自动递归搜索所有子目录中匹配的 `SKILL.md`。
+**设计哲学：四大失败模式**：
 
-安装后在 CC 中运行 `/setup-matt-pocock-skills` 初始化项目配置（Issue 跟踪器、文档布局等）。
+作者认为编码代理有四个常见失败模式，每个都有对应技能。这是理解整个套装的关键：
+
+| # | 失败模式 | 问题 | 解法 |
+|---|---------|------|------|
+| 1 | **代理没做对** | 对齐失败，代理理解错了你的意图 | `/grill-me`（非代码）+ `/grill-with-docs`（代码+领域建模）——动手前先让代理"拷问"你。作者最受欢迎的技能 |
+| 2 | **代理太啰嗦** | 用 20 个词表达 1 个词的事 | **共享语言**——通过 `CONTEXT.md` 和 ADR 建立领域术语表，内置在 `/grill-with-docs`。作者称"可能是整个仓库最酷的技巧"：一段长描述能浓缩成 "materialization cascade" 一个术语 |
+| 3 | **代码跑不通** | 缺乏反馈循环，代理瞎飞 | `/tdd`（红-绿-重构）+ `/diagnosing-bugs`（调试循环） |
+| 4 | **代码变成大泥球** | agent 加速熵增，代码库失控 | 设计关怀：`/to-spec`（动手前先确认碰哪些模块）+ `/improve-codebase-architecture`（扫描代码库、生成可视化 HTML 报告、逐个拷问改进方案，建议每几天跑一次） |
+
+**技能全览**：按**谁可调用**分两类——**User-invoked**（只能你手动 `/命令` 触发，负责编排）和 **Model-invoked**（你可触发，代理也会在任务匹配时自动调用，承载可复用纪律）。User-invoked 技能可以调用 Model-invoked 技能，但绝不调用另一个 User-invoked。插件共包含 22 个活跃技能。
 
 **评星维度：思维杠杆度**——一次调用能撬动多大的决策质量提升。同时综合考量使用门槛（是否需要复杂前置配置）。
 
-**Engineering（11 个，日常编码）**：
+**Engineering（17 个，日常编码）**：
+
+**User-invoked（9 个）**：
 
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
-| `grill-with-docs` | ★★★★ | grill-me 的同时需要记录 | 追问 + 自动更新 `CONTEXT.md` 和 ADR 决策文档 |
-| `tdd` | ★★★★★ | "实现 X 功能" | 严格 Red→Green→Refactor 循环，强制先写失败测试再写实现 |
-| `diagnose` | ★★★★★ | "修这个 bug" | 6 阶段诊断：复现→最小化→假设→插桩→修复→回归测试 |
-| `zoom-out` | ★★★★ | "这个模块我不熟悉" | 给出代码区域的高层地图，而非逐行解释 |
-| `prototype` | ★★★ | "这个方案可行吗？" | 构建可丢弃原型来暴露设计问题：终端版（逻辑验证）或 UI 多变体 |
-| `to-prd` | ★★★ | 方案讨论完毕 | 将当前对话内容合成 PRD，提交为 GitHub Issue |
-| `to-issues` | ★★★ | PRD/方案已就绪 | 将方案拆成独立垂直切片的 GitHub Issues |
-| `triage` | ★★★ | Issue 列表混乱 | 按状态机分诊：`needs-triage`→`needs-info`/`ready-for-agent`/`ready-for-human`/`wontfix` |
-| `improve-codebase-architecture` | ★★★ | 代码腐化需要清理 | 基于 `CONTEXT.md` 领域语言和 ADR 决策发现深层改进机会 |
-| `setup-matt-pocock-skills` | ★ | 首次安装后 | 搭建项目级配置（Issue 跟踪器、分诊标签、文档结构），每个仓库运行一次 |
+| `ask-matt` | ★★★ | "该用哪个技能？" | 技能路由器，根据你的处境指路（已覆盖全部技能） |
+| `grill-with-docs` | ★★★★★ | 动手做有代码的变更前 | 拷问会话 + 建立领域模型，更新 `CONTEXT.md` 和 ADR |
+| `triage` | ★★★ | Issue 列表混乱 | 按状态机分诊 issue 和外部 PR：`needs-triage`→`needs-info`/`ready-for-agent`/`ready-for-human`/`wontfix` |
+| `improve-codebase-architecture` | ★★★ | 代码腐化需要清理 | 扫描代码库、生成可视化 HTML 报告，再逐个拷问改进方案 |
+| `setup-matt-pocock-skills` | ★ | 首次安装后 | 仓库级配置（issue tracker、triage 标签、文档布局），每个仓库跑一次 |
+| `to-spec` | ★★★ | 方案讨论完毕 | 将当前对话综合成 spec 发布到 issue tracker（无访谈，直接综合已讨论内容）。原 `to-prd` 改名 |
+| `to-tickets` | ★★★★ | spec/计划已就绪 | 拆成曳光弹（tracer-bullet）ticket，各自声明阻塞边（blocking edges）。原 `to-issues` 与 `to-plan` 合并 |
+| `implement` | ★★★★★ | 按 spec/ticket 实现 | 在预定接缝处驱动 `/tdd`，提交前用 `/code-review` 收尾 |
+| `wayfinder` | ★★★★ | 超出一轮会话的大工程 | 规划成共享的调查 ticket 地图（`wayfinder:map` 主 issue + 子 issue），逐个解决直到通往目的地的路清晰。原 `decision-mapping` 改名后毕业 |
 
-**Productivity（4 个，提升效率）**：
+**Model-invoked（8 个）**：
 
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
-| `grill-me` | ★★★★★ | "我打算做 X 功能" | 像技术面试官连续追问 16-50 个问题，直到每个决策分支都想清楚 |
-| `caveman` | ★★★★ | Token 消耗太高 | 超压缩通信模式，砍掉 ~75% token 同时保持技术准确性 |
-| `handoff` | ★★★ | 将当前会话压缩成交接文档 | 交接文档供另一位 Agent 无缝继续 |
-| `write-a-skill` | ★★ | "创建一个新 skill" | 元技能，用 TDD 方式创建新的 Skill |
+| `tdd` | ★★★★★ | "实现 X 功能" | 红-绿重构，一次一个垂直切片；只在预定"接缝"处写测试（reference-only） |
+| `diagnosing-bugs` | ★★★★★ | "修这个 bug" | 6 阶段诊断：复现→最小化→假设→插桩→修复→回归测试。原 `diagnose` 改名 |
+| `domain-modeling` | ★★★★ | 领域术语含糊 | 主动构建/打磨领域模型，挑战术语、压力测试边界场景，更新 `CONTEXT.md` 和 ADR |
+| `codebase-design` | ★★★★ | 设计模块接口 | "深模块"设计纪律：小接口背后大量行为、干净接缝、可测性 |
+| `code-review` | ★★★★ | 提交前收尾 | 双轴审查（标准 + spec 忠实度），并行子代理避免相互污染；内置 Fowler 坏味道基线 |
+| `prototype` | ★★★ | "这个方案可行吗？" | 一次性原型暴露设计问题：状态/逻辑问题做可运行终端应用，UI 问题做多个激进变体 |
+| `research` | ★★★ | "查证一手资料" | 后台 agent 对照高可信一手资料调研，产出带引用的 Markdown 文件 |
+| `resolving-merge-conflicts` | ★★★ | 合并冲突 | 按意图逐块解决，绝不 `--abort` |
 
-**`/grill-me` 的核心价值**：这是整个套装最出名的 Skill，属于 Productivity 类而非 Engineering 类（GitHub 实际分类）。Matt 本人曾被自己的 `grill-me` 连续追问近 50 个问题才通过。问的问题包括："这个组件需要什么 props？""状态从哪里来？服务端还是客户端？""loading 态长什么样？""如果 API 超时怎么办？""可访问性怎么处理？"
+**Productivity（5 个，通用工作流）**：
 
-**Misc（4 个，辅助工具）**：
+| Skill | 思维杠杆度 | 触发场景 | 实际效果 |
+|-------|--------|----------|----------|
+| `grill-me` | ★★★★★ | "我打算做 X" | 被无穷追问直到决策树每个分支都解决。Matt 本人曾被自己的 grill-me 连续追问近 50 个问题 |
+| `grilling` | ★★★★★ | — | 底层访谈引擎（Model-invoked），`grill-me` 和 `grill-with-docs` 的共用循环 |
+| `handoff` | ★★★ | 换代理继续工作 | 把当前对话压缩成交接文档，供另一位 Agent 无缝继续 |
+| `teach` | ★★★ | 多会话教学 | 以当前目录作为有状态教学空间，从可复用组件搭建课程 |
+| `writing-great-skills` | ★★ | "写一个新 skill" | 元技能方法论。原 `write-a-skill` 升级 |
 
-| Skill | 思维杠杆度 | 用途 |
-|-------|--------|------|
-| `git-guardrails-claude-code` | ★★★★ | 在 git hook 层拦截危险命令（force push、hard reset 等） |
-| `setup-pre-commit` | ★★★ | 搭建 Husky pre-commit hooks |
-| `migrate-to-shoehorn` | ★★ | 将 `as` 断言迁移到 `@total-typescript/shoehorn` |
-| `scaffold-exercises` | ★ | 生成练习目录结构（教学场景） |
+> **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`（进行中：`wizard`、`loop-me` 等）和 `deprecated/`（已弃用：`design-an-interface`、`qa` 等）目录。
 
-**💡 按星筛选安装**：★★★★★ 三件套 — `grill-me`（思考）+ `tdd`（编码）+ `diagnose`（调试），覆盖核心链路。★★★★ 补充 `grill-with-docs`、`zoom-out`、`caveman`、`git-guardrails-claude-code`。
+**核心工作流（idea → ship）**：`ask-matt` 路由的推荐主流程——
 
-**单技能安装命令（4★/5★）**：
-
-```bash
-# ★★★★★
-npx skills@latest add mattpocock/skills -g -a claude-code --skill grill-me    # 方案追问
-npx skills@latest add mattpocock/skills -g -a claude-code --skill tdd        # TDD 红绿重构
-npx skills@latest add mattpocock/skills -g -a claude-code --skill diagnose   # 结构化调试
-
-# ★★★★
-npx skills@latest add mattpocock/skills -g -a claude-code --skill grill-with-docs  # 追问 + 文档
-npx skills@latest add mattpocock/skills -g -a claude-code --skill zoom-out         # 代码高层地图
-npx skills@latest add mattpocock/skills -g -a claude-code --skill caveman          # 超压缩通信
-npx skills@latest add mattpocock/skills -g -a claude-code --skill git-guardrails-claude-code  # Git 危险命令拦截
 ```
+/grill-me 或 /grill-with-docs   → 先拷问，对齐需求（不写代码）
+/to-spec                        → 对话综合成 spec，发布到 issue tracker
+/to-tickets                     → spec 拆成曳光弹 ticket，声明阻塞边
+/implement                      → 按 ticket 实现，接缝处驱动 /tdd，提交前 /code-review
+```
+
+**💡 按星筛选安装**：★★★★★ 五件套 — `grill-me`（思考）+ `grill-with-docs`（思考+文档）+ `implement`（执行）+ `tdd`（编码）+ `diagnosing-bugs`（调试），覆盖核心链路。★★★★ 补充 `code-review`、`to-tickets`、`wayfinder`、`domain-modeling`、`codebase-design`。
 
 **实战演示：用 mattpocock 套装开发 TypeScript 泛型工具库**：
 
@@ -1556,22 +1561,22 @@ npx skills@latest add mattpocock/skills -g -a claude-code --skill git-guardrails
 
 You: 我想写一个 DeepReadonly 泛型，递归地将对象所有属性设为 readonly
 
-# 第1步：先 grill，不写代码
+# 第1步：ask-matt 问路 → grill，不写代码
+You: /ask-matt
+Claude: 建议先 /grill-me 对齐需求
 You: /grill-me
 Claude: 连续追问——
         Q1: 数组怎么处理？递归 readonly 还是只 readonly 顶层？
         Q2: 函数属性呢？保留还是剥掉？
         Q3: Date、RegExp 等内置对象怎么处理？
         Q4: Map/Set 呢？
-        Q5: 你要支持多深的嵌套？
-        Q6: 这个工具是给什么场景用的？
-        Q7: 有没有现成的库可以参考（type-fest）？
-        Q8: 你准备写多少测试用例？边界情况列出来...
+        Q5: 这个工具是给什么场景用的？
+        Q6: 有没有现成的库可以参考（type-fest）？
         ... 共 16 个问题 ...
 
 You: [一一回答，思路完全清晰]
 
-# 第2步：用 TDD 方式实现
+# 第2步：用 tdd 方式实现
 You: 用 tdd 实现 DeepReadonly
 Claude: 第一步先写测试——
         test('should make shallow object readonly')
@@ -1592,9 +1597,8 @@ Claude: 现在写实现——
 Claude: 运行测试——6 个通过，2 个失败（数组和 Map/Set 处理）
 Claude: 修正实现——8 个全部通过 ✓
 
-# 第3步：出了问题用 diagnose
+# 第3步：出了问题用 diagnosing-bugs
 You: DeepReadonly 在处理联合类型时行为不对，帮我看看
-You: /diagnose
 Claude: 阶段1-复现：确认联合类型 `A | B` 的 readonly 行为异常
         阶段2-最小化：精简到 3 行的最小复现用例
         阶段3-假设：可能是 distributive conditional type 导致
@@ -1602,18 +1606,27 @@ Claude: 阶段1-复现：确认联合类型 `A | B` 的 readonly 行为异常
         阶段5-修复：改用非分布式写法
         阶段6-回归：所有 8 个原有用例 + 3 个新增联合类型用例全部通过 ✓
 
-# 第4步：生成文档和 PR
-You: /to-issues
-Claude: 生成 3 个垂直切片 Issue：
+# 第4步：生成 spec 和 tickets
+You: 方案讨论得差不多了，生成 spec 吧
+You: /to-spec
+Claude: 把对话综合成 spec，发布为 GitHub Issue ✓
+You: /to-tickets
+Claude: 拆成 3 个曳光弹 ticket（各自声明阻塞边）：
         #1 - DeepReadonly 核心实现 + 单元测试
-        #2 - 补充文档和 JSDoc 示例
-        #3 - 发布到 npm 的 CI/CD 配置
+        #2 - 补充文档和 JSDoc 示例（阻塞于 #1）
+        #3 - 发布到 npm 的 CI/CD 配置（阻塞于 #1、#2）
+
+# 第5步：按 tickets 实现
+You: /implement
+Claude: 接缝处驱动 /tdd，逐个完成 ticket，提交前 /code-review 收尾 ✓
 ```
 
 **使用建议**：
-- `/grill-me` + `tdd` + `diagnose` 是日常编码最常用的三个
-- `caveman` 在 token 紧张时非常实用，能省约 75% 的 token
-- 整个套装天然适合 TypeScript/JavaScript 项目，其他语言项目也能用但最佳体验在 TS 生态
+- `grill-me` + `tdd` + `diagnosing-bugs` 是日常编码最常用的三个，`implement` 是完整执行的入口
+- 想搭建完整 idea → ship 流水线，用 `ask-matt` → `grill` → `to-spec` → `to-tickets` → `implement` 链路
+- 大工程（超出一轮会话）用 `/wayfinder` 规划调查地图，而不是硬塞进一次会话
+- 整个套装不绑定语言/模型——README 明确 "work with any model"，但泛型工具类技能在 TypeScript 生态最能体现功力
+- **注意技能有改名历史**：`diagnose`→`diagnosing-bugs`、`to-prd`→`to-spec`、`to-issues`→`to-tickets`、`write-a-skill`→`writing-great-skills`；`caveman`、`zoom-out` 已在 1.0.0 移除。老教程里的命令名可能已失效
 
 ---
 
