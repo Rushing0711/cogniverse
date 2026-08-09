@@ -9,7 +9,7 @@
 |------|-------|----------|--------|----------|----------|
 | **[Superpowers](https://github.com/obra/superpowers)** | 202k+ | 工程纪律 + TDD 强制 | 14 个 | 日常开发的完整闭环 | `/plugin install superpowers@superpowers-marketplace` |
 | **[gstack](https://github.com/garrytan/gstack)** | 99k+ | 虚拟 23 人工程团队 + Power Tools | 47 个 | Solo 冲刺产品 MVP | `git clone` 到 `~/.claude/skills/gstack` |
-| **[mattpocock](https://github.com/mattpocock/skills)** | 203k+ | Skills for Real Engineers，小而可组合、不拥有流程 | 25 个 | 通用工程（任意模型/语言） | 见第5章（Claude Code 插件 + skills.sh 两种方式） |
+| **[mattpocock](https://github.com/mattpocock/skills)** | 210k+ | Skills for Real Engineers，小而可组合、不拥有流程 | 25 个 | 通用工程（任意模型/语言） | 见第5章（Claude Code 插件 + skills.sh 两种方式） |
 | **[GSD](https://github.com/gsd-build/get-shit-done)** | 63k+ | Spec 驱动 + 上下文工程 | 多个 | 0→1 完整功能开发 | `npx get-shit-done-cc@latest` |
 | **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** | 49k+ | Spec 驱动开发（SDD） | 1 套 CLI + 多命令 | 需求到交付的完整闭环 | `npm install -g @fission-ai/openspec@latest` |
 | **[find-skills](https://github.com/vercel-labs/skills)** | 579k+ 安装 | Skills 搜索引擎 | 1 个 | 发现和搜索其他 Skills | `npx skills add vercel-labs/skills -g -a claude-code --skill find-skills` |
@@ -1474,7 +1474,7 @@ Claude: 测试 42→51（+9 新增），PR: github.com/you/app/pull/42
 
 ## 5 mattpocock 实战 — Skills for Real Engineers
 
-Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，MIT 许可。它的定位已经从"让 AI 慢下来先想清楚"升级为 **"Skills for Real Engineers"**——这些技能直接取自作者 `.agents` 目录、每天真实工程都在用的东西，不是 vibe coding。作者明确不跟 GSD、BMAD、Spec-Kit 这类"拥有整个流程"的框架竞争，而是提供**小而可组合**的技能：保留你的控制权，方便自行修改，且支持任意模型。
+Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，210k+ Stars，MIT 许可。它的定位已经从"让 AI 慢下来先想清楚"升级为 **"Skills for Real Engineers"**——这些技能直接取自作者 `.agents` 目录、每天真实工程都在用的东西，不是 vibe coding。作者明确不跟 GSD、BMAD、Spec-Kit 这类"拥有整个流程"的框架竞争，而是提供**小而可组合**的技能：保留你的控制权，方便自行修改，且支持任意模型。
 
 **安装**：
 
@@ -1523,11 +1523,11 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
 | `tdd` | ★★★★★ | "实现 X 功能" | 红-绿重构，一次一个垂直切片；只在预定"接缝"处写测试（reference-only） |
-| `diagnosing-bugs` | ★★★★★ | "修这个 bug" | 6 阶段诊断：复现→最小化→假设→插桩→修复→回归测试。原 `diagnose` 改名 |
+| `diagnosing-bugs` | ★★★★★ | "修这个 bug" | 6 阶段诊断：复现→最小化→假设→插桩→修复→回归测试；自动脱敏 secrets。原 `diagnose` 改名 |
 | `domain-modeling` | ★★★★ | 领域术语含糊 | 主动构建/打磨领域模型，挑战术语、压力测试边界场景，更新 `CONTEXT.md` 和 ADR |
 | `codebase-design` | ★★★★ | 设计模块接口 | "深模块"设计纪律：小接口背后大量行为、干净接缝、可测性 |
 | `code-review` | ★★★★ | 提交前收尾 | 双轴审查（标准 + spec 忠实度），并行子代理避免相互污染；内置 Fowler 坏味道基线 |
-| `prototype` | ★★★ | "这个方案可行吗？" | 一次性原型暴露设计问题：状态/逻辑问题做可运行终端应用，UI 问题做多个激进变体 |
+| `prototype` | ★★★ | "这个方案可行吗？" | 一次性原型暴露设计问题：逻辑问题做成单个自包含 HTML 文件（双击即开、内置引导 walkthrough），UI 问题做多个激进变体；原型保存在 `prototype/<name>` 分支作一手资料，不再删除 |
 | `research` | ★★★ | "查证一手资料" | 后台 agent 对照高可信一手资料调研，产出带引用的 Markdown 文件 |
 | `resolving-merge-conflicts` | ★★★ | 合并冲突 | 按意图逐块解决，绝不 `--abort` |
 | `wizard` | ★★★ | 配置基础设施/凭据、走陌生控制台 | 生成交互式 bash 向导，引导人类完成只有他们能做的步骤；代理能自己做的步骤不要用它 |
@@ -1548,10 +1548,10 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
-| `grilling` | ★★★★★ | — | 底层访谈引擎，`grill-me`、`grill-with-docs`、`triage`、`wayfinder` 等的共用循环 |
+| `grilling` | ★★★★★ | — | 底层访谈引擎，`grill-me`、`grill-with-docs`、`triage`、`wayfinder` 等的共用循环。按轮次一次询问整片决策前沿（frontier），~13 个问题分 3 轮完成；事实类问题派后台 subagent 去查 |
 | `writing-for-agents` | ★★★ | 写/改 skill、`AGENTS.md`/`CLAUDE.md` | 给 agent 读的文档写作方法论。原 `writing-great-skills` 改名并改为 Model-invoked |
 
-> **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`（进行中：`loop-me`、`claude-handoff`、`setup-ts-deep-modules`、`writing-beats` 等）。
+> **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`——**beta 频道**（进行中：`loop-me`、`claude-handoff`、`setup-ts-deep-modules`、`writing-beats` 等），可经 skills.sh 单独安装；`deprecated/` 已随 1.2.0 清空（6 个旧技能全部移除或并入现有技能）。
 
 **核心工作流（idea → ship）**：`ask-matt` 路由的推荐主流程——
 
