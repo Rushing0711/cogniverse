@@ -1533,13 +1533,20 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 
 **Productivity（5 个，通用工作流）**：
 
+**User-invoked（4 个）**：
+
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
 | `grill-me` | ★★★★★ | "我打算做 X" | 被无穷追问直到决策树每个分支都解决。Matt 本人曾被自己的 grill-me 连续追问近 50 个问题 |
-| `grilling` | ★★★★★ | — | 底层访谈引擎（Model-invoked），`grill-me` 和 `grill-with-docs` 的共用循环 |
 | `handoff` | ★★★ | 换代理继续工作 | 把当前对话压缩成交接文档，供另一位 Agent 无缝继续 |
 | `teach` | ★★★ | 多会话教学 | 以当前目录作为有状态教学空间，从可复用组件搭建课程 |
 | `writing-great-skills` | ★★ | "写一个新 skill" | 元技能方法论。原 `write-a-skill` 升级 |
+
+**Model-invoked（1 个）**：
+
+| Skill | 思维杠杆度 | 触发场景 | 实际效果 |
+|-------|--------|----------|----------|
+| `grilling` | ★★★★★ | — | 底层访谈引擎，`grill-me` 和 `grill-with-docs` 的共用循环 |
 
 > **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`（进行中：`wizard`、`loop-me` 等）和 `deprecated/`（已弃用：`design-an-interface`、`qa` 等）目录。
 
