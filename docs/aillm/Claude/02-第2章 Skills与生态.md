@@ -9,7 +9,7 @@
 |------|-------|----------|--------|----------|----------|
 | **[Superpowers](https://github.com/obra/superpowers)** | 202k+ | 工程纪律 + TDD 强制 | 14 个 | 日常开发的完整闭环 | `/plugin install superpowers@superpowers-marketplace` |
 | **[gstack](https://github.com/garrytan/gstack)** | 99k+ | 虚拟 23 人工程团队 + Power Tools | 47 个 | Solo 冲刺产品 MVP | `git clone` 到 `~/.claude/skills/gstack` |
-| **[mattpocock](https://github.com/mattpocock/skills)** | 203k+ | Skills for Real Engineers，小而可组合、不拥有流程 | 22 个 | 通用工程（任意模型/语言） | 见第5章（Claude Code 插件 + skills.sh 两种方式） |
+| **[mattpocock](https://github.com/mattpocock/skills)** | 203k+ | Skills for Real Engineers，小而可组合、不拥有流程 | 25 个 | 通用工程（任意模型/语言） | 见第5章（Claude Code 插件 + skills.sh 两种方式） |
 | **[GSD](https://github.com/gsd-build/get-shit-done)** | 63k+ | Spec 驱动 + 上下文工程 | 多个 | 0→1 完整功能开发 | `npx get-shit-done-cc@latest` |
 | **[OpenSpec](https://github.com/Fission-AI/OpenSpec)** | 49k+ | Spec 驱动开发（SDD） | 1 套 CLI + 多命令 | 需求到交付的完整闭环 | `npm install -g @fission-ai/openspec@latest` |
 | **[find-skills](https://github.com/vercel-labs/skills)** | 579k+ 安装 | Skills 搜索引擎 | 1 个 | 发现和搜索其他 Skills | `npx skills add vercel-labs/skills -g -a claude-code --skill find-skills` |
@@ -1498,11 +1498,11 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 | 3 | **代码跑不通** | 缺乏反馈循环，代理瞎飞 | `/tdd`（红-绿-重构）+ `/diagnosing-bugs`（调试循环） |
 | 4 | **代码变成大泥球** | agent 加速熵增，代码库失控 | 设计关怀：`/to-spec`（动手前先确认碰哪些模块）+ `/improve-codebase-architecture`（扫描代码库、生成可视化 HTML 报告、逐个拷问改进方案，建议每几天跑一次） |
 
-**技能全览**：按**谁可调用**分两类——**User-invoked**（只能你手动 `/命令` 触发，负责编排）和 **Model-invoked**（你可触发，代理也会在任务匹配时自动调用，承载可复用纪律）。User-invoked 技能可以调用 Model-invoked 技能，但绝不调用另一个 User-invoked。插件共包含 22 个活跃技能。
+**技能全览**：按**谁可调用**分两类——**User-invoked**（只能你手动 `/命令` 触发，负责编排）和 **Model-invoked**（你可触发，代理也会在任务匹配时自动调用，承载可复用纪律）。User-invoked 技能可以调用 Model-invoked 技能，但绝不调用另一个 User-invoked。插件共包含 25 个活跃技能。
 
 **评星维度：思维杠杆度**——一次调用能撬动多大的决策质量提升。同时综合考量使用门槛（是否需要复杂前置配置）。
 
-**Engineering（17 个，日常编码）**：
+**Engineering（18 个，日常编码）**：
 
 **User-invoked（9 个）**：
 
@@ -1518,7 +1518,7 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 | `implement` | ★★★★★ | 按 spec/ticket 实现 | 在预定接缝处驱动 `/tdd`，提交前用 `/code-review` 收尾 |
 | `wayfinder` | ★★★★ | 超出一轮会话的大工程 | 规划成共享的调查 ticket 地图（`wayfinder:map` 主 issue + 子 issue），逐个解决直到通往目的地的路清晰。原 `decision-mapping` 改名后毕业 |
 
-**Model-invoked（8 个）**：
+**Model-invoked（9 个）**：
 
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
@@ -1530,18 +1530,28 @@ Matt Pocock（Total TypeScript 作者）开源的 Skills 套装，203k+ Stars，
 | `prototype` | ★★★ | "这个方案可行吗？" | 一次性原型暴露设计问题：状态/逻辑问题做可运行终端应用，UI 问题做多个激进变体 |
 | `research` | ★★★ | "查证一手资料" | 后台 agent 对照高可信一手资料调研，产出带引用的 Markdown 文件 |
 | `resolving-merge-conflicts` | ★★★ | 合并冲突 | 按意图逐块解决，绝不 `--abort` |
+| `wizard` | ★★★ | 配置基础设施/凭据、走陌生控制台 | 生成交互式 bash 向导，引导人类完成只有他们能做的步骤；代理能自己做的步骤不要用它 |
 
-**Productivity（5 个，通用工作流）**：
+**Productivity（7 个，通用工作流）**：
+
+**User-invoked（5 个）**：
 
 | Skill | 思维杠杆度 | 触发场景 | 实际效果 |
 |-------|--------|----------|----------|
 | `grill-me` | ★★★★★ | "我打算做 X" | 被无穷追问直到决策树每个分支都解决。Matt 本人曾被自己的 grill-me 连续追问近 50 个问题 |
-| `grilling` | ★★★★★ | — | 底层访谈引擎（Model-invoked），`grill-me` 和 `grill-with-docs` 的共用循环 |
 | `handoff` | ★★★ | 换代理继续工作 | 把当前对话压缩成交接文档，供另一位 Agent 无缝继续 |
 | `teach` | ★★★ | 多会话教学 | 以当前目录作为有状态教学空间，从可复用组件搭建课程 |
-| `writing-great-skills` | ★★ | "写一个新 skill" | 元技能方法论。原 `write-a-skill` 升级 |
+| `to-questionnaire` | ★★★ | 有个决定自己答不了 | 转成 Markdown 问卷，交给唯一能答的人（异步填写，或会议中一起填）。拷问的是"发给谁、要什么回来"，而非内容本身 |
+| `wait-what` | ★★★ | 某条消息没看懂 | 立即触发，代理用 `CONTEXT.md` 的术语库以平实语言重新解释漏掉的上下文 |
 
-> **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`（进行中：`wizard`、`loop-me` 等）和 `deprecated/`（已弃用：`design-an-interface`、`qa` 等）目录。
+**Model-invoked（2 个）**：
+
+| Skill | 思维杠杆度 | 触发场景 | 实际效果 |
+|-------|--------|----------|----------|
+| `grilling` | ★★★★★ | — | 底层访谈引擎，`grill-me`、`grill-with-docs`、`triage`、`wayfinder` 等的共用循环 |
+| `writing-for-agents` | ★★★ | 写/改 skill、`AGENTS.md`/`CLAUDE.md` | 给 agent 读的文档写作方法论。原 `writing-great-skills` 改名并改为 Model-invoked |
+
+> **工具类（Misc，4 个）**：`git-guardrails-claude-code`（git hook 层拦截危险命令）、`setup-pre-commit`、`migrate-to-shoehorn`、`scaffold-exercises` 仍在仓库 `skills/misc/` 目录，未进插件主清单，需要时用 `npx skills` 安装。仓库另有 `in-progress/`（进行中：`loop-me`、`claude-handoff`、`setup-ts-deep-modules`、`writing-beats` 等）。
 
 **核心工作流（idea → ship）**：`ask-matt` 路由的推荐主流程——
 
@@ -1626,7 +1636,7 @@ Claude: 接缝处驱动 /tdd，逐个完成 ticket，提交前 /code-review 收�
 - 想搭建完整 idea → ship 流水线，用 `ask-matt` → `grill` → `to-spec` → `to-tickets` → `implement` 链路
 - 大工程（超出一轮会话）用 `/wayfinder` 规划调查地图，而不是硬塞进一次会话
 - 整个套装不绑定语言/模型——README 明确 "work with any model"，但泛型工具类技能在 TypeScript 生态最能体现功力
-- **注意技能有改名历史**：`diagnose`→`diagnosing-bugs`、`to-prd`→`to-spec`、`to-issues`→`to-tickets`、`write-a-skill`→`writing-great-skills`；`caveman`、`zoom-out` 已在 1.0.0 移除。老教程里的命令名可能已失效
+- **注意技能有改名历史**：`diagnose`→`diagnosing-bugs`、`to-prd`→`to-spec`、`to-issues`→`to-tickets`、`write-a-skill`→`writing-great-skills`→`writing-for-agents`；`caveman`、`zoom-out` 已在 1.0.0 移除。老教程里的命令名可能已失效
 
 ---
 
